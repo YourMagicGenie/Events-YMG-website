@@ -38,6 +38,8 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
   assert.equal(wrongOrigin.status, 403);
   const invalidEmail = await handleEventsApi(request(form({ email: "nope" })), env, fetcher);
   assert.equal(invalidEmail.status, 400);
+  const overlongFormat = await handleEventsApi(request(form({ format: "x".repeat(101) })), env, fetcher);
+  assert.equal(overlongFormat.status, 400);
   const honeypot = await handleEventsApi(request(form({ "bot-field": "robot" })), env, fetcher);
   assert.equal(honeypot.status, 202);
   assert.equal(calls.length, 0);
