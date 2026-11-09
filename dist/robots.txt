@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://events.ymgconsultingservices.com/sitemap.xml
