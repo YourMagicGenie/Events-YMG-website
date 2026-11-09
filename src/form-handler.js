@@ -116,13 +116,15 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   const name = field(params, "name", 120, true);
   const email = field(params, "email", 254, true);
   const business = field(params, "business", 160, true);
-  const format = field(params, "format", 100) || "Let's explore a partnership";
-  const guests = field(params, "guests", 40) || "Still exploring";
+  const rawFormat = field(params, "format", 100);
+  const rawGuests = field(params, "guests", 40);
+  const format = rawFormat === "" ? "Let's explore a partnership" : rawFormat;
+  const guests = rawGuests === "" ? "Still exploring" : rawGuests;
   const timing = field(params, "timing", 300);
   const budget = field(params, "budget", 120);
   const idea = field(params, "idea", 5000);
   const token = field(params, "cf-turnstile-response", 2048, true);
-  if ([name, email, business, timing, budget, idea, token].includes(null) ||
+  if ([name, email, business, rawFormat, rawGuests, timing, budget, idea, token].includes(null) ||
       !validEmail(email || "") || !FORMAT_CHOICES.has(format) || !GUEST_CHOICES.has(guests)) {
     return json(400, { ok: false, error: "Please check the required fields and try again." });
   }
