@@ -16,7 +16,7 @@ Use [the prioritized GPT coding handoff](docs/GPT_CODING_HANDOFF.md) when starti
 
 ## Direct enquiries
 
-[Issue #10](https://github.com/YourMagicGenie/Events-YMG-website/issues/10) covers replacing the current `mailto:` builder with inline submission. The main site's verified solution combines Cloudflare Worker form validation, Turnstile, and a protected Google Apps Script relay to `hello@ymgconsultingservices.com` with the visitor as `Reply-To`. Reuse the existing relay where compatible, but validate the Events hostname/action and form-specific schema before deployment. Never store secrets in Git.
+`dist/index.html` now contains the inline Events enquiry form and `src/worker.js` routes `/api/events/config` and `/api/events/enquiry` through the tested `src/form-handler.js` validation, Turnstile and existing Google Apps Script relay pattern. `dist/assets/enquiry-client.js` submits the complete form to the same-origin Worker and reports acceptance or failure without opening an email app. The runtime expects `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `GOOGLE_RELAY_URL`, and `GOOGLE_RELAY_SECRET`; values belong only in the Worker environment. The current production Worker remains unchanged: this source path still needs a configured static-assets binding, isolated preview, rate/abuse review and non-sensitive mailbox delivery verification before a guarded release. See [Issue #10](https://github.com/YourMagicGenie/Events-YMG-website/issues/10) and [deployment notes](deploy/README.md).
 
 ## Safety and deployment
 
@@ -29,4 +29,4 @@ See [Issue #3](https://github.com/YourMagicGenie/Events-YMG-website/issues/3) fo
 
 ## Local checks
 
-The site is buildless. With Node.js 22 or newer, run `npm test` to execute the form-handler unit tests and static site smoke checks. To preview the current public files locally, run `python3 -m http.server 4173 --directory dist` and open `http://localhost:4173/`. These checks do not deploy or contact production.
+The site is buildless. With Node.js 22 or newer, run `npm test` to execute the form-handler, inline-client, Worker-route and static-site smoke tests. To preview the static files locally, run `python3 -m http.server 4173 --directory dist` and open `http://localhost:4173/`. A static server does not run `src/worker.js`, so the direct-send button stays unavailable and only the visible email fallback works in this preview. These checks do not deploy or contact production.

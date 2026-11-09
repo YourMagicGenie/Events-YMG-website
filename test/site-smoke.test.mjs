@@ -36,6 +36,9 @@ test("local assets and public crawl files are present", () => {
   }
   const privacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
   assert.match(privacy, /class="skip-link" href="#main-content"/);
+  assert.match(privacy, /Cloudflare Turnstile/);
+  assert.match(privacy, /Google Apps Script/);
+  assert.match(privacy, /does not create a submissions database/);
 });
 
 test("event formats form a six-card carousel without filters or mockup disclaimers", () => {
@@ -58,5 +61,19 @@ test("hero copy is venue-facing and contains no artificial hero photo", () => {
   assert.doesNotMatch(html, /<img[^>]+rooftop-night\.jpg|Discover the atmosphere|We’re developing/);
   assert.match(html, /talk about an event/i);
   assert.match(html, /assets\/social-card\.png/);
+});
+
+test("enquiry form collects reply email and submits inline through the Worker", () => {
+  assert.match(html, /<input required id="email" name="email" type="email" autocomplete="email"/);
+  assert.match(html, /id="submit-enquiry" type="submit" disabled><span class="submit-label">Send my inquiry email/);
+  assert.match(html, /id="turnstile-widget"/);
+  assert.match(html, /id="form-feedback"[^>]*aria-live="polite"/);
+  assert.match(html, /href="mailto:hello@ymgconsultingservices\.com"/);
+  assert.doesNotMatch(html, /Open email app|Prepare my enquiry email|Nothing is sent until you send/);
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+  assert.match(interactions, /sendEventsEnquiry\(new FormData\(form\), turnstileToken\)/);
+  assert.match(interactions, /submit\.disabled = true/);
+  assert.match(interactions, /events_enquiry/);
+  assert.ok(existsSync(new URL("../dist/assets/enquiry-client.js", import.meta.url)));
 });
 
