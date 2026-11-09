@@ -26,3 +26,7 @@ Use [the prioritized GPT coding handoff](docs/GPT_CODING_HANDOFF.md) when starti
 - The public repo is intentionally separate from the private scientific site; do not copy unrelated scientific source/assets.
 
 See [Issue #3](https://github.com/YourMagicGenie/Events-YMG-website/issues/3) for the complete source/parity and guarded deployment checklist.
+
+## Local checks
+
+The site is buildless. With Node.js 22 or newer, run `npm test` to execute the form-handler unit tests and static site smoke checks. To preview the current public files locally, run `python3 -m http.server 4173 --directory dist` and open `http://localhost:4173/`. These checks do not deploy or contact production.
