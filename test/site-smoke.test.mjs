@@ -22,8 +22,8 @@ test("main content can be reached by keyboard and reduced motion is respected", 
   assert.match(html, /class="skip-link" href="#main-content"/);
   assert.match(html, /<main id="main-content" tabindex="-1">/);
   assert.match(html, /prefers-reduced-motion:reduce/);
-  assert.match(html, /prefers-reduced-motion: reduce/);
-  assert.match(html, /matches\?'auto':'smooth'/);
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+  assert.match(interactions, /prefers-reduced-motion: reduce/);
   assert.match(html, /:focus-visible/);
 });
 
@@ -36,5 +36,27 @@ test("local assets and public crawl files are present", () => {
   }
   const privacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
   assert.match(privacy, /class="skip-link" href="#main-content"/);
+});
+
+test("event formats form a six-card carousel without filters or mockup disclaimers", () => {
+  assert.match(html, /SEVERAL WAYS THE NIGHT COULD UNFOLD/);
+  assert.equal([...html.matchAll(/class="concept" role="group"/g)].length, 6);
+  assert.match(html, /id="concept-deck"[^>]*aria-roledescription="carousel"/);
+  assert.match(html, /id="deck-previous"/);
+  assert.match(html, /id="deck-next"/);
+  assert.doesNotMatch(html, /data-filter|All concepts|Concept imagery|Proposed event formats|A YMG Event Concept/i);
+  for (const format of ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Jazz &amp; Cocktails", "Corporate Social"]) {
+    assert.ok(html.includes(`data-concept="${format}"`), `${format} has a form preselection`);
+    assert.ok(html.includes(`<option>${format}</option>`), `${format} is available in the form`);
+  }
+  assert.match(html, /overflow-x:auto/);
+  assert.match(readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8"), /ArrowRight/);
+});
+
+test("hero copy is venue-facing and contains no artificial hero photo", () => {
+  assert.match(html, /class="hero-atmosphere"/);
+  assert.doesNotMatch(html, /<img[^>]+rooftop-night\.jpg|Discover the atmosphere|We’re developing/);
+  assert.match(html, /talk about an event/i);
+  assert.match(html, /assets\/social-card\.png/);
 });
 
