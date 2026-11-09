@@ -1,0 +1,38 @@
+name: Events checks
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/checks.yml"
+      - "dist/**"
+      - "src/**"
+      - "test/**"
+      - "package.json"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/checks.yml"
+      - "dist/**"
+      - "src/**"
+      - "test/**"
+      - "package.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: events-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run unit and site smoke tests
+        run: npm test
