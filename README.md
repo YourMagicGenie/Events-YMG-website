@@ -10,6 +10,10 @@ This repository was initialized on 2026-11-09 from the selected YMG Events Sites
 - `deploy/`: notes and the standalone Worker bundle used by the current production architecture. A future pipeline should generate and verify the bundle from source rather than hand-editing embedded content.
 - `reference/`: vetted, non-secret implementation patterns borrowed from the [main YMG website](https://github.com/YourMagicGenie/ymg-scientific-website) to accelerate Events-specific direct enquiry delivery. Reference code is **not** wired to production until tested and explicitly integrated.
 
+## Coding-agent handoff
+
+Use [the prioritized GPT coding handoff](docs/GPT_CODING_HANDOFF.md) when starting a new implementation session. It inventories the 33 approved issues, actual source/deployment boundaries, critical dependency order, test gates and PR/CI expectations. The handoff is a dated snapshot; recheck open issues, repository state, live Worker and Project Keeper before changing code.
+
 ## Direct enquiries
 
 [Issue #10](https://github.com/YourMagicGenie/Events-YMG-website/issues/10) covers replacing the current `mailto:` builder with inline submission. The main site's verified solution combines Cloudflare Worker form validation, Turnstile, and a protected Google Apps Script relay to `hello@ymgconsultingservices.com` with the visitor as `Reply-To`. Reuse the existing relay where compatible, but validate the Events hostname/action and form-specific schema before deployment. Never store secrets in Git.
