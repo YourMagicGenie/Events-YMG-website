@@ -8,8 +8,10 @@ The site was launched 2026-11-09 from Sites-managed project
 `appgprj_6af1846f038c8191a5028170979bd4b3` at source commit
 `76dd4f9580e546dac33e6605534414ad77408f10`.
 
-`dist/` here is the editable static source from that launch (including its
-current `mailto:` form). The original live bundle is a generated standalone
+`dist/` here is the editable static source from that launch. The launch
+baseline used a visitor-reviewed `mailto:` form; the current GitHub source has
+an inline form, but it cannot send until the staged Worker path is configured
+and released. The original live bundle is a generated standalone
 `deploy/cloudflare-worker.mjs` in the Sites-managed source: it embeds HTML,
 privacy and JPEG assets for direct Worker upload. The giant generated bundle
 is deliberately **not** copied as a second editable source of truth.

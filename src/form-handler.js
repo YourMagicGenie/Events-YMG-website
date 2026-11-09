@@ -3,7 +3,7 @@
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const MAX_BODY_BYTES = 48_000;
 const FORMAT_CHOICES = new Set([
-  "Let's explore a partnership",
+  "Let’s explore a partnership",
   "Rooftop evenings",
   "Live music & DJs",
   "Private celebrations",
@@ -118,7 +118,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   const business = field(params, "business", 160, true);
   const rawFormat = field(params, "format", 100);
   const rawGuests = field(params, "guests", 40);
-  const format = rawFormat === "" ? "Let's explore a partnership" : rawFormat;
+  const format = rawFormat === "" ? "Let’s explore a partnership" : rawFormat;
   const guests = rawGuests === "" ? "Still exploring" : rawGuests;
   const timing = field(params, "timing", 300);
   const budget = field(params, "budget", 120);

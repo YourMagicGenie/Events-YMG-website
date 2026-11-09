@@ -1,3 +1,5 @@
+import { sendEventsEnquiry } from "./enquiry-client.js";
+
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const deck = document.getElementById("concept-deck");
@@ -62,30 +64,105 @@ document.querySelectorAll("[data-concept]").forEach(button => {
 });
 
 const form = document.getElementById("brief");
-form?.addEventListener("submit", event => {
-  event.preventDefault();
-  const get = id => document.getElementById(id).value.trim();
-  const summary = document.getElementById("summary");
-  summary.textContent = `YMG EVENTS — PARTNERSHIP BRIEF\n\nName: ${get("name")}\nBusiness / venue: ${get("business")}\nFormat: ${get("format")}\nGuests: ${get("guests")}\nTiming: ${get("timing") || "To discuss"}\nBudget: ${get("budget") || "To discuss"}\n\nThe idea:\n${get("idea") || "I’d like to discuss an event format."}`;
-  document.getElementById("email-brief").href = "mailto:hello@ymgconsultingservices.com?subject=" +
-    encodeURIComponent("YMG Events partnership — " + get("business")) + "&body=" + encodeURIComponent(summary.textContent);
-  document.getElementById("result").hidden = false;
-  document.getElementById("copystatus").textContent = "";
-  document.getElementById("result").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth", block: "nearest" });
-});
+if (form) {
+  const feedback = document.getElementById("form-feedback");
+  const submit = document.getElementById("submit-enquiry");
+  const submitLabel = submit.querySelector(".submit-label");
+  let challengeReady = false;
+  let turnstileToken = "";
+  let widgetId = null;
+  let submitting = false;
 
-document.getElementById("copy")?.addEventListener("click", async () => {
-  const summary = document.getElementById("summary");
-  const status = document.getElementById("copystatus");
-  try {
-    await navigator.clipboard.writeText(summary.textContent);
-    status.textContent = "Copied to clipboard.";
-  } catch {
-    const range = document.createRange();
-    range.selectNodeContents(summary);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    status.textContent = "Select and copy the highlighted brief.";
-  }
-});
+  const setFeedback = (message, state = "") => {
+    feedback.textContent = message;
+    feedback.dataset.state = state;
+  };
+
+  const loadTurnstile = () => new Promise((resolve, reject) => {
+    if (window.turnstile) return resolve(window.turnstile);
+    const callbackName = "ymgEventsTurnstileLoaded";
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve(window.turnstile);
+    };
+    const script = document.createElement("script");
+    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      delete window[callbackName];
+      reject(new Error("Spam protection could not load."));
+    };
+    document.head.appendChild(script);
+  });
+
+  const configureForm = async () => {
+    try {
+      const response = await fetch("/api/events/config", {
+        method: "GET", credentials: "same-origin", cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      const config = await response.json();
+      if (!response.ok || config.ready !== true || !config.siteKey) throw new Error("Service unavailable");
+      const turnstile = await loadTurnstile();
+      setFeedback("Complete the spam-protection check to send your enquiry.");
+      widgetId = turnstile.render("#turnstile-widget", {
+        sitekey: config.siteKey,
+        action: "events_enquiry",
+        callback: token => {
+          turnstileToken = token;
+          challengeReady = true;
+          submit.disabled = false;
+          if (feedback.dataset.state !== "success") setFeedback("Spam protection is ready. You can send your enquiry.");
+        },
+        "expired-callback": () => {
+          turnstileToken = "";
+          challengeReady = false;
+          submit.disabled = true;
+          setFeedback("Verification expired. Please complete the check again.", "error");
+        },
+        "error-callback": () => {
+          turnstileToken = "";
+          challengeReady = false;
+          submit.disabled = true;
+          setFeedback("Spam protection could not verify this request. Please use the direct email link.", "error");
+        },
+      });
+    } catch {
+      challengeReady = false;
+      submit.disabled = true;
+      setFeedback("Online enquiries are temporarily unavailable. Please email us directly using the address shown here.", "error");
+    }
+  };
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (submitting) return;
+    if (!turnstileToken) {
+      setFeedback("Please complete the spam-protection check before sending.", "error");
+      return;
+    }
+
+    submitting = true;
+    submit.disabled = true;
+    form.setAttribute("aria-busy", "true");
+    submitLabel.textContent = "Sending your enquiry…";
+    setFeedback("Sending your enquiry…");
+    try {
+      await sendEventsEnquiry(new FormData(form), turnstileToken);
+      setFeedback("Your enquiry has been accepted for processing. We’ll follow up at the email address you provided.", "success");
+    } catch {
+      setFeedback("We couldn’t send your enquiry. Please try again or email us directly.", "error");
+    } finally {
+      submitting = false;
+      form.removeAttribute("aria-busy");
+      submitLabel.textContent = "Send my inquiry email";
+      turnstileToken = "";
+      challengeReady = false;
+      submit.disabled = true;
+      if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
+    }
+  });
+
+  configureForm();
+}

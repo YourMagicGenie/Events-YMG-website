@@ -75,6 +75,15 @@ test("a relay failure reports an error instead of claiming delivery", async () =
   assert.equal((await response.json()).ok, false);
 });
 
+test("the page's curly-apostrophe default event format passes validation", async () => {
+  const defaultFormat = form({ format: "Let’s explore a partnership" });
+  const response = await handleEventsApi(request(defaultFormat), env, async url =>
+    url.includes("turnstile")
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      : Response.json({ ok: true }));
+  assert.equal(response.status, 202);
+});
+
 test("subject removes header controls from sender name", () => {
   assert.equal(eventsNotificationSubject("Jane\r\nBCC: extra@example.org"), "New YMG Events enquiry — Jane BCC: extra@example.org");
 });
