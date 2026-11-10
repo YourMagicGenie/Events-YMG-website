@@ -29,7 +29,7 @@ test("main content can be reached by keyboard and reduced motion is respected", 
 });
 
 test("local assets and public crawl files are present", () => {
-  const assets = [...html.matchAll(/(?:src|href)="(assets\/[^"?#]+)"/g)].map(match => match[1]);
+  const assets = [...html.matchAll(/(?:src|href)="\/?(assets\/[^"?#]+)"/g)].map(match => match[1]);
   assert.ok(assets.length > 0, "expected at least one local asset reference");
   for (const asset of assets) assert.ok(existsSync(new URL(`../dist/${asset}`, import.meta.url)), `${asset} exists`);
   for (const path of ["privacy.html", "robots.txt", "sitemap.xml"]) {
@@ -42,6 +42,70 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /temporary request threshold/);
   assert.match(privacy, /does not create a submissions database/);
   assert.match(privacy, /served from Unsplash’s image CDN/);
+});
+
+test("brand icons and bilingual social previews use documented local assets", () => {
+  const variants = [
+    {
+      name: "English",
+      page: html,
+      image: "social-card.png",
+      title: "YMG Events — Elegance, after hours.",
+      description: "YMG Events works with Genova venues and hosts to shape distinctive evenings with music, hospitality and a memorable guest experience.",
+      alt: "YMG Events — Elegance has an after-hours side. Genova, Italy.",
+    },
+    {
+      name: "Italian",
+      page: italianHtml,
+      image: "social-card-it.png",
+      title: "YMG Events — Eleganza, dopo il tramonto.",
+      description: "YMG Events collabora con location e organizzatori di Genova per creare serate distintive, con musica, ospitalità e un’esperienza memorabile per gli ospiti.",
+      alt: "YMG Events — L’eleganza ha un lato notturno. Genova, Italia.",
+    },
+  ];
+  for (const variant of variants) {
+    const { page, name, image, title, description, alt } = variant;
+    for (const token of [
+      '<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">',
+      '<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">',
+      '<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">',
+      '<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">',
+      `<meta property="og:image" content="https://events.ymgconsultingservices.com/assets/${image}">`,
+      `<meta property="og:image:alt" content="${alt}">`,
+      '<meta property="og:image:width" content="1200">',
+      '<meta property="og:image:height" content="630">',
+      '<meta property="og:image:type" content="image/png">',
+      `<meta name="twitter:title" content="${title}">`,
+      `<meta name="twitter:description" content="${description}">`,
+      `<meta name="twitter:image" content="https://events.ymgconsultingservices.com/assets/${image}">`,
+      `<meta name="twitter:image:alt" content="${alt}">`,
+    ]) assert.ok(page.includes(token), `${name} metadata includes ${token}`);
+    assert.match(page, /<meta property="og:url" content="https:\/\/events\.ymgconsultingservices\.com\//, `${name} canonical share URL is absolute`);
+  }
+
+  const pngDimensions = name => {
+    const png = readFileSync(new URL(`../dist/assets/${name}`, import.meta.url));
+    assert.ok(png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${name} is a PNG`);
+    if (name.startsWith("social-card")) assert.ok(png.length < 50_000, `${name} stays compact for link previews`);
+    return [png.readUInt32BE(16), png.readUInt32BE(20)];
+  };
+  assert.deepEqual(pngDimensions("favicon-16.png"), [16, 16]);
+  assert.deepEqual(pngDimensions("favicon-32.png"), [32, 32]);
+  assert.deepEqual(pngDimensions("apple-touch-icon.png"), [180, 180]);
+  for (const name of ["social-card.png", "social-card-it.png"]) assert.deepEqual(pngDimensions(name), [1200, 630], `${name} has the correct share-preview dimensions`);
+
+  const provenance = readFileSync(new URL("../docs/BRAND-ASSET-PROVENANCE.md", import.meta.url), "utf8");
+  const renderer = readFileSync(new URL("../tools/render-brand-assets.sh", import.meta.url), "utf8");
+  assert.match(renderer, /social-card-it\.svg/);
+  assert.match(renderer, /apple-touch-icon\.png/);
+  for (const sourceName of ["favicon.svg", "social-card.svg", "social-card-it.svg"]) {
+    const source = readFileSync(new URL(`../dist/assets/${sourceName}`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /(?:href|xlink:href)="https?:|url\(["']?https?:/i, `${sourceName} has no external asset dependencies`);
+  }
+  for (const name of ["favicon.svg", "favicon-16.png", "favicon-32.png", "apple-touch-icon.png", "social-card.svg", "social-card.png", "social-card-it.svg", "social-card-it.png"]) {
+    assert.ok(existsSync(new URL(`../dist/assets/${name}`, import.meta.url)), `${name} exists`);
+    assert.ok(provenance.includes(name), `${name} has a provenance entry`);
+  }
 });
 
 test("Worker config serves this repo's assets from a separate preview worker", () => {
@@ -248,10 +312,11 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(messages, /formUnavailable: "L’invio online/);
   assert.match(navigation, /Chiudi il menu di navigazione/);
 
-  const italianAssets = [...italian.matchAll(/(?:src|href)="(\.\.\/assets\/[^"]+)"/g)].map(match => match[1]);
+  const italianAssets = [...italian.matchAll(/(?:src|href)="(\.\.\/assets\/[^"#?]+|\/?assets\/[^"#?]+)"/g)].map(match => match[1]);
   assert.ok(italianAssets.length > 0, "Italian page has local asset references");
   for (const asset of italianAssets) {
-    assert.ok(existsSync(new URL(`../dist/it/${asset}`, import.meta.url)), `${asset} resolves from the Italian route`);
+    const path = asset.startsWith("../") ? `../dist/it/${asset}` : `../dist/${asset.replace(/^\//, "")}`;
+    assert.ok(existsSync(new URL(path, import.meta.url)), `${asset} resolves from the Italian route`);
   }
 });
 
