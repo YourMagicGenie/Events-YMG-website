@@ -5,6 +5,45 @@ import test from "node:test";
 const html = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
 const italianHtml = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
 
+
+test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
+  const footerCases = [
+    {
+      page: html,
+      privacy: 'href="/privacy.html"',
+      privacyLabel: "Privacy notice",
+      ariaLabel: 'aria-label="Related websites"',
+      atlasLabel: "Your Magic Genie · Atlas home",
+      tagline: "Venue partnerships",
+    },
+    {
+      page: italianHtml,
+      privacy: 'href="/it/privacy.html"',
+      privacyLabel: "Informativa privacy",
+      ariaLabel: 'aria-label="Siti collegati"',
+      atlasLabel: "Your Magic Genie · sito principale Atlas",
+      tagline: "Collaborazioni con location",
+    },
+  ];
+
+  for (const { page, privacy, privacyLabel, ariaLabel, atlasLabel, tagline } of footerCases) {
+    const footer = page.match(/<footer class="site-footer">[\s\S]*?<\/footer>/)?.[0];
+    assert.ok(footer, "footer exists in both languages");
+    assert.match(page, /href="\/assets\/footer\.css"/);
+    assert.match(footer, /YMG Events/);
+    assert.ok(footer.includes(tagline), "footer states the Events service and location");
+    assert.match(footer, /href="mailto:hello@ymgconsultingservices\.com"/);
+    assert.ok(footer.includes(privacy));
+    assert.ok(footer.includes(privacyLabel));
+    assert.ok(footer.includes(ariaLabel));
+    assert.ok(footer.includes(atlasLabel));
+    assert.match(footer, /href="https:\/\/ymgconsultingservices\.com\//);
+    assert.match(footer, /href="#enquire"/);
+    assert.doesNotMatch(footer, /(?:P\.?IVA|Partita IVA|VAT|REA|sede legale)/i,
+      "unverified legal identifiers and addresses are withheld pending owner review");
+  }
+});
+
 test("main page exposes mobile navigation and a direct enquiry control", () => {
   assert.match(html, /<nav class="primary-nav" id="primary-navigation" aria-label="Main navigation">/);
   assert.match(html, /class="menu-toggle"[^>]*aria-expanded="false"[^>]*aria-controls="primary-navigation"/);

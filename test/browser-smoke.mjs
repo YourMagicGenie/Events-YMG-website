@@ -536,7 +536,7 @@ try {
   assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible on desktop");
   await mobile.screenshot({ path: resolve(screenshotRoot, "italian-1440px.png"), fullPage: true });
   await mobile.setViewportSize({ width: 390, height: 844 });
-  const ItalianPrivacyLink = mobile.getByRole("link", { name: "Informativa privacy" });
+  const ItalianPrivacyLink = mobile.locator('footer .footer-links a[href="/it/privacy.html"]');
   await ItalianPrivacyLink.scrollIntoViewIfNeeded();
   await ItalianPrivacyLink.click();
   assert.equal(new URL(mobile.url()).pathname, "/it/privacy.html", "Italian privacy link preserves the selected language");
