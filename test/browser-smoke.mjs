@@ -286,22 +286,26 @@ try {
   const artBounds = await touch.locator("#concept-deck .art").first().boundingBox();
   const touchSession = await touchContext.newCDPSession(touch);
   const touchY = Math.round(artBounds.y + artBounds.height / 2);
-  await touchSession.send("Emulation.setTouchEmulationEnabled", { enabled: true, configuration: "mobile" });
-  const synthesizeTouchScroll = xDistance => touchSession.send("Input.synthesizeScrollGesture", {
-    x: Math.round(artBounds.x + artBounds.width / 2),
-    y: touchY,
-    xDistance,
-    yDistance: 0,
-    speed: 600,
-    gestureSourceType: "touch",
-    preventFling: true,
+  const startX = Math.round(artBounds.x + artBounds.width * 0.85);
+  await touch.evaluate(() => {
+    window.carouselTouchEvents = [];
+    for (const type of ["touchstart", "touchmove", "touchend"]) {
+      document.querySelector("#concept-deck").addEventListener(type, () => window.carouselTouchEvents.push(type), { passive: true });
+    }
   });
-  await synthesizeTouchScroll(260);
-  await touch.waitForTimeout(250);
-  if (await touch.locator("#concept-deck").evaluate(deck => deck.scrollLeft) <= 5) {
-    await synthesizeTouchScroll(-260);
-    await touch.waitForTimeout(250);
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: startX, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
+  });
+  for (let step = 1; step <= 6; step++) {
+    await touchSession.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: startX - step * 25, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
+    });
+    await touch.waitForTimeout(25);
   }
+  await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await touch.waitForTimeout(250);
   const touchState = await touch.evaluate(() => {
     const deck = document.querySelector("#concept-deck");
     return {
@@ -311,6 +315,7 @@ try {
       maxTouchPoints: navigator.maxTouchPoints,
       coarsePointer: matchMedia("(pointer: coarse)").matches,
       touchAction: getComputedStyle(deck).touchAction,
+      touchEvents: window.carouselTouchEvents,
     };
   });
   assert.ok(touchState.scrollLeft > 5, `mobile touch swipe advances the horizontal deck: ${JSON.stringify(touchState)}`);
