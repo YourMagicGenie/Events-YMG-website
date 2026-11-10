@@ -41,6 +41,21 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /does not create a submissions database/);
 });
 
+test("Worker config serves this repo's assets from a separate preview worker", () => {
+  const config = JSON.parse(readFileSync(new URL("../wrangler.json", import.meta.url), "utf8"));
+  assert.equal(config.name, "ymg-events-preview");
+  assert.notEqual(config.name, "ymg-events-website");
+  assert.equal(config.main, "src/worker.js");
+  assert.equal(config.workers_dev, true);
+  assert.deepEqual(config.assets, {
+    directory: "./dist",
+    binding: "ASSETS",
+    run_worker_first: true,
+  });
+  assert.equal("routes" in config, false, "preview config must not attach a route");
+  assert.equal("custom_domains" in config, false, "preview config must not attach a custom domain");
+});
+
 test("event formats form a six-card carousel without filters or mockup disclaimers", () => {
   assert.match(html, /SEVERAL WAYS THE NIGHT COULD UNFOLD/);
   assert.equal([...html.matchAll(/class="concept" role="group"/g)].length, 6);
