@@ -54,6 +54,19 @@ try {
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}`;
   const widths = [320, 360, 390, 430, 540, 541, 768, 850, 851, 1024, 1280, 1440, 1920];
+  const assetChecks = [
+    ["/assets/favicon.svg", "image/svg+xml"],
+    ["/assets/favicon-16.png", "image/png"],
+    ["/assets/favicon-32.png", "image/png"],
+    ["/assets/apple-touch-icon.png", "image/png"],
+    ["/assets/social-card.png", "image/png"],
+    ["/assets/social-card-it.png", "image/png"],
+  ];
+  for (const [path, contentType] of assetChecks) {
+    const response = await fetch(`${baseUrl}${path}`);
+    assert.equal(response.status, 200, `${path} is served by the local Events site`);
+    assert.ok(response.headers.get("content-type").startsWith(contentType), `${path} has the correct content type`);
+  }
 
   for (const width of widths) {
     const context = await browser.newContext({ viewport: { width, height: 900 } });
