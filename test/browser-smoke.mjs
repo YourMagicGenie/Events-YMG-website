@@ -4,6 +4,7 @@ import { mkdir, readFile, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { withEventsSecurityHeaders } from "../src/security-headers.js";
 
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const siteRoot = resolve(projectRoot, "dist");
@@ -42,12 +43,19 @@ const server = createServer(async (request, response) => {
       status = 404;
     }
     if (!fileStat.isFile()) throw new Error("Not a file");
-    response.writeHead(status, {
-      "content-type": mimeTypes[extname(filePath).toLowerCase()] ?? "application/octet-stream",
-      "cache-control": "no-store",
-      "x-content-type-options": "nosniff",
-    });
-    response.end(await readFile(filePath));
+    const content = await readFile(filePath);
+    const secured = withEventsSecurityHeaders(
+      new Request(`http://127.0.0.1${request.url}`),
+      new Response(content, {
+        status,
+        headers: {
+          "content-type": mimeTypes[extname(filePath).toLowerCase()] ?? "application/octet-stream",
+          "cache-control": "no-store",
+        },
+      }),
+    );
+    response.writeHead(secured.status, Object.fromEntries(secured.headers));
+    response.end(content);
   } catch {
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" }).end("Not found");
   }
@@ -90,12 +98,22 @@ try {
     await context.route("https://fonts.googleapis.com/**", route => route.abort());
     await context.route("https://fonts.gstatic.com/**", route => route.abort());
     const page = await context.newPage();
+    await page.addInitScript(() => {
+      window.__eventsCspViolations = [];
+      document.addEventListener("securitypolicyviolation", event => {
+        window.__eventsCspViolations.push({ directive: event.violatedDirective, blockedURI: event.blockedURI });
+      });
+    });
     const externalFontRequests = [];
     page.on("request", request => {
       if (/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(request.url())) externalFontRequests.push(request.url());
     });
     const pageResponse = await page.goto(baseUrl, { waitUntil: "load" });
     assert.equal(pageResponse.status(), 200, `${width}px homepage responds successfully`);
+    const responseHeaders = await pageResponse.allHeaders();
+    assert.ok(responseHeaders["content-security-policy"], `${width}px HTML response has a CSP`);
+    assert.equal(responseHeaders["x-frame-options"], "DENY", `${width}px response cannot be framed`);
+    assert.equal(responseHeaders["x-content-type-options"], "nosniff", `${width}px response disables MIME sniffing`);
 
     if (width === 320) {
       const loadedFonts = await page.evaluate(async () => {
@@ -329,6 +347,8 @@ try {
     }
 
     await page.screenshot({ path: resolve(screenshotRoot, `${width}px.png`), fullPage: true });
+    const cspViolations = await page.evaluate(() => window.__eventsCspViolations);
+    assert.deepEqual(cspViolations, [], `${width}px page loads its scripts, fonts, styles and imagery without CSP violations`);
     await context.close();
   }
 
