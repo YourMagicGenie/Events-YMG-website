@@ -1,5 +1,7 @@
+import { messages } from "./i18n.js";
+
 export async function sendEventsEnquiry(formData, turnstileToken, fetcher = fetch) {
-  if (!turnstileToken) throw new Error("Spam protection is required.");
+  if (!turnstileToken) throw new Error(messages.spamRequired);
   const body = new URLSearchParams(formData);
   body.set("cf-turnstile-response", turnstileToken);
   const response = await fetcher("/api/events/enquiry", {
@@ -15,7 +17,7 @@ export async function sendEventsEnquiry(formData, turnstileToken, fetcher = fetc
   let result;
   try { result = await response.json(); } catch { result = null; }
   if (!response.ok || result?.ok !== true) {
-    throw new Error("The enquiry service did not accept this request.");
+    throw new Error(messages.requestRejected);
   }
   return result;
 }

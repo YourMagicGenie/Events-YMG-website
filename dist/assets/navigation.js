@@ -4,12 +4,15 @@
 
   const toggle = document.querySelector(".menu-toggle");
   const navigation = document.getElementById("primary-navigation");
+  const labels = root.lang === "it"
+    ? { open: "Apri il menu di navigazione", close: "Chiudi il menu di navigazione" }
+    : { open: "Open navigation menu", close: "Close navigation menu" };
   if (!toggle || !navigation) return;
 
   const isOpen = () => toggle.getAttribute("aria-expanded") === "true";
   const setOpen = (open, restoreFocus = false) => {
     toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
+    toggle.setAttribute("aria-label", open ? labels.close : labels.open);
     navigation.classList.toggle("is-open", open);
     if (restoreFocus) toggle.focus();
   };

@@ -1,0 +1,41 @@
+const translations = {
+  en: {
+    turnstileLanguage: "en",
+    formatStatus: (current, total) => `Format ${current} of ${total}`,
+    turnstileLoadError: "Spam protection could not load.",
+    serviceUnavailable: "Service unavailable",
+    turnstileCheck: "Complete the spam-protection check to send your enquiry.",
+    turnstileReady: "Spam protection is ready. You can send your enquiry.",
+    turnstileExpired: "Verification expired. Please complete the check again.",
+    turnstileError: "Spam protection could not verify this request. Please use the direct email link.",
+    formUnavailable: "Online enquiries are temporarily unavailable. Please email us directly using the address shown here.",
+    turnstileRequired: "Please complete the spam-protection check before sending.",
+    sending: "Sending your enquiry…",
+    accepted: "Your enquiry has been accepted for processing. We’ll follow up at the email address you provided.",
+    failed: "We couldn’t send your enquiry. Please try again or email us directly.",
+    submit: "Send my inquiry email",
+    spamRequired: "Spam protection is required.",
+    requestRejected: "The enquiry service did not accept this request.",
+  },
+  it: {
+    turnstileLanguage: "it",
+    formatStatus: (current, total) => `Format ${current} di ${total}`,
+    turnstileLoadError: "Non è stato possibile caricare la protezione antispam.",
+    serviceUnavailable: "Servizio momentaneamente non disponibile.",
+    turnstileCheck: "Completa la verifica antispam per inviare la richiesta.",
+    turnstileReady: "Verifica antispam completata. Puoi inviare la richiesta.",
+    turnstileExpired: "La verifica è scaduta. Completa nuovamente il controllo.",
+    turnstileError: "La verifica antispam non è riuscita. Riprova oppure scrivici direttamente via email.",
+    formUnavailable: "L’invio online non è momentaneamente disponibile. Puoi scriverci direttamente all’indirizzo email indicato.",
+    turnstileRequired: "Completa la verifica antispam prima di inviare la richiesta.",
+    sending: "Invio della richiesta in corso…",
+    accepted: "La richiesta è stata accettata per l’elaborazione. Ti ricontatteremo all’indirizzo email che hai indicato.",
+    failed: "Non è stato possibile inviare la richiesta. Riprova oppure scrivici direttamente via email.",
+    submit: "Invia la richiesta",
+    spamRequired: "È necessaria la verifica antispam.",
+    requestRejected: "Il servizio non ha accettato la richiesta.",
+  },
+};
+
+const language = typeof document !== "undefined" && document.documentElement.lang === "it" ? "it" : "en";
+export const messages = translations[language];

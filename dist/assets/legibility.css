@@ -65,3 +65,9 @@ footer .textlink { padding-block: 10px; }
 @media (max-width: 480px) {
   .header-actions .header-cta { font-size: 12px; }
 }
+
+nav .language-switch { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; letter-spacing: 1px; border-left: 1px solid var(--line); padding-left: 14px; }
+@media (min-width: 851px) and (max-width: 1100px) {
+  .primary-nav { gap: 14px; font-size: 12px; }
+  .primary-nav .language-switch { min-width: 38px; padding-left: 8px; }
+}

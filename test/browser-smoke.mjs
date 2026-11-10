@@ -23,7 +23,7 @@ const mimeTypes = {
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
-    const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
+    const relativePath = pathname.endsWith("/") ? `${pathname.slice(1)}index.html` : pathname.slice(1);
     const filePath = resolve(siteRoot, relativePath);
     if (filePath !== siteRoot && !filePath.startsWith(`${siteRoot}${sep}`)) {
       response.writeHead(404).end("Not found");
@@ -312,6 +312,58 @@ try {
   await contactInvitation.scrollIntoViewIfNeeded();
   await contactInvitation.click();
   assert.equal(new URL(mobile.url()).hash, "#enquire", "the contact invitation navigates to the enquiry form");
+  await menu.click();
+  const englishLanguageSwitch = mobile.getByRole("link", { name: "Read this site in Italian" });
+  assert.ok(await englishLanguageSwitch.isVisible(), "the Italian language switch is available in the mobile navigation");
+  await englishLanguageSwitch.click();
+  assert.equal(new URL(mobile.url()).pathname, "/it/", "the mobile language switch opens the Italian home page");
+  assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
+  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "L’eleganza ha unlato notturno.");
+  await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
+  assert.equal(await mobile.locator(".menu-toggle").getAttribute("aria-label"), "Apri il menu di navigazione");
+  const ItalianRooftopButton = mobile.getByRole("button", { name: "Esplora una serata in terrazza" });
+  await ItalianRooftopButton.scrollIntoViewIfNeeded();
+  await ItalianRooftopButton.click();
+  assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
+  const ItalianMobileMetrics = await mobile.evaluate(() => ({
+    width: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+  }));
+  assert.ok(ItalianMobileMetrics.documentWidth <= ItalianMobileMetrics.width, `390px Italian page has no horizontal overflow: ${JSON.stringify(ItalianMobileMetrics)}`);
+  await mobile.screenshot({ path: resolve(screenshotRoot, "italian-390px.png"), fullPage: true });
+  await mobile.setViewportSize({ width: 851, height: 900 });
+  const ItalianTabletDesktopMetrics = await mobile.evaluate(() => ({
+    width: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    logoRight: document.querySelector(".logo").getBoundingClientRect().right,
+    navLeft: document.querySelector(".primary-nav").getBoundingClientRect().left,
+    navRight: document.querySelector(".primary-nav").getBoundingClientRect().right,
+    actionsLeft: document.querySelector(".header-actions").getBoundingClientRect().left,
+  }));
+  assert.ok(ItalianTabletDesktopMetrics.documentWidth <= 851, `851px Italian page has no horizontal overflow: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
+  assert.ok(ItalianTabletDesktopMetrics.logoRight <= ItalianTabletDesktopMetrics.navLeft + 0.5, `851px Italian wordmark and navigation do not collide: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
+  assert.ok(ItalianTabletDesktopMetrics.navRight <= ItalianTabletDesktopMetrics.actionsLeft + 0.5, `851px Italian navigation and enquiry controls do not collide: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
+  assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible at the desktop breakpoint");
+  await mobile.screenshot({ path: resolve(screenshotRoot, "italian-851px.png"), fullPage: true });
+  await mobile.setViewportSize({ width: 1440, height: 900 });
+  const ItalianDesktopMetrics = await mobile.evaluate(() => ({
+    width: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+  }));
+  assert.ok(ItalianDesktopMetrics.documentWidth <= ItalianDesktopMetrics.width, `1440px Italian page has no horizontal overflow: ${JSON.stringify(ItalianDesktopMetrics)}`);
+  assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible on desktop");
+  await mobile.screenshot({ path: resolve(screenshotRoot, "italian-1440px.png"), fullPage: true });
+  await mobile.setViewportSize({ width: 390, height: 844 });
+  const ItalianPrivacyLink = mobile.getByRole("link", { name: "Informativa privacy" });
+  await ItalianPrivacyLink.scrollIntoViewIfNeeded();
+  await ItalianPrivacyLink.click();
+  assert.equal(new URL(mobile.url()).pathname, "/it/privacy.html", "Italian privacy link preserves the selected language");
+  assert.equal(await mobile.locator("html").getAttribute("lang"), "it");
+  await mobile.locator("#privacy-language-switch").click();
+  assert.equal(new URL(mobile.url()).pathname, "/privacy.html", "privacy language switch opens the English counterpart");
+  assert.equal(await mobile.locator("html").getAttribute("lang"), "en");
+  await mobile.locator("#privacy-language-switch").click();
+  assert.equal(new URL(mobile.url()).pathname, "/it/privacy.html", "privacy language switch returns to its Italian counterpart");
   await mobile.close();
 
   const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

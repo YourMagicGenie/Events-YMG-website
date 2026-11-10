@@ -1,4 +1,5 @@
 import { sendEventsEnquiry } from "./enquiry-client.js";
+import { messages } from "./i18n.js";
 
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -17,7 +18,7 @@ if (deck) {
     next.setAttribute("aria-disabled", String(atEnd));
     const deckLeft = deck.getBoundingClientRect().left;
     const firstVisible = cards.findIndex(card => card.getBoundingClientRect().right > deckLeft + 2);
-    status.textContent = `Format ${Math.max(firstVisible, 0) + 1} of ${cards.length}`;
+    status.textContent = messages.formatStatus(Math.max(firstVisible, 0) + 1, cards.length);
   };
 
   const moveDeck = direction => {
@@ -91,7 +92,7 @@ if (form) {
     script.defer = true;
     script.onerror = () => {
       delete window[callbackName];
-      reject(new Error("Spam protection could not load."));
+      reject(new Error(messages.turnstileLoadError));
     };
     document.head.appendChild(script);
   });
@@ -103,35 +104,36 @@ if (form) {
         headers: { Accept: "application/json" },
       });
       const config = await response.json();
-      if (!response.ok || config.ready !== true || !config.siteKey) throw new Error("Service unavailable");
+      if (!response.ok || config.ready !== true || !config.siteKey) throw new Error(messages.serviceUnavailable);
       const turnstile = await loadTurnstile();
-      setFeedback("Complete the spam-protection check to send your enquiry.");
+      setFeedback(messages.turnstileCheck);
       widgetId = turnstile.render("#turnstile-widget", {
         sitekey: config.siteKey,
         action: "events_enquiry",
+        language: messages.turnstileLanguage,
         callback: token => {
           turnstileToken = token;
           challengeReady = true;
           submit.disabled = false;
-          if (feedback.dataset.state !== "success") setFeedback("Spam protection is ready. You can send your enquiry.");
+          if (feedback.dataset.state !== "success") setFeedback(messages.turnstileReady);
         },
         "expired-callback": () => {
           turnstileToken = "";
           challengeReady = false;
           submit.disabled = true;
-          setFeedback("Verification expired. Please complete the check again.", "error");
+          setFeedback(messages.turnstileExpired, "error");
         },
         "error-callback": () => {
           turnstileToken = "";
           challengeReady = false;
           submit.disabled = true;
-          setFeedback("Spam protection could not verify this request. Please use the direct email link.", "error");
+          setFeedback(messages.turnstileError, "error");
         },
       });
     } catch {
       challengeReady = false;
       submit.disabled = true;
-      setFeedback("Online enquiries are temporarily unavailable. Please email us directly using the address shown here.", "error");
+      setFeedback(messages.formUnavailable, "error");
     }
   };
 
@@ -139,24 +141,24 @@ if (form) {
     event.preventDefault();
     if (submitting) return;
     if (!turnstileToken) {
-      setFeedback("Please complete the spam-protection check before sending.", "error");
+      setFeedback(messages.turnstileRequired, "error");
       return;
     }
 
     submitting = true;
     submit.disabled = true;
     form.setAttribute("aria-busy", "true");
-    submitLabel.textContent = "Sending your enquiry…";
-    setFeedback("Sending your enquiry…");
+    submitLabel.textContent = messages.sending;
+    setFeedback(messages.sending);
     try {
       await sendEventsEnquiry(new FormData(form), turnstileToken);
-      setFeedback("Your enquiry has been accepted for processing. We’ll follow up at the email address you provided.", "success");
+      setFeedback(messages.accepted, "success");
     } catch {
-      setFeedback("We couldn’t send your enquiry. Please try again or email us directly.", "error");
+      setFeedback(messages.failed, "error");
     } finally {
       submitting = false;
       form.removeAttribute("aria-busy");
-      submitLabel.textContent = "Send my inquiry email";
+      submitLabel.textContent = messages.submit;
       turnstileToken = "";
       challengeReady = false;
       submit.disabled = true;
