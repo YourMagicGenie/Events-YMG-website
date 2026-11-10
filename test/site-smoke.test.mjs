@@ -44,6 +44,32 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /served from Unsplash’s image CDN/);
 });
 
+test("English and Italian branded recovery pages are accessible and excluded from indexing", () => {
+  const variants = [
+    {
+      path: "404.html", page: readFileSync(new URL("../dist/404.html", import.meta.url), "utf8"),
+      lang: "en", heading: "We couldn’t find that page.", home: 'href="/"', concepts: 'href="/#concepts"', enquire: 'href="/#enquire"', privacy: 'href="/privacy.html"', otherLanguage: 'href="/it/"',
+    },
+    {
+      path: "it/404.html", page: readFileSync(new URL("../dist/it/404.html", import.meta.url), "utf8"),
+      lang: "it", heading: "Non troviamo questa pagina.", home: 'href="/it/"', concepts: 'href="/it/#concepts"', enquire: 'href="/it/#enquire"', privacy: 'href="/it/privacy.html"', otherLanguage: 'href="/"',
+    },
+  ];
+  const sitemap = readFileSync(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
+  for (const { path, page, lang, heading, home, concepts, enquire, privacy, otherLanguage } of variants) {
+    assert.ok(existsSync(new URL(`../dist/${path}`, import.meta.url)), `${path} exists`);
+    assert.match(page, new RegExp(`<html lang="${lang}">`));
+    assert.match(page, /<meta name="robots" content="noindex,follow">/);
+    assert.match(page, /<main id="main-content" tabindex="-1">/);
+    assert.ok(page.includes(`<h1>${heading}</h1>`), `${path} gives a clear not-found message`);
+    for (const href of [home, concepts, enquire, privacy, otherLanguage]) assert.ok(page.includes(href), `${path} provides ${href}`);
+    assert.match(page, /class="skip-link" href="#main-content"/);
+    assert.match(page, /min-height:48px/);
+    assert.doesNotMatch(page, /https?:\/\//, `${path} has no remote assets or external dependency`);
+    assert.ok(!sitemap.includes(`/${path}`), `${path} is not listed as a valid destination`);
+  }
+});
+
 test("brand icons and bilingual social previews use documented local assets", () => {
   const variants = [
     {
@@ -118,6 +144,7 @@ test("Worker config serves this repo's assets from a separate preview worker", (
     directory: "./dist",
     binding: "ASSETS",
     run_worker_first: true,
+    not_found_handling: "404-page",
   });
   assert.equal("routes" in config, false, "preview config must not attach a route");
   assert.equal("custom_domains" in config, false, "preview config must not attach a custom domain");
