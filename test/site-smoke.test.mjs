@@ -96,11 +96,19 @@ test("event formats form a six-card carousel without filters or mockup disclaime
   assert.match(interactions, /scrollIntoView\(\{ behavior: reduceMotion\(\) \? "auto" : "smooth"/);
 });
 
-test("hero copy is venue-facing and contains no artificial hero photo", () => {
-  assert.match(html, /class="hero-atmosphere"/);
-  assert.doesNotMatch(html, /<img[^>]+rooftop-night\.jpg|Discover the atmosphere|We’re developing/);
-  assert.match(html, /talk about an event/i);
+test("hero uses licensed coastal photography without implying a YMG event", () => {
+  assert.match(html, /<div class="hero-atmosphere"><picture>/);
+  assert.match(html, /images\.unsplash\.com\/photo-1789931123652-6d22f2ef7cc7/);
+  assert.match(html, /alt="Boats moored beside waterfront restaurants at dusk\."/);
+  assert.match(html, /media="\(max-width: 540px\)"[^>]+480w/);
+  assert.match(html, /fetchpriority="high"[^>]+referrerpolicy="no-referrer"/);
+  assert.doesNotMatch(html, /Discover the atmosphere|We’re developing/);
+  assert.match(html, /<a class="btn primary" href="#enquire">Talk about an event/);
   assert.match(html, /assets\/social-card\.png/);
+  const provenance = readFileSync(new URL("../docs/ASSET-PROVENANCE.md", import.meta.url), "utf8");
+  assert.match(provenance, /Arlind Photography/);
+  assert.match(provenance, /Unsplash License/);
+  assert.match(privacy, /served from Unsplash’s image CDN/);
 });
 
 test("enquiry form collects reply email and submits inline through the Worker", () => {
