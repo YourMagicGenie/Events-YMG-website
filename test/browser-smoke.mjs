@@ -24,14 +24,24 @@ const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
     const relativePath = pathname.endsWith("/") ? `${pathname.slice(1)}index.html` : pathname.slice(1);
-    const filePath = resolve(siteRoot, relativePath);
+    let filePath = resolve(siteRoot, relativePath);
     if (filePath !== siteRoot && !filePath.startsWith(`${siteRoot}${sep}`)) {
       response.writeHead(404).end("Not found");
       return;
     }
-    const fileStat = await stat(filePath);
+    let status = 200;
+    let fileStat;
+    try {
+      fileStat = await stat(filePath);
+      if (!fileStat.isFile()) throw new Error("Not a file");
+    } catch {
+      const notFoundPage = pathname === "/it" || pathname.startsWith("/it/") ? "it/404.html" : "404.html";
+      filePath = resolve(siteRoot, notFoundPage);
+      fileStat = await stat(filePath);
+      status = 404;
+    }
     if (!fileStat.isFile()) throw new Error("Not a file");
-    response.writeHead(200, {
+    response.writeHead(status, {
       "content-type": mimeTypes[extname(filePath).toLowerCase()] ?? "application/octet-stream",
       "cache-control": "no-store",
       "x-content-type-options": "nosniff",
@@ -667,6 +677,10 @@ try {
   const privacy = await browser.newPage();
   await privacy.route("https://fonts.googleapis.com/**", route => route.abort());
   await privacy.route("https://fonts.gstatic.com/**", route => route.abort());
+  for (const path of ["/", "/privacy.html", "/robots.txt", "/sitemap.xml", "/assets/favicon.svg", "/it/", "/it/privacy.html"]) {
+    const response = await fetch(`${baseUrl}${path}`);
+    assert.equal(response.status, 200, `${path} continues to resolve after adding the custom not-found route`);
+  }
   const privacyResponse = await privacy.goto(`${baseUrl}/privacy.html`, { waitUntil: "load" });
   assert.equal(privacyResponse.status(), 200, "privacy page is available");
   const privacyReadability = await privacy.evaluate(() => {
@@ -700,6 +714,34 @@ try {
   }
   const missingResponse = await privacy.goto(`${baseUrl}/does-not-exist`, { waitUntil: "load" });
   assert.equal(missingResponse.status(), 404, "unknown static paths keep a real 404 status");
+  assert.equal(await privacy.locator("html").getAttribute("lang"), "en", "an unknown English path receives the English recovery page");
+  assert.equal(await privacy.getByRole("heading", { level: 1 }).textContent(), "We couldn’t find that page.");
+  assert.equal(await privacy.getByRole("link", { name: "Back to YMG Events home" }).getAttribute("href"), "/");
+  assert.equal(await privacy.getByRole("link", { name: "Explore event formats" }).getAttribute("href"), "/#concepts");
+  assert.equal(await privacy.getByRole("link", { name: "Contact YMG Events" }).getAttribute("href"), "/#enquire");
+  await privacy.setViewportSize({ width: 390, height: 844 });
+  const english404Layout = await privacy.evaluate(() => ({
+    viewportWidth: window.innerWidth,
+    documentWidth: document.documentElement.scrollWidth,
+    targets: [...document.querySelectorAll(".button, .secondary-links a")].map(link => link.getBoundingClientRect().height),
+  }));
+  assert.ok(english404Layout.documentWidth <= english404Layout.viewportWidth, `English 390px 404 has no horizontal overflow: ${JSON.stringify(english404Layout)}`);
+  assert.ok(english404Layout.targets.every(height => height >= 44), `404 recovery links have comfortable targets: ${JSON.stringify(english404Layout.targets)}`);
+  await privacy.screenshot({ path: resolve(screenshotRoot, "404-390px.png"), fullPage: true });
+
+  for (const path of ["/missing-page/", "/a/deep/missing-page", "/it/missing-page", "/it/a/deep/missing-page/"]) {
+    const response = await privacy.goto(`${baseUrl}${path}`, { waitUntil: "load" });
+    assert.equal(response.status(), 404, `${path} remains a genuine 404, including slash variants`);
+    const isItalian = path.startsWith("/it/");
+    assert.equal(await privacy.locator("html").getAttribute("lang"), isItalian ? "it" : "en", `${path} receives the nearest language-specific recovery page`);
+    assert.equal(await privacy.getByRole("heading", { level: 1 }).textContent(), isItalian ? "Non troviamo questa pagina." : "We couldn’t find that page.");
+  }
+  await privacy.screenshot({ path: resolve(screenshotRoot, "italian-404-390px.png"), fullPage: true });
+  await privacy.goto(`${baseUrl}/another-missing-page`, { waitUntil: "load" });
+  await privacy.keyboard.press("Tab");
+  assert.equal(await privacy.evaluate(() => document.activeElement.classList.contains("skip-link")), true, "the 404 page has a visible keyboard skip link");
+  await privacy.keyboard.press("Enter");
+  assert.equal(await privacy.evaluate(() => document.activeElement.id), "main-content", "the skip link moves keyboard focus to the recovery message");
   await privacy.close();
 
   console.log(`Responsive browser matrix passed at ${widths.join(", ")} CSS-pixel widths; screenshots saved to ${screenshotRoot}`);

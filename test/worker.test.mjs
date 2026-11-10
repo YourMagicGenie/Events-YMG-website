@@ -61,14 +61,20 @@ test("Worker sends non-API requests to static assets and keeps unknown API paths
   const worker = createEventsWorker();
   const assets = { fetch: async request => {
     requests.push(request.url);
-    return new Response("static page", { status: 200 });
+    if (new URL(request.url).pathname === "/privacy.html") return new Response("privacy page", { status: 200 });
+    return new Response("<h1>We couldn’t find that page.</h1>", { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
   } };
 
   const page = await worker.fetch(new Request(origin + "/privacy.html"), { ASSETS: assets });
-  assert.equal(await page.text(), "static page");
+  assert.equal(await page.text(), "privacy page");
   assert.deepEqual(requests, [origin + "/privacy.html"]);
+
+  const missing = await worker.fetch(new Request(origin + "/an-unknown-route/"), { ASSETS: assets });
+  assert.equal(missing.status, 404, "the Worker preserves the static asset binding's real 404 status");
+  assert.match(await missing.text(), /We couldn’t find that page/, "the branded recovery body passes through the asset binding");
+  assert.deepEqual(requests, [origin + "/privacy.html", origin + "/an-unknown-route/"]);
 
   const unknown = await worker.fetch(new Request(origin + "/api/other"), { ASSETS: assets });
   assert.equal(unknown.status, 404);
-  assert.equal(requests.length, 1);
+  assert.equal(requests.length, 2, "unknown API routes do not fall through to public HTML assets");
 });
