@@ -111,6 +111,27 @@ test("hero uses licensed coastal photography without implying a YMG event", () =
   assert.match(provenance, /Unsplash License/);
 });
 
+test("public positioning is venue-facing, factual, and consistent with metadata", () => {
+  assert.match(html, /name="description" content="YMG Events plans distinctive evenings with Genova venues and hosts, bringing together music, hospitality and a memorable guest experience\."/);
+  assert.match(html, /property="og:description" content="YMG Events works with Genova venues and hosts to shape distinctive evenings with music, hospitality and a memorable guest experience\."/);
+  for (const detail of [
+    "We work with Genova venues and hosts to shape evenings with character",
+    "thoughtful hospitality, distinctive music",
+    "coordinate entertainment",
+    "practical delivery and commercial terms together",
+    "a clear reason to choose your venue",
+    "Discuss ticketing, hospitality costs, entertainment, promotion",
+    "Dante David, based in Genova",
+    "venue partnerships and private occasions",
+  ]) {
+    assert.ok(html.includes(detail), `public copy retains the owner-directed offer: ${detail}`);
+  }
+  assert.doesNotMatch(html, /we(?:['’]re| are) developing|exploring higher-end evenings|more mature (?:audience|crowd)|prototype|mockup|demo site/i);
+  assert.doesNotMatch(html, /sold out|award[- ]winning|trusted by|our clients include|booked venues/i);
+  assert.equal([...html.matchAll(/<h1\b/g)].length, 1, "the landing page keeps one clear primary heading");
+  assert.ok([...html.matchAll(/<h2\b/g)].length >= 4, "the page keeps a structured section heading hierarchy");
+});
+
 test("enquiry form collects reply email and submits inline through the Worker", () => {
   assert.match(html, /<input required id="email" name="email" type="email" autocomplete="email"/);
   assert.match(html, /id="submit-enquiry" type="submit" disabled><span class="submit-label">Send my inquiry email/);
