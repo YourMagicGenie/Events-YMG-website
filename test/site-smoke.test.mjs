@@ -63,18 +63,37 @@ test("Worker config serves this repo's assets from a separate preview worker", (
 });
 
 test("event formats form a six-card carousel without filters or mockup disclaimers", () => {
-  assert.match(html, /SEVERAL WAYS THE NIGHT COULD UNFOLD/);
-  assert.equal([...html.matchAll(/class="concept" role="group"/g)].length, 6);
+  assert.match(html, /<div class="eyebrow">SEVERAL WAYS THE NIGHT COULD UNFOLD<\/div>/);
+  assert.doesNotMatch(html, /THREE WAYS THE NIGHT COULD UNFOLD/);
+  const expected = [
+    "The Rooftop Social",
+    "Strings After Dark",
+    "The Private Occasion",
+    "The Supper Club",
+    "Jazz &amp; Cocktails",
+    "The Corporate Social",
+  ];
+  const cards = [...html.matchAll(/<article class="concept" role="group" aria-roledescription="slide" aria-label="([^"]+)">([\s\S]*?)<\/article>/g)];
+  assert.equal(cards.length, expected.length);
+  for (const [index, [, accessibleLabel, markup]] of cards.entries()) {
+    const number = String(index + 1).padStart(2, "0");
+    assert.equal(accessibleLabel, `${index + 1} of 6: ${expected[index]}`, `slide ${number} has its matching semantic label`);
+    assert.match(markup, new RegExp(`<small>${number} \/`), `slide ${number} keeps its number with the card`);
+    assert.ok(markup.includes(`<h3>${expected[index]}</h3>`), `slide ${number} has the expected title`);
+  }
   assert.match(html, /id="concept-deck"[^>]*aria-roledescription="carousel"/);
   assert.match(html, /id="deck-previous"/);
   assert.match(html, /id="deck-next"/);
   assert.doesNotMatch(html, /data-filter|All concepts|Concept imagery|Proposed event formats|A YMG Event Concept/i);
-  for (const format of ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Jazz &amp; Cocktails", "Corporate Social"]) {
+  const formats = ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Jazz &amp; Cocktails", "Corporate Social"];
+  for (const format of formats) {
     assert.ok(html.includes(`data-concept="${format}"`), `${format} has a form preselection`);
     assert.ok(html.includes(`<option>${format}</option>`), `${format} is available in the form`);
   }
-  assert.match(html, /overflow-x:auto/);
-  assert.match(readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8"), /ArrowRight/);
+  assert.match(html, /\.concept-grid\{display:flex;gap:[^}]*overflow-x:auto/);
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+  assert.match(interactions, /ArrowRight/);
+  assert.match(interactions, /scrollIntoView\(\{ behavior: reduceMotion\(\) \? "auto" : "smooth"/);
 });
 
 test("hero copy is venue-facing and contains no artificial hero photo", () => {
