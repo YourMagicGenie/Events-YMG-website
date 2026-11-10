@@ -108,7 +108,7 @@ try {
   await mobile.route("https://fonts.googleapis.com/**", route => route.abort());
   await mobile.route("https://fonts.gstatic.com/**", route => route.abort());
   await mobile.goto(baseUrl, { waitUntil: "load" });
-  const menu = mobile.getByRole("button", { name: "Open navigation menu" });
+  const menu = mobile.locator(".menu-toggle");
   await menu.focus();
   await mobile.keyboard.press("Enter");
   assert.equal(await menu.getAttribute("aria-expanded"), "true", "keyboard opens the mobile navigation");
