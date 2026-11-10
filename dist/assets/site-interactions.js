@@ -63,6 +63,9 @@ const businessHelp = document.getElementById("business-help");
 const ideaLabel = document.getElementById("idea-label");
 const idea = document.getElementById("idea");
 const format = document.getElementById("format");
+const formatContext = document.getElementById("format-context");
+const formatContextStatus = document.getElementById("format-context-status");
+const clearFormat = document.getElementById("clear-format");
 const pathCopy = messages.turnstileLanguage === "it" ? {
   businessInitial: "Seleziona prima il tipo di richiesta",
   businessPlaceholder: "Scegli il tipo di richiesta per adattare questo campo",
@@ -118,6 +121,7 @@ const pathCopy = messages.turnstileLanguage === "it" ? {
 };
 
 let previousIntent = "";
+let selectedFromConcept = false;
 const updateEnquiryPath = () => {
   const selected = intent?.value || "";
   if (previousIntent && previousIntent !== selected) business.value = "";
@@ -154,8 +158,37 @@ const updateEnquiryPath = () => {
   previousIntent = selected;
 };
 
-intent?.addEventListener("change", updateEnquiryPath);
+const renderFormatContext = () => {
+  const selectedFormat = format?.value || "";
+  const defaultFormat = pathCopy.defaults[intent?.value] || pathCopy.defaults.venue_partnership;
+  const isSpecificChoice = selectedFormat && selectedFormat !== defaultFormat;
+  const showContext = Boolean(selectedFormat) && (selectedFromConcept || isSpecificChoice);
+  formatContext.hidden = !showContext;
+  if (showContext) {
+    const optionLabel = format.selectedOptions[0]?.textContent.trim() || selectedFormat;
+    formatContextStatus.textContent = `${messages.selectedFormatPrefix} ${optionLabel}`;
+  }
+};
+
+intent?.addEventListener("change", () => {
+  updateEnquiryPath();
+  selectedFromConcept = false;
+  renderFormatContext();
+});
 updateEnquiryPath();
+renderFormatContext();
+if (clearFormat) clearFormat.textContent = messages.clearFormat;
+
+format?.addEventListener("change", () => {
+  selectedFromConcept = false;
+  renderFormatContext();
+});
+clearFormat?.addEventListener("click", () => {
+  selectedFromConcept = false;
+  format.value = "";
+  format.dispatchEvent(new Event("change", { bubbles: true }));
+  format.focus({ preventScroll: true });
+});
 
 document.querySelectorAll("[data-concept]").forEach(button => {
   button.addEventListener("click", () => {
@@ -164,6 +197,8 @@ document.querySelectorAll("[data-concept]").forEach(button => {
       intent.dispatchEvent(new Event("change", { bubbles: true }));
     }
     format.value = button.dataset.concept;
+    selectedFromConcept = true;
+    renderFormatContext();
     document.getElementById("enquire").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
     format.focus({ preventScroll: true });
   });

@@ -19,6 +19,11 @@ const ENQUIRY_TYPES = new Map([
   ["private_celebration", "Private celebration"],
 ]);
 const ENQUIRY_SOURCES = new Map([["events_website_form", "Events website"]]);
+const DEFAULT_FORMATS = new Map([
+  ["venue_partnership", "Let’s explore a partnership"],
+  ["corporate_event", "Corporate Social"],
+  ["private_celebration", "Private celebrations"],
+]);
 
 function json(status, body, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
@@ -72,9 +77,9 @@ function subjectName(value) {
   return Array.from(cleaned).slice(0, 60).join("") || "Unnamed sender";
 }
 
-export function eventsNotificationSubject(name, intent = "venue_partnership") {
+export function eventsNotificationSubject(name, intent = "venue_partnership", format = "Let’s explore a partnership") {
   const type = ENQUIRY_TYPES.get(intent) || "Events enquiry";
-  return `New YMG Events enquiry — ${type} — ${subjectName(name)}`;
+  return `New YMG Events enquiry — ${type} — ${subjectName(format)} — ${subjectName(name)}`;
 }
 
 function relayReady(env) {
@@ -129,7 +134,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   const business = field(params, "business", 160);
   const rawFormat = field(params, "format", 100);
   const rawGuests = field(params, "guests", 40);
-  const format = rawFormat === "" ? "Let’s explore a partnership" : rawFormat;
+  const format = rawFormat === "" ? (DEFAULT_FORMATS.get(intent) || "Let’s explore a partnership") : rawFormat;
   const guests = rawGuests === "" ? "Still exploring" : rawGuests;
   const timing = field(params, "timing", 300);
   const budget = field(params, "budget", 120);
@@ -195,7 +200,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
       body: JSON.stringify({
         secret: env.GOOGLE_RELAY_SECRET,
         replyTo: email,
-        subject: eventsNotificationSubject(name, intent),
+        subject: eventsNotificationSubject(name, intent, format),
         text,
       }),
       redirect: "follow",

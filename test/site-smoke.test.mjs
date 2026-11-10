@@ -345,9 +345,31 @@ test("venue, corporate and private enquiries have explicit localized routes and 
   assert.match(interactions, /Non serve avere già scelto una location per inviare la richiesta/);
   assert.match(handler, /Enquiry type: \$\{ENQUIRY_TYPES\.get\(intent\)\}/);
   assert.match(handler, /Enquiry source: \$\{ENQUIRY_SOURCES\.get\(source\)\}/);
-  assert.match(handler, /eventsNotificationSubject\(name, intent\)/);
+  assert.match(handler, /eventsNotificationSubject\(name, intent, format\)/);
   assert.match(englishPrivacy, /enquiry type \(venue partnership, corporate event or private celebration\)/);
   assert.match(italianPrivacy, /tipo di richiesta \(collaborazione con una location, evento aziendale o occasione privata\)/);
+});
+
+test("event format context is bilingual, explicit, clearable and sent through the existing form field", () => {
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+  const messages = readFileSync(new URL("../dist/assets/i18n.js", import.meta.url), "utf8");
+  const handler = readFileSync(new URL("../src/form-handler.js", import.meta.url), "utf8");
+
+  for (const page of [html, italianHtml]) {
+    assert.match(page, /<select id="format" name="format">/);
+    assert.match(page, /<div class="format-context" id="format-context" hidden>/);
+    assert.match(page, /id="format-context-status" role="status" aria-live="polite" aria-atomic="true"/);
+    assert.match(page, /<button type="button" id="clear-format">/);
+    assert.match(page, /option value="">/);
+    assert.match(page, /\.format-context button\{min-height:44px/);
+  }
+  assert.match(messages, /selectedFormatPrefix: "Selected event format:"/);
+  assert.match(messages, /selectedFormatPrefix: "Formato selezionato:"/);
+  assert.match(interactions, /selectedFromConcept = true/);
+  assert.match(interactions, /format\.value = ""/);
+  assert.match(interactions, /new FormData\(form\)/);
+  assert.match(handler, /eventsNotificationSubject\(name, intent, format\)/);
+  assert.match(handler, /subjectName\(format\)/);
 });
 
 test("venue offer and commercial FAQ are clear, localized and carefully qualified", () => {

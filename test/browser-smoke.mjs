@@ -346,6 +346,11 @@ try {
     await action.click();
     assert.equal(await mobile.locator("#format").inputValue(), route.format, `slide ${index + 1} preselects ${route.format}`);
     assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `slide ${index + 1} chooses the matching enquiry path`);
+    assert.equal(await mobile.locator("#format-context").isVisible(), true, `slide ${index + 1} shows its selected event format beside the form`);
+    assert.equal(await mobile.locator("#format-context-status").textContent(), `Selected event format: ${route.format}`, `slide ${index + 1} names the chosen format for assistive technology`);
+    assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), route.format, `slide ${index + 1} puts its selected format in the direct-send form payload`);
+    assert.ok((await mobile.locator("#clear-format").boundingBox()).height >= 44, "the clear-format action has a comfortable touch target");
+    assert.equal(await mobile.locator("#clear-format").textContent(), "Clear format selection", "the clear action has a clear English label");
     assert.equal(await mobile.locator("#business").evaluate(input => input.required), route.required, `${route.intent} asks for an organization name only when required`);
     if (route.intent === "private_celebration") {
       assert.match(await mobile.locator("#business-label").textContent(), /Preferred venue or location \(optional\)/, "private hosts see an optional location field, not an ownership claim");
@@ -356,7 +361,24 @@ try {
       assert.equal(await mobile.locator("#business-label").textContent(), "Company or team *", "corporate hosts see a company/team field");
       await mobile.screenshot({ path: resolve(screenshotRoot, "corporate-enquiry-390px.png"), fullPage: true });
     }
+    if (index === 0) {
+      await mobile.keyboard.press("Tab");
+      assert.equal(await mobile.evaluate(() => document.activeElement.id), "clear-format", "keyboard users can reach the selected-format clear action");
+      await mobile.keyboard.press("Enter");
+      assert.equal(await mobile.evaluate(() => document.activeElement.id), "format", "clearing a format returns focus to the editable format control");
+    } else {
+      await mobile.locator("#clear-format").click();
+    }
+    assert.equal(await mobile.locator("#format").inputValue(), "", `slide ${index + 1} can be cleared for a generic enquiry`);
+    assert.equal(await mobile.locator("#format-context").isVisible(), false, `slide ${index + 1} no longer claims a selected concept after clearing`);
+    assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `clearing slide ${index + 1} preserves the enquiry path`);
+    assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), "", `clearing slide ${index + 1} sends an empty format for path-aware generic fallback`);
   }
+  await mobile.locator("#format").selectOption("Jazz & Cocktails");
+  assert.equal(await mobile.locator("#format-context").isVisible(), true, "a manually changed event format remains explicit");
+  assert.match(await mobile.locator("#format-context-status").textContent(), /Jazz & Cocktails/);
+  await mobile.locator("#clear-format").click();
+  assert.equal(await mobile.locator("#format").inputValue(), "", "a manually selected event format can also be cleared");
   await mobile.getByRole("link", { name: "Explore a partnership" }).click();
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the venue partnership CTA preselects the venue pathway");
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue operators are asked for their venue name");
@@ -403,6 +425,12 @@ try {
   await ItalianRooftopButton.click();
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the Italian card chooses the venue partnership pathway");
+  assert.equal(await mobile.locator("#format-context").isVisible(), true, "the Italian route shows its selected event format");
+  assert.equal(await mobile.locator("#format-context-status").textContent(), "Formato selezionato: Serate in terrazza", "the Italian context summary is localized while preserving the canonical backend value");
+  assert.equal(await mobile.locator("#clear-format").textContent(), "Rimuovi il formato selezionato", "the Italian clear action is localized");
+  await mobile.locator("#clear-format").click();
+  assert.equal(await mobile.locator("#format").inputValue(), "", "Italian users can remove a selected format");
+  assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "clearing an Italian format preserves the venue enquiry path");
   assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
   const ItalianPortoApertoReference = mobile.getByRole("link", { name: "Scopri Porto Aperto | Genova su Instagram (si apre in una nuova scheda)" });
   await ItalianPortoApertoReference.scrollIntoViewIfNeeded();

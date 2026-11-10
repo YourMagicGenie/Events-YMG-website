@@ -2,6 +2,8 @@ const translations = {
   en: {
     turnstileLanguage: "en",
     formatStatus: (current, total) => `Format ${current} of ${total}`,
+    selectedFormatPrefix: "Selected event format:",
+    clearFormat: "Clear format selection",
     turnstileLoadError: "Spam protection could not load.",
     serviceUnavailable: "Service unavailable",
     turnstileCheck: "Complete the spam-protection check to send your enquiry.",
@@ -20,6 +22,8 @@ const translations = {
   it: {
     turnstileLanguage: "it",
     formatStatus: (current, total) => `Format ${current} di ${total}`,
+    selectedFormatPrefix: "Formato selezionato:",
+    clearFormat: "Rimuovi il formato selezionato",
     turnstileLoadError: "Non è stato possibile caricare la protezione antispam.",
     serviceUnavailable: "Servizio momentaneamente non disponibile.",
     turnstileCheck: "Completa la verifica antispam per inviare la richiesta.",
