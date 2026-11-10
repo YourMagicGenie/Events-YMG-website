@@ -123,7 +123,7 @@ test("public positioning is venue-facing, factual, and consistent with metadata"
     "practical delivery and commercial terms together",
     "a clear reason to choose your venue",
     "Discuss ticketing, hospitality costs, entertainment, promotion",
-    "Dante David, based in Genova",
+    "Dante David, a Genova-based event organizer",
     "venue partnerships and private occasions",
   ]) {
     assert.ok(html.includes(detail), `public copy retains the owner-directed offer: ${detail}`);
@@ -132,6 +132,24 @@ test("public positioning is venue-facing, factual, and consistent with metadata"
   assert.doesNotMatch(html, /sold out|award[- ]winning|trusted by|our clients include|booked venues/i);
   assert.equal([...html.matchAll(/<h1\b/g)].length, 1, "the landing page keeps one clear primary heading");
   assert.ok([...html.matchAll(/<h2\b/g)].length >= 4, "the page keeps a structured section heading hierarchy");
+});
+
+test("founder credibility uses first-party community experience and keeps the brands distinct", () => {
+  const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+  const sources = readFileSync(new URL("../docs/FOUNDER-CREDIBILITY.md", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../dist/assets/legibility.css", import.meta.url), "utf8");
+  const profile = 'href="https://www.instagram.com/portoaperto_genova/" target="_blank" rel="noopener noreferrer"';
+
+  assert.match(html, /Through Porto Aperto, a separate local community/);
+  assert.match(html, /not a record of previous YMG bookings/);
+  assert.ok(html.includes(profile), "English page links to the owner-controlled community account safely");
+  assert.match(italian, /Con Porto Aperto, una community locale distinta da YMG Events/);
+  assert.match(italian, /non costituiscono un portfolio di eventi già realizzati da YMG/);
+  assert.ok(italian.includes(profile), "Italian page links to the same community account safely");
+  assert.match(sources, /delivered Halloween/);
+  assert.match(sources, /No portrait or event photo was added/);
+  assert.match(sources, /remain in issue #12/);
+  assert.match(styles, /\.about p\.founder-reference a[\s\S]*?min-height: 44px/);
 });
 
 test("enquiry form collects reply email and submits inline through the Worker", () => {

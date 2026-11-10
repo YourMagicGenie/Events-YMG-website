@@ -342,6 +342,11 @@ try {
   await contactInvitation.scrollIntoViewIfNeeded();
   await contactInvitation.click();
   assert.equal(new URL(mobile.url()).hash, "#enquire", "the contact invitation navigates to the enquiry form");
+  const portoApertoReference = mobile.getByRole("link", { name: "See Porto Aperto | Genova on Instagram (opens in a new tab)" });
+  await portoApertoReference.scrollIntoViewIfNeeded();
+  assert.equal(await portoApertoReference.getAttribute("target"), "_blank", "the community reference opens separately from the Events site");
+  assert.equal(await portoApertoReference.getAttribute("rel"), "noopener noreferrer", "the external community link is isolated safely");
+  assert.ok((await portoApertoReference.boundingBox()).height >= 44, "the founder's community reference has a comfortable mobile target");
   await mobile.locator("#venue-offer").scrollIntoViewIfNeeded();
   assert.equal(await mobile.locator(".offer-item").count(), 6, "the venue offer is available on mobile");
   const firstFaq = mobile.locator(".faq-item").first();
@@ -367,6 +372,10 @@ try {
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the Italian card chooses the venue partnership pathway");
   assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
+  const ItalianPortoApertoReference = mobile.getByRole("link", { name: "Scopri Porto Aperto | Genova su Instagram (si apre in una nuova scheda)" });
+  await ItalianPortoApertoReference.scrollIntoViewIfNeeded();
+  assert.equal(await ItalianPortoApertoReference.getAttribute("target"), "_blank", "the Italian community reference opens separately from the Events site");
+  assert.ok((await ItalianPortoApertoReference.boundingBox()).height >= 44, "the Italian external link has a comfortable mobile target");
   assert.equal(await mobile.locator(".offer-item").count(), 6, "the Italian page provides the same six partnership work areas");
   assert.equal(await mobile.locator(".faq-item").count(), 7, "the Italian page answers all seven venue questions");
   const italianFaq = mobile.locator(".faq-item").first();
