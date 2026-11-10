@@ -5,6 +5,13 @@ import test from "node:test";
 const html = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
 const italianHtml = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
 
+test("partnership section uses the tighter desktop gutter in both locales", () => {
+  for (const page of [html, italianHtml]) {
+    assert.match(page, /\.partnerships\{[^}]*grid-template-columns:minmax\(0,\.95fr\) minmax\(0,1\.05fr\);gap:clamp\(32px,5vw,72px\)/);
+    assert.match(page, /\.partnerships p\{color:#ccd3c8;max-width:420px/);
+  }
+});
+
 
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [

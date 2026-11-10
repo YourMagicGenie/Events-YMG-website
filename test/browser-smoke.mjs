@@ -165,6 +165,30 @@ try {
     assert.equal(metrics.faqQuestions, 7, `${width}px shows all venue FAQs`);
     assert.ok(metrics.faqSummaryHeight >= 44, `${width}px FAQ controls remain easy to tap: ${JSON.stringify(metrics)}`);
 
+    if (width === 1280 || width === 1440) {
+      const desktopGutters = await page.evaluate(() => {
+        const columns = selector => {
+          const section = document.querySelector(selector);
+          const [first, second] = [...section.children].slice(0, 2).map(element => element.getBoundingClientRect());
+          return { gap: second.left - first.right, firstWidth: first.width, secondWidth: second.width, topDifference: Math.abs(first.top - second.top) };
+        };
+        return {
+          partnership: columns(".partnerships"),
+          adjacent: [columns(".intro").gap, columns(".about").gap],
+        };
+      });
+      assert.ok(desktopGutters.partnership.gap >= 0 && desktopGutters.partnership.gap <= width * 0.07,
+        `${width}px partnership columns have a compact, positive center gutter: ${JSON.stringify(desktopGutters)}`);
+      assert.ok(desktopGutters.partnership.firstWidth >= width * 0.3,
+        `${width}px partnership copy has enough width: ${JSON.stringify(desktopGutters)}`);
+      assert.ok(desktopGutters.partnership.secondWidth >= width * 0.35,
+        `${width}px partnership details have enough width: ${JSON.stringify(desktopGutters)}`);
+      assert.ok(desktopGutters.partnership.topDifference <= 1,
+        `${width}px partnership columns align at the top: ${JSON.stringify(desktopGutters)}`);
+      assert.ok(desktopGutters.adjacent.every(gap => gap >= 0 && gap <= width * 0.12),
+        `${width}px neighboring sections keep intentional, bounded gutters: ${JSON.stringify(desktopGutters)}`);
+    }
+
     const typeScale = await page.evaluate(() => {
       const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
       return [
