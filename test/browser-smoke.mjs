@@ -212,6 +212,7 @@ try {
         ["muted copy on paper", style(".intro p:not(.lead)").color, body.backgroundColor],
         ["muted copy on warm ivory", style(".about p").color, style(".about").backgroundColor],
         ["muted copy on enquiry surface", style(".enquiry .description").color, enquiry.backgroundColor],
+        ["conditional enquiry guidance", style(".field-help").color, enquiry.backgroundColor],
         ["red section accent", style(".intro h2 em").color, body.backgroundColor],
         ["red section accent on warm ivory", style(".about h2 em").color, style(".about").backgroundColor],
         ["hero supporting copy", style(".hero p").color, hero.backgroundColor],
@@ -298,15 +299,37 @@ try {
     && document.querySelector("#deck-previous").getAttribute("aria-disabled") === "false"
     && document.querySelector("#deck-status").textContent === "Format 2 of 6");
   assert.equal(await mobile.getByRole("button", { name: "Previous event formats" }).getAttribute("aria-disabled"), "false", "carousel state updates after scrolling");
-  const expectedFormats = ["Rooftop evenings", "Live music & DJs", "Private celebrations", "Supper Club", "Jazz & Cocktails", "Corporate Social"];
+  const expectedFormats = [
+    { format: "Rooftop evenings", intent: "venue_partnership", required: true },
+    { format: "Live music & DJs", intent: "venue_partnership", required: true },
+    { format: "Private celebrations", intent: "private_celebration", required: false },
+    { format: "Supper Club", intent: "venue_partnership", required: true },
+    { format: "Jazz & Cocktails", intent: "venue_partnership", required: true },
+    { format: "Corporate Social", intent: "corporate_event", required: true },
+  ];
   const conceptCards = mobile.locator("#concept-deck .concept");
   assert.equal(await conceptCards.count(), expectedFormats.length, "each event format has an individual card");
-  for (const [index, format] of expectedFormats.entries()) {
+  assert.equal(await mobile.locator("#business").isDisabled(), true, "the context field waits until an enquiry path is selected");
+  for (const [index, route] of expectedFormats.entries()) {
     const action = conceptCards.nth(index).locator("button[data-concept]");
     await action.scrollIntoViewIfNeeded();
     await action.click();
-    assert.equal(await mobile.locator("#format").inputValue(), format, `slide ${index + 1} preselects ${format}`);
+    assert.equal(await mobile.locator("#format").inputValue(), route.format, `slide ${index + 1} preselects ${route.format}`);
+    assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `slide ${index + 1} chooses the matching enquiry path`);
+    assert.equal(await mobile.locator("#business").evaluate(input => input.required), route.required, `${route.intent} asks for an organization name only when required`);
+    if (route.intent === "private_celebration") {
+      assert.match(await mobile.locator("#business-label").textContent(), /Preferred venue or location \(optional\)/, "private hosts see an optional location field, not an ownership claim");
+      assert.match(await mobile.locator("#business-help").textContent(), /do not need to have chosen a venue/);
+      await mobile.screenshot({ path: resolve(screenshotRoot, "private-enquiry-390px.png"), fullPage: true });
+    }
+    if (route.intent === "corporate_event") {
+      assert.equal(await mobile.locator("#business-label").textContent(), "Company or team *", "corporate hosts see a company/team field");
+      await mobile.screenshot({ path: resolve(screenshotRoot, "corporate-enquiry-390px.png"), fullPage: true });
+    }
   }
+  await mobile.getByRole("link", { name: "Explore a partnership" }).click();
+  assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the venue partnership CTA preselects the venue pathway");
+  assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue operators are asked for their venue name");
   const contactInvitation = mobile.getByRole("link", { name: "Contact us to discuss availability and a tailored proposal." });
   assert.equal(await contactInvitation.getAttribute("href"), "#enquire", "the concept invitation leads directly to the enquiry form");
   await contactInvitation.scrollIntoViewIfNeeded();
@@ -325,6 +348,8 @@ try {
   await ItalianRooftopButton.scrollIntoViewIfNeeded();
   await ItalianRooftopButton.click();
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
+  assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the Italian card chooses the venue partnership pathway");
+  assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
   const ItalianMobileMetrics = await mobile.evaluate(() => ({
     width: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
@@ -502,6 +527,7 @@ try {
   assert.ok(emailFocus.style !== "none" && emailFocus.width >= 3, `form focus remains visible: ${JSON.stringify(emailFocus)}`);
   assert.ok(await desktopKeyboard.getByLabel("Your name *").count(), "the name field has an accessible label");
   assert.ok(await desktopKeyboard.getByLabel("Email address *").count(), "the email field has an accessible label");
+  assert.ok(await desktopKeyboard.getByLabel("What are you enquiring about? *").count(), "the enquiry type control has an accessible label");
   assert.equal(await desktopKeyboard.locator("#form-feedback").getAttribute("aria-live"), "polite", "form feedback is announced politely");
   await desktopKeyboard.close();
 
