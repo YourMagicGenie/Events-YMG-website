@@ -86,6 +86,8 @@ test("event formats form a six-card carousel without filters or mockup disclaime
   assert.match(html, /id="deck-previous"/);
   assert.match(html, /id="deck-next"/);
   assert.doesNotMatch(html, /data-filter|All concepts|Concept imagery|Proposed event formats|A YMG Event Concept/i);
+  assert.match(html, /<p class="caption"><a class="textlink" href="#enquire">Contact us to discuss availability and a tailored proposal\.<\/a><\/p>/);
+  assert.doesNotMatch(html, /concept imagery|proposed event formats|a ymg event concept|prototype|mockup|demo (?:site|event)|sample concept|preview[- ]only/i);
   const formats = ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Jazz &amp; Cocktails", "Corporate Social"];
   for (const format of formats) {
     assert.ok(html.includes(`data-concept="${format}"`), `${format} has a form preselection`);

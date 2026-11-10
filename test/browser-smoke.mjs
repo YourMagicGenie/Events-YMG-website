@@ -234,7 +234,7 @@ try {
         ".menu-toggle", ".header-cta", "header .logo", ".primary-nav > a:not(.btn)",
         ".deck-arrow", ".concept button", ".partnerships .btn",
         "#brief input:not([type=hidden]):not(#bot-field)", "#brief select", "#brief textarea",
-        "#submit-enquiry", "footer a", ".site-note a", ".enquiry .small a",
+        "#submit-enquiry", ".caption a", "footer a", ".site-note a", ".enquiry .small a",
       ];
       const targets = selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(element => {
         const rect = element.getBoundingClientRect();
@@ -307,6 +307,11 @@ try {
     await action.click();
     assert.equal(await mobile.locator("#format").inputValue(), format, `slide ${index + 1} preselects ${format}`);
   }
+  const contactInvitation = mobile.getByRole("link", { name: "Contact us to discuss availability and a tailored proposal." });
+  assert.equal(await contactInvitation.getAttribute("href"), "#enquire", "the concept invitation leads directly to the enquiry form");
+  await contactInvitation.scrollIntoViewIfNeeded();
+  await contactInvitation.click();
+  assert.equal(new URL(mobile.url()).hash, "#enquire", "the contact invitation navigates to the enquiry form");
   await mobile.close();
 
   const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

@@ -25,6 +25,7 @@ header .logo { display: block; min-height: 44px; padding-block: 4px; }
 .art-kicker,
 .art-foot { font-size: 11px; }
 .caption { font-size: 12px; }
+.caption a { display: inline-flex; align-items: center; min-height: 44px; }
 .partnership > span { font-size: 12px; }
 .step > span { color: var(--red); }
 .enquiry .small { font-size: 13px; }
