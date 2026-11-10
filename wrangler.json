@@ -3,6 +3,15 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-11-10",
   "workers_dev": true,
+  "vars": {
+    "EVENTS_METRICS_ENABLED": "false"
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "EVENTS_ANALYTICS",
+      "dataset": "ymg_events_preview_metrics"
+    }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -15,6 +24,14 @@
       "namespace_id": "2026111010",
       "simple": {
         "limit": 5,
+        "period": 60
+      }
+    },
+    {
+      "name": "EVENTS_METRICS_LIMITER",
+      "namespace_id": "2026111030",
+      "simple": {
+        "limit": 30,
         "period": 60
       }
     }

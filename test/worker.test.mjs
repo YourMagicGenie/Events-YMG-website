@@ -18,6 +18,15 @@ test("Worker routes configuration requests to the Events handler", async () => {
   assert.deepEqual(await response.json(), { ready: true, siteKey: "test-site-key" });
 });
 
+test("Worker exposes the privacy-gated metrics configuration without enabling collection by default", async () => {
+  const worker = createEventsWorker();
+  const response = await worker.fetch(new Request(origin + "/api/events/metrics/config"), env);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { enabled: false });
+  const unknown = await worker.fetch(new Request(origin + "/api/events/other-metrics"), env);
+  assert.equal(unknown.status, 404);
+});
+
 test("Worker routes inline submissions through Turnstile and the shared relay", async () => {
   const calls = [];
   const worker = createEventsWorker(async (url, options) => {

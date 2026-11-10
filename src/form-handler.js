@@ -1,5 +1,6 @@
 // Adapted from the validated YMG Consulting Services intake Worker.
 // This source path is not deployed to the live Events Worker until its release gates pass.
+import { recordEventsMetric } from "./event-metrics.js";
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const MAX_BODY_BYTES = 48_000;
 const FORMAT_CHOICES = new Set([
@@ -146,19 +147,34 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
       (businessRequired && !business) || !FORMAT_CHOICES.has(format) || !GUEST_CHOICES.has(guests)) {
     return json(400, { ok: false, error: "Please check the required fields and try again." });
   }
-  if (!configured(env)) return json(503, { ok: false, error: "Online submission is unavailable." });
+  const metricDimensions = {
+    locale: params.get("locale") === "it" ? "it" : "en",
+    intent,
+    format,
+  };
+  recordEventsMetric(env, "enquiry_attempt", metricDimensions);
+
+  if (!configured(env)) {
+    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    return json(503, { ok: false, error: "Online submission is unavailable." });
+  }
 
   const remoteIp = request.headers.get("cf-connecting-ip");
-  if (!remoteIp) return json(503, { ok: false, error: "Online submission is unavailable." });
+  if (!remoteIp) {
+    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    return json(503, { ok: false, error: "Online submission is unavailable." });
+  }
   try {
     const rateLimit = await env.EVENTS_SUBMISSION_LIMITER.limit({ key: remoteIp });
     if (!rateLimit?.success) {
+      recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "rate_limited" });
       return json(429, { ok: false, error: "Please wait a little before sending another enquiry, or contact us directly." }, {
         "retry-after": "60",
       });
     }
   } catch {
     // Fail closed if abuse protection is unavailable; do not log client data.
+    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
     return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
   }
 
@@ -175,9 +191,11 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     if (!response.ok) throw new Error("Turnstile unreachable");
     challenge = await response.json();
   } catch {
+    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "turnstile_unavailable" });
     return json(503, { ok: false, error: "Spam protection is temporarily unavailable." });
   }
   if (!challenge.success || challenge.hostname !== url.hostname || challenge.action !== "events_enquiry") {
+    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "turnstile_rejected" });
     return json(403, { ok: false, error: "Spam protection could not verify this request." });
   }
 
@@ -210,7 +228,11 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     if (!result || result.ok !== true) throw new Error("Relay rejected enquiry");
   } catch {
     // Do not log enquiry content, email addresses, or relay credentials.
+    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "relay_failure" });
+    recordEventsMetric(env, "relay_failure", { ...metricDimensions, category: "relay_failure" });
     return json(503, { ok: false, error: "We could not send your enquiry. Please try again or email us directly." });
   }
+  // This confirms relay acceptance only; it is not a mailbox delivery receipt.
+  recordEventsMetric(env, "relay_accepted", metricDimensions);
   return json(202, { ok: true });
 }
