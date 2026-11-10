@@ -6,6 +6,7 @@
     "test": "node --test test/*.test.mjs",
     "test:site": "node --test test/site-smoke.test.mjs",
     "test:e2e": "node test/browser-smoke.mjs",
+    "test:e2e:full": "node test/browser-smoke.mjs --full-matrix",
     "audit:performance": "node test/performance-audit.mjs"
   },
   "devDependencies": {
