@@ -187,7 +187,7 @@ try {
   assert.ok(emailFocus.style !== "none" && emailFocus.width >= 3, `form focus remains visible: ${JSON.stringify(emailFocus)}`);
   assert.ok(await desktopKeyboard.getByLabel("Your name *").count(), "the name field has an accessible label");
   assert.ok(await desktopKeyboard.getByLabel("Email address *").count(), "the email field has an accessible label");
-  assert.equal(await desktopKeyboard.getByRole("status").getAttribute("aria-live"), "polite", "form feedback is announced politely");
+  assert.equal(await desktopKeyboard.locator("#form-feedback").getAttribute("aria-live"), "polite", "form feedback is announced politely");
   await desktopKeyboard.close();
 
   const reducedMotion = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
