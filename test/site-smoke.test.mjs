@@ -115,13 +115,23 @@ test("local assets and public crawl files are present", () => {
   }
   const privacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
   assert.match(privacy, /class="skip-link" href="#main-content"/);
-  assert.match(privacy, /Cloudflare Turnstile/);
-  assert.match(privacy, /Google Apps Script/);
-  assert.match(privacy, /temporary request threshold/);
-  assert.match(privacy, /does not create a submissions database/);
-  assert.match(privacy, /served from Unsplash’s image CDN/);
-  assert.match(privacy, /page’s fonts are served from this website/);
-  assert.doesNotMatch(privacy, /Google Fonts/);
+  assert.match(privacy, /form on the currently published website prepares an email in your email app/);
+  assert.match(privacy, /does not automatically submit or store the form fields/);
+  assert.match(privacy, /not deployed on the public website/);
+  assert.match(privacy, /Google Fonts/);
+  assert.match(privacy, /does not request it from Unsplash/);
+  assert.match(privacy, /We do not use analytics or advertising pixels/);
+  assert.match(privacy, /Article 6\(1\)\(b\) GDPR/);
+  assert.match(privacy, /European Economic Area/);
+  assert.match(privacy, /specific transfer mechanism and safeguards configured/);
+  assert.match(privacy, /href="https:\/\/www\.garanteprivacy\.it\/diritti\/come-agire-per-tutelare-i-tuoi-dati-personali\/reclamo"/);
+  assert.doesNotMatch(privacy, /Cloudflare Turnstile checks|Valid submissions are forwarded through Google Apps Script/);
+  const dataFlow = readFileSync(new URL("../docs/PRIVACY-DATA-FLOW.md", import.meta.url), "utf8");
+  assert.match(dataFlow, /current production flow/);
+  assert.match(dataFlow, /no runtime bindings, variable names or secret names/);
+  assert.match(dataFlow, /direct-send form is not deployed/);
+  assert.match(dataFlow, /Confirm the data controller's full legal identity/);
+  assert.match(dataFlow, /qualified privacy adviser/);
 });
 
 test("hero photos use responsive compressed sources and explicit priority", () => {
@@ -237,8 +247,9 @@ test("self-hosted fonts are licensed, preloaded, and disclosed accurately", () =
     assert.match(page, /font-display:swap/);
   }
   const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
-  assert.match(italianPrivacy, /I font sono serviti da questo sito web/);
-  assert.doesNotMatch(italianPrivacy, /Google Fonts/);
+  assert.match(italianPrivacy, /La pagina attualmente pubblicata richiede i font a Google Fonts/);
+  assert.match(italianPrivacy, /modulo di invio diretto presente nel codice sorgente.*non è attivo sul sito pubblico/);
+  assert.match(italianPrivacy, /href="https:\/\/www\.garanteprivacy\.it\/diritti\/come-agire-per-tutelare-i-tuoi-dati-personali\/reclamo"/);
   const provenance = readFileSync(new URL("../docs/FONT-ASSET-PROVENANCE.md", import.meta.url), "utf8");
   assert.match(provenance, /SIL Open Font License 1\.1/);
   for (const unusedPhoto of ["hero.jpg", "dinner.jpg", "rooftop-night.jpg"]) {
@@ -559,8 +570,8 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /<button[^>]*data-concept="Rooftop evenings"/);
   assert.match(italian, /href="\/it\/privacy.html"[^>]*>Scopri come trattiamo i tuoi dati/);
   assert.match(italianPrivacy, /Informativa sulla privacy/);
-  assert.match(italianPrivacy, /Visita del sito/);
-  assert.match(italianPrivacy, /Invio di una richiesta/);
+  assert.match(italianPrivacy, /Quando visiti il sito/);
+  assert.match(italianPrivacy, /Inviare una richiesta/);
   assert.match(interactions, /language: messages\.turnstileLanguage/);
   assert.match(messages, /turnstileLanguage: "it"/);
   assert.match(messages, /formUnavailable: "L’invio online/);
@@ -600,8 +611,8 @@ test("venue, corporate and private enquiries have explicit localized routes and 
   assert.match(handler, /Enquiry type: \$\{ENQUIRY_TYPES\.get\(intent\)\}/);
   assert.match(handler, /Enquiry source: \$\{ENQUIRY_SOURCES\.get\(source\)\}/);
   assert.match(handler, /eventsNotificationSubject\(name, intent, format\)/);
-  assert.match(englishPrivacy, /enquiry type \(venue partnership, corporate event or private celebration\)/);
-  assert.match(italianPrivacy, /tipo di richiesta \(collaborazione con una location, evento aziendale o occasione privata\)/);
+  assert.match(englishPrivacy, /prepared message may include your name, venue or business, chosen event direction, approximate guest count, timing, budget and any description/);
+  assert.match(italianPrivacy, /Il messaggio preparato può includere nome, location o azienda, direzione dell’evento scelta, numero indicativo di ospiti, tempistiche, budget e la descrizione/);
 });
 
 test("event format context is bilingual, explicit, clearable and sent through the existing form field", () => {
