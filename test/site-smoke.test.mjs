@@ -599,6 +599,6 @@ test("venue outreach one-pager is small, factual and withheld from the live down
     assert.ok(source.includes(claim), `source copy preserves factual offer and commercial limits: ${claim}`);
   }
   for (const page of [html, italianHtml]) {
-    assert.doesNotMatch(page, /venue-partnership-one-pager-it\\.pdf/, "website download link waits for owner approval");
+    assert.doesNotMatch(page, /venue-partnership-one-pager-it\.pdf/, "website download link waits for owner approval");
   }
 });
