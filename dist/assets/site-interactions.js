@@ -11,7 +11,7 @@ if (deck) {
   let statusTimer;
 
   const updateDeckState = () => {
-    const atStart = deck.scrollLeft <= 1;
+    const atStart = deck.scrollLeft <= 4;
     const atEnd = deck.scrollLeft + deck.clientWidth >= deck.scrollWidth - 2;
     previous.setAttribute("aria-disabled", String(atStart));
     next.setAttribute("aria-disabled", String(atEnd));

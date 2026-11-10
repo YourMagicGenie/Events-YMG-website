@@ -101,6 +101,60 @@ try {
       assert.ok(actual >= minimum, `${name} is ${actual}px at ${width}px; expected at least ${minimum}px`);
     }
 
+    const carousel = await page.evaluate(() => {
+      const deck = document.querySelector("#concept-deck");
+      const bounds = element => {
+        const rect = element.getBoundingClientRect();
+        return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
+      };
+      return {
+        display: getComputedStyle(deck).display,
+        overflowX: getComputedStyle(deck).overflowX,
+        scrollLeft: deck.scrollLeft,
+        clientWidth: deck.clientWidth,
+        scrollWidth: deck.scrollWidth,
+        previousDisabled: document.querySelector("#deck-previous").getAttribute("aria-disabled"),
+        nextDisabled: document.querySelector("#deck-next").getAttribute("aria-disabled"),
+        slides: [...deck.querySelectorAll(".concept")].map((card, index) => {
+          const art = card.querySelector(".art");
+          const artKicker = art.querySelector(".art-kicker");
+          const artTitle = art.querySelector(".art-title");
+          const artFoot = art.querySelector(".art-foot");
+          return {
+            number: index + 1,
+            accessibleLabel: card.getAttribute("aria-label"),
+            title: card.querySelector("h3").textContent,
+            badge: card.querySelector(":scope > small").textContent,
+            art: bounds(art),
+            kicker: bounds(artKicker),
+            artTitle: bounds(artTitle),
+            foot: bounds(artFoot),
+            badgeBounds: bounds(card.querySelector(":scope > small")),
+            titleBounds: bounds(card.querySelector("h3")),
+          };
+        }),
+      };
+    });
+    assert.equal(carousel.display, "flex", `${width}px keeps the formats in one horizontal deck`);
+    assert.equal(carousel.overflowX, "auto", `${width}px allows horizontal carousel scrolling`);
+    assert.ok(carousel.scrollWidth > carousel.clientWidth, `${width}px keeps more formats available by scrolling`);
+    assert.equal(carousel.slides.length, 6, `${width}px exposes all six slides in the carousel`);
+    assert.equal(carousel.previousDisabled, "true", `${width}px identifies the starting position: ${JSON.stringify({ scrollLeft: carousel.scrollLeft, clientWidth: carousel.clientWidth, scrollWidth: carousel.scrollWidth, previousDisabled: carousel.previousDisabled })}`);
+    assert.equal(carousel.nextDisabled, "false", `${width}px identifies that more slides are available`);
+    const expectedTitles = ["The Rooftop Social", "Strings After Dark", "The Private Occasion", "The Supper Club", "Jazz & Cocktails", "The Corporate Social"];
+    for (const slide of carousel.slides) {
+      const number = String(slide.number).padStart(2, "0");
+      assert.equal(slide.title, expectedTitles[slide.number - 1], `${width}px keeps slide ${number}'s title with its position`);
+      assert.equal(slide.accessibleLabel, `${slide.number} of 6: ${slide.title}`, `${width}px gives slide ${number} a semantic name`);
+      assert.ok(slide.badge.startsWith(`${number} /`), `${width}px keeps slide ${number}'s number with its category`);
+      assert.ok(slide.badgeBounds.bottom <= slide.titleBounds.top + 1, `${width}px slide ${number}'s number does not overlap its title`);
+      assert.ok(slide.kicker.bottom <= slide.artTitle.top + 1 && slide.artTitle.bottom <= slide.foot.top + 1,
+        `${width}px slide ${number}'s artwork labels do not overlap: ${JSON.stringify(slide)}`);
+      assert.ok(slide.kicker.top >= slide.art.top && slide.foot.bottom <= slide.art.bottom,
+        `${width}px slide ${number}'s artwork labels stay inside the image panel`);
+    }
+    assert.ok(await page.locator(".deck-hint").isVisible(), `${width}px tells visitors they can swipe or use the arrows`);
+
     const audit = await page.evaluate(() => {
       const rgb = color => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
       const luminance = color => rgb(color).map(value => value / 255).map(value =>
@@ -206,13 +260,104 @@ try {
   assert.equal(await mobile.evaluate(() => document.activeElement.id), "concepts", "section navigation moves focus to its destination");
 
   const next = mobile.getByRole("button", { name: "Next event formats" });
+  assert.equal(await mobile.getByRole("button", { name: "Previous event formats" }).getAttribute("aria-disabled"), "true", "carousel identifies its starting position");
   await next.click();
   await mobile.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft > 0
-    && document.querySelector("#deck-previous").getAttribute("aria-disabled") === "false");
+    && document.querySelector("#deck-previous").getAttribute("aria-disabled") === "false"
+    && document.querySelector("#deck-status").textContent === "Format 2 of 6");
   assert.equal(await mobile.getByRole("button", { name: "Previous event formats" }).getAttribute("aria-disabled"), "false", "carousel state updates after scrolling");
-  await mobile.getByRole("button", { name: /Explore a rooftop evening/ }).click();
-  assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "concept action selects its enquiry format");
+  const expectedFormats = ["Rooftop evenings", "Live music & DJs", "Private celebrations", "Supper Club", "Jazz & Cocktails", "Corporate Social"];
+  const conceptCards = mobile.locator("#concept-deck .concept");
+  assert.equal(await conceptCards.count(), expectedFormats.length, "each event format has an individual card");
+  for (const [index, format] of expectedFormats.entries()) {
+    const action = conceptCards.nth(index).locator("button[data-concept]");
+    await action.scrollIntoViewIfNeeded();
+    await action.click();
+    assert.equal(await mobile.locator("#format").inputValue(), format, `slide ${index + 1} preselects ${format}`);
+  }
   await mobile.close();
+
+  const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const touch = await touchContext.newPage();
+  await touch.route("https://fonts.googleapis.com/**", route => route.abort());
+  await touch.route("https://fonts.gstatic.com/**", route => route.abort());
+  await touch.goto(baseUrl, { waitUntil: "load" });
+  await touch.locator("#concept-deck .art").first().scrollIntoViewIfNeeded();
+  const artBounds = await touch.locator("#concept-deck .art").first().boundingBox();
+  const touchSession = await touchContext.newCDPSession(touch);
+  const touchY = Math.round(artBounds.y + artBounds.height / 2);
+  const startX = Math.round(artBounds.x + artBounds.width * 0.85);
+  await touch.evaluate(() => {
+    window.carouselTouchEvents = [];
+    for (const type of ["touchstart", "touchmove", "touchend"]) {
+      document.querySelector("#concept-deck").addEventListener(type, () => window.carouselTouchEvents.push(type), { passive: true });
+    }
+  });
+  await touchSession.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: startX, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
+  });
+  for (let step = 1; step <= 6; step++) {
+    await touchSession.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: startX - step * 25, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
+    });
+    await touch.waitForTimeout(25);
+  }
+  await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await touch.waitForTimeout(250);
+  const touchState = await touch.evaluate(() => {
+    const deck = document.querySelector("#concept-deck");
+    return {
+      scrollLeft: deck.scrollLeft,
+      scrollWidth: deck.scrollWidth,
+      clientWidth: deck.clientWidth,
+      maxTouchPoints: navigator.maxTouchPoints,
+      coarsePointer: matchMedia("(pointer: coarse)").matches,
+      touchAction: getComputedStyle(deck).touchAction,
+      touchEvents: window.carouselTouchEvents,
+    };
+  });
+  assert.ok(touchState.scrollLeft > 5, `mobile touch swipe advances the horizontal deck: ${JSON.stringify(touchState)}`);
+  await touch.close();
+  await touchContext.close();
+
+  const carouselKeyboard = await browser.newPage({ viewport: { width: 1024, height: 900 }, reducedMotion: "reduce" });
+  await carouselKeyboard.route("https://fonts.googleapis.com/**", route => route.abort());
+  await carouselKeyboard.route("https://fonts.gstatic.com/**", route => route.abort());
+  await carouselKeyboard.goto(baseUrl, { waitUntil: "load" });
+  const deck = carouselKeyboard.locator("#concept-deck");
+  await deck.focus();
+  await carouselKeyboard.keyboard.press("ArrowRight");
+  await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft > 1);
+  assert.equal(await carouselKeyboard.evaluate(() => document.activeElement.id), "concept-deck", "ArrowRight scrolls the focused carousel without losing focus");
+  await carouselKeyboard.keyboard.press("ArrowLeft");
+  await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft <= 4);
+
+  const nextControl = carouselKeyboard.getByRole("button", { name: "Next event formats" });
+  const previousControl = carouselKeyboard.getByRole("button", { name: "Previous event formats" });
+  await nextControl.focus();
+  await carouselKeyboard.keyboard.press("Enter");
+  await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft > 1);
+  await carouselKeyboard.waitForFunction(() => document.querySelector("#deck-previous").getAttribute("aria-disabled") === "false");
+  assert.equal(await previousControl.getAttribute("aria-disabled"), "false", "keyboard activation updates the previous control");
+  for (let index = 0; index < 8 && await nextControl.getAttribute("aria-disabled") !== "true"; index++) {
+    await nextControl.click();
+    await carouselKeyboard.waitForTimeout(180);
+  }
+  assert.equal(await nextControl.getAttribute("aria-disabled"), "true", "carousel announces when no later slide remains");
+  assert.equal(await previousControl.getAttribute("aria-disabled"), "false", "carousel keeps the previous control available at the end");
+  await previousControl.focus();
+  await carouselKeyboard.keyboard.press("Enter");
+  await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft < document.querySelector("#concept-deck").scrollWidth - document.querySelector("#concept-deck").clientWidth - 2);
+
+  const firstAction = carouselKeyboard.locator("#concept-deck .concept").first().locator("button[data-concept]");
+  await firstAction.focus();
+  await carouselKeyboard.keyboard.press("ArrowRight");
+  await carouselKeyboard.waitForFunction(() => document.activeElement.dataset.concept === "Live music & DJs");
+  await carouselKeyboard.keyboard.press("ArrowLeft");
+  await carouselKeyboard.waitForFunction(() => document.activeElement.dataset.concept === "Rooftop evenings");
+  await carouselKeyboard.close();
 
   const keyboard = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await keyboard.route("https://fonts.googleapis.com/**", route => route.abort());
