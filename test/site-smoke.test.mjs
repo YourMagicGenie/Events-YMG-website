@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const html = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+const italianHtml = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
 
 test("main page exposes mobile navigation and a direct enquiry control", () => {
   assert.match(html, /<nav class="primary-nav" id="primary-navigation" aria-label="Main navigation">/);
@@ -97,6 +98,44 @@ test("event formats form a six-card carousel without filters or mockup disclaime
   const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
   assert.match(interactions, /ArrowRight/);
   assert.match(interactions, /scrollIntoView\(\{ behavior: reduceMotion\(\) \? "auto" : "smooth"/);
+});
+
+
+test("event card illustrations are local, format-specific, responsive and documented", () => {
+  const assets = [
+    { file: "rooftop-social.svg", en: "Stylized illustration of a candlelit rooftop table beside a coastal skyline at dusk.", it: "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto." },
+    { file: "strings-after-dark.svg", en: "Stylized illustration of a violin under warm stage lights with musical notes nearby.", it: "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo." },
+    { file: "private-occasion.svg", en: "Stylized illustration of a celebration table with flowers, cake and candles.", it: "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele." },
+    { file: "supper-club.svg", en: "Stylized illustration of a plated meal on a dining table with candles and foliage.", it: "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame." },
+    { file: "jazz-cocktails.svg", en: "Stylized illustration of a golden saxophone beside a cocktail on a dark stage.", it: "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro." },
+    { file: "corporate-social.svg", en: "Stylized illustration of a modern city-view lounge with a high table and glasses.", it: "Illustrazione stilizzata di un lounge moderno con vista sulla città, un tavolo alto e bicchieri." },
+  ];
+  for (const [pageName, page, localizedAlt] of [["English", html, "en"], ["Italian", italianHtml, "it"]]) {
+    const cards = [...page.matchAll(/<article class="concept" role="group"[\s\S]*?<div class="art">([\s\S]*?)<\/div>/g)];
+    assert.equal(cards.length, assets.length, `${pageName} has six illustrated cards`);
+    for (const [index, asset] of assets.entries()) {
+      const [, art] = cards[index];
+      const alt = asset[localizedAlt];
+      assert.match(art, new RegExp(`<img class="card-art-image" src="/assets/event-art/${asset.file}" alt="${alt.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}" width="1200" height="960" decoding="async" loading="lazy">`), `${pageName} card ${index + 1} uses its matching illustration and localized description`);
+      assert.equal(art.replace(/<img[^>]+>/, "").trim(), "", `${pageName} card ${index + 1} artwork contains no baked-in or duplicated poster copy`);
+      assert.doesNotMatch(art, /https?:\/\//, `${pageName} card ${index + 1} has no remote image request`);
+    }
+  }
+  for (const [pageName, styles] of [["English", html], ["Italian", italianHtml]]) {
+    assert.match(styles, /\.concept \.art\{height:auto;aspect-ratio:5\/4/, `${pageName} uses the shared 5:4 card image frame`);
+    assert.match(styles, /\.concept \.art img\{display:block;width:100%;height:100%;object-fit:cover/, `${pageName} crops the images without distortion`);
+    assert.doesNotMatch(styles, /\.art-title|\.art-kicker|\.art-foot|\.type-art|\.games-art/, `${pageName} has no leftover poster-style art rules`);
+  }
+  const provenance = readFileSync(new URL("../docs/CARD-ART-PROVENANCE.md", import.meta.url), "utf8");
+  assert.match(provenance, /original, locally authored SVG illustrations/i);
+  assert.match(provenance, /do not depict or claim a past YMG booking/i);
+  for (const asset of assets) {
+    const source = readFileSync(new URL(`../dist/assets/event-art/${asset.file}`, import.meta.url), "utf8");
+    assert.match(source, /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="1200" height="960" viewBox="0 0 1200 960"/);
+    assert.doesNotMatch(source, /<text\b/, `${asset.file} keeps wording in the HTML rather than the image`);
+    assert.ok(Buffer.byteLength(source) < 12000, `${asset.file} remains compact for delivery`);
+    assert.ok(provenance.includes(asset.file), `${asset.file} has a provenance entry`);
+  }
 });
 
 test("hero uses licensed coastal photography without implying a YMG event", () => {

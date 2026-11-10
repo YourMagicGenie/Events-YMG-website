@@ -144,7 +144,7 @@ try {
       const deck = document.querySelector("#concept-deck");
       const bounds = element => {
         const rect = element.getBoundingClientRect();
-        return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
+        return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left, width: rect.width, height: rect.height };
       };
       return {
         display: getComputedStyle(deck).display,
@@ -156,18 +156,15 @@ try {
         nextDisabled: document.querySelector("#deck-next").getAttribute("aria-disabled"),
         slides: [...deck.querySelectorAll(".concept")].map((card, index) => {
           const art = card.querySelector(".art");
-          const artKicker = art.querySelector(".art-kicker");
-          const artTitle = art.querySelector(".art-title");
-          const artFoot = art.querySelector(".art-foot");
+          const image = art.querySelector("img");
           return {
             number: index + 1,
             accessibleLabel: card.getAttribute("aria-label"),
             title: card.querySelector("h3").textContent,
             badge: card.querySelector(":scope > small").textContent,
             art: bounds(art),
-            kicker: bounds(artKicker),
-            artTitle: bounds(artTitle),
-            foot: bounds(artFoot),
+            image: { alt: image?.alt, src: image?.getAttribute("src"), box: bounds(image), objectFit: image ? getComputedStyle(image).objectFit : null },
+            artworkText: art.textContent.trim(),
             badgeBounds: bounds(card.querySelector(":scope > small")),
             titleBounds: bounds(card.querySelector("h3")),
           };
@@ -181,16 +178,25 @@ try {
     assert.equal(carousel.previousDisabled, "true", `${width}px identifies the starting position: ${JSON.stringify({ scrollLeft: carousel.scrollLeft, clientWidth: carousel.clientWidth, scrollWidth: carousel.scrollWidth, previousDisabled: carousel.previousDisabled })}`);
     assert.equal(carousel.nextDisabled, "false", `${width}px identifies that more slides are available`);
     const expectedTitles = ["The Rooftop Social", "Strings After Dark", "The Private Occasion", "The Supper Club", "Jazz & Cocktails", "The Corporate Social"];
+    const expectedArtAlts = [
+      "Stylized illustration of a candlelit rooftop table beside a coastal skyline at dusk.",
+      "Stylized illustration of a violin under warm stage lights with musical notes nearby.",
+      "Stylized illustration of a celebration table with flowers, cake and candles.",
+      "Stylized illustration of a plated meal on a dining table with candles and foliage.",
+      "Stylized illustration of a golden saxophone beside a cocktail on a dark stage.",
+      "Stylized illustration of a modern city-view lounge with a high table and glasses.",
+    ];
     for (const slide of carousel.slides) {
       const number = String(slide.number).padStart(2, "0");
       assert.equal(slide.title, expectedTitles[slide.number - 1], `${width}px keeps slide ${number}'s title with its position`);
       assert.equal(slide.accessibleLabel, `${slide.number} of 6: ${slide.title}`, `${width}px gives slide ${number} a semantic name`);
       assert.ok(slide.badge.startsWith(`${number} /`), `${width}px keeps slide ${number}'s number with its category`);
       assert.ok(slide.badgeBounds.bottom <= slide.titleBounds.top + 1, `${width}px slide ${number}'s number does not overlap its title`);
-      assert.ok(slide.kicker.bottom <= slide.artTitle.top + 1 && slide.artTitle.bottom <= slide.foot.top + 1,
-        `${width}px slide ${number}'s artwork labels do not overlap: ${JSON.stringify(slide)}`);
-      assert.ok(slide.kicker.top >= slide.art.top && slide.foot.bottom <= slide.art.bottom,
-        `${width}px slide ${number}'s artwork labels stay inside the image panel`);
+      assert.equal(slide.image.alt, expectedArtAlts[slide.number - 1], `${width}px slide ${number} exposes its format-specific illustration description`);
+      assert.equal(slide.image.src, `/assets/event-art/${["rooftop-social.svg", "strings-after-dark.svg", "private-occasion.svg", "supper-club.svg", "jazz-cocktails.svg", "corporate-social.svg"][slide.number - 1]}`, `${width}px slide ${number} uses a local art asset`);
+      assert.equal(slide.image.objectFit, "cover", `${width}px slide ${number} crops consistently without distortion`);
+      assert.ok(Math.abs(slide.art.width / slide.art.height - 1.25) < 0.01, `${width}px slide ${number} keeps the shared 5:4 art frame`);
+      assert.equal(slide.artworkText, "", `${width}px slide ${number} avoids duplicated text in the illustration`);
     }
     assert.ok(await page.locator(".deck-hint").isVisible(), `${width}px tells visitors they can swipe or use the arrows`);
 
@@ -318,8 +324,12 @@ try {
   assert.equal(await conceptCards.count(), expectedFormats.length, "each event format has an individual card");
   assert.equal(await mobile.locator("#business").isDisabled(), true, "the context field waits until an enquiry path is selected");
   for (const [index, route] of expectedFormats.entries()) {
-    const action = conceptCards.nth(index).locator("button[data-concept]");
+    const card = conceptCards.nth(index);
+    const action = card.locator("button[data-concept]");
     await action.scrollIntoViewIfNeeded();
+    const artImage = card.locator("img.card-art-image");
+    await artImage.evaluate(image => image.decode());
+    assert.ok(await artImage.evaluate(image => image.naturalWidth === 1200 && image.naturalHeight === 960), `slide ${index + 1} loads its full-resolution local illustration`);
     await action.click();
     assert.equal(await mobile.locator("#format").inputValue(), route.format, `slide ${index + 1} preselects ${route.format}`);
     assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `slide ${index + 1} chooses the matching enquiry path`);
@@ -364,6 +374,15 @@ try {
   assert.equal(new URL(mobile.url()).pathname, "/it/", "the mobile language switch opens the Italian home page");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
   assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "L’eleganza ha unlato notturno.");
+  const expectedItalianArtAlts = [
+    "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto.",
+    "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo.",
+    "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele.",
+    "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame.",
+    "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro.",
+    "Illustrazione stilizzata di un lounge moderno con vista sulla città, un tavolo alto e bicchieri.",
+  ];
+  assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific illustration descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
   assert.equal(await mobile.locator(".menu-toggle").getAttribute("aria-label"), "Apri il menu di navigazione");
   const ItalianRooftopButton = mobile.getByRole("button", { name: "Esplora una serata in terrazza" });
