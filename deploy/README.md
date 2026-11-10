@@ -16,13 +16,44 @@ and released. The original live bundle is a generated standalone
 privacy and JPEG assets for direct Worker upload. The giant generated bundle
 is deliberately **not** copied as a second editable source of truth.
 
-**Do not deploy the new GitHub repository by assumption.** No GitHub Actions
-deployment controller, source-to-bundle generator, or automatic custom-domain
-release is configured yet. Before integrating issue #10 or modifying the site:
+## Reproduce and preview the source
 
-1. Establish and test a reproducible build of the site and a Worker static-asset
-   deployment path on an isolated preview host, preserving public GET/HEAD,
-   redirects, 404/405 responses and cache/security headers.
+The site is buildless. To preview the public static page without credentials or
+network calls:
+
+```bash
+python3 -m http.server 4173 --directory dist
+```
+
+Open `http://localhost:4173/`. For a local run of the Worker and static-assets
+binding, install Wrangler locally and run:
+
+```bash
+npx wrangler dev --local --config wrangler.json
+```
+
+The checked-in Wrangler config is deliberately named `ymg-events-preview` and
+contains no routes or custom domains. It binds this repository's `dist/` assets
+to `src/worker.js`; it cannot silently attach this source to the production
+hostname. Without runtime variables, `/api/events/config` correctly reports
+that direct submission is unavailable. The form's email fallback remains
+available, while mocked success and failure paths are covered by `npm test`.
+
+The same config can be used for an isolated `workers.dev` preview once a
+scoped Cloudflare credential is available. Do not change the config name or
+attach a custom domain as part of a preview. Verify anonymous access, `/`,
+`/privacy.html`, `/robots.txt`, `/sitemap.xml`, all local images/scripts,
+GET/HEAD behavior, form error states and 404/405 responses on that preview.
+Record the preview URL and evidence in the release notes. This repository does
+not define an automatic production deployment.
+
+**Do not deploy the new GitHub repository by assumption.** No GitHub Actions
+deployment controller or automatic custom-domain release is configured. Before
+integrating this source with production:
+
+1. Deploy and test the isolated `ymg-events-preview` Worker described above,
+   preserving public GET/HEAD, redirects, 404/405 responses and cache/security
+   headers.
 2. Capture the current production Worker version, bindings and known-good
    recovery target without exposing account IDs, tokens or secret values in Git.
 3. Check preview rendering, responsive layout, anonymous access, forms,
