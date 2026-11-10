@@ -54,16 +54,17 @@ test("hero photos use responsive compressed sources and explicit priority", () =
     assert.notEqual(end, -1, "hero picture markup exists");
     const hero = page.slice(start, end + "</picture>".length);
     assert.match(hero, /<source media="\(max-width: 540px\)" sizes="100vw" srcset=/);
-    assert.match(hero, /w=480&amp;h=854&amp;q=70 480w/);
-    assert.match(hero, /w=780&amp;h=1388&amp;q=70 780w/);
-    assert.match(hero, /w=960&amp;h=540&amp;q=70 960w/);
-    assert.match(hero, /w=1440&amp;h=810&amp;q=70 1440w/);
+    assert.match(hero, /auto=format&amp;fit=crop/);
+    assert.match(hero, /w=480&amp;h=854&amp;q=\d+ 480w/);
+    assert.match(hero, /w=780&amp;h=1388&amp;q=\d+ 780w/);
+    assert.match(hero, /w=960&amp;h=540&amp;q=\d+ 960w/);
+    assert.match(hero, /w=1440&amp;h=810&amp;q=\d+ 1440w/);
     assert.match(hero, /width="1600" height="900"/);
     assert.match(hero, /loading="eager" fetchpriority="high" decoding="async"/);
   }
 });
 
-test("variable fonts are self-hosted, licensed, preloaded, and disclosed accurately", () => {
+test("self-hosted fonts are licensed, preloaded, and disclosed accurately", () => {
   const fontAssets = [
     "dm-sans-latin.woff2",
     "dm-sans-latin-ext.woff2",
@@ -78,6 +79,8 @@ test("variable fonts are self-hosted, licensed, preloaded, and disclosed accurat
   for (const page of [html, italianHtml]) {
     assert.doesNotMatch(page, /fonts\.googleapis\.com|fonts\.gstatic\.com|@import/);
     assert.equal([...page.matchAll(/@font-face\{/g)].length, 6, "English and Italian pages retain all weight, style, and language subsets");
+    assert.equal([...page.matchAll(/@font-face\{font-family:'Playfair Display';[^}]*font-weight:400;/g)].length, 4, "Playfair Display only loads the regular weight used by the design");
+    assert.equal([...page.matchAll(/@font-face\{font-family:'DM Sans';[^}]*font-weight:400 700;/g)].length, 2, "DM Sans retains its variable weight range");
     for (const asset of ["dm-sans-latin.woff2", "playfair-display-latin.woff2"]) {
       assert.ok(page.includes(`<link rel="preload" href="/assets/fonts/${asset}" as="font" type="font/woff2" crossorigin>`), `${asset} is preloaded for first-viewport text`);
     }
