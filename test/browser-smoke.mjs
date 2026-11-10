@@ -101,6 +101,38 @@ try {
       assert.ok(actual >= minimum, `${name} is ${actual}px at ${width}px; expected at least ${minimum}px`);
     }
 
+    const heroVisual = await page.evaluate(() => {
+      const image = document.querySelector(".hero-atmosphere img");
+      const hero = document.querySelector(".hero");
+      const imageRect = image.getBoundingClientRect();
+      const heroRect = hero.getBoundingClientRect();
+      const overlay = getComputedStyle(document.querySelector(".hero-atmosphere"), "::after").backgroundImage;
+      return {
+        alt: image.alt,
+        src: image.getAttribute("src"),
+        srcset: image.srcset,
+        mobileSource: document.querySelector(".hero-atmosphere source").srcset,
+        mobileMedia: document.querySelector(".hero-atmosphere source").media,
+        sizes: image.sizes,
+        objectFit: getComputedStyle(image).objectFit,
+        coversHero: Math.abs(imageRect.width - heroRect.width) < 1 && Math.abs(imageRect.height - heroRect.height) < 1,
+        overlayAlpha: [...overlay.matchAll(/rgba\([^)]*,\s*([\d.]+)\s*\)/g)].map(match => Number(match[1])),
+        primaryHref: document.querySelector(".hero-actions .btn.primary").getAttribute("href"),
+        secondaryPresent: [...document.querySelectorAll(".hero-actions a")].some(link => /discover the atmosphere/i.test(link.textContent)),
+      };
+    });
+    assert.equal(heroVisual.alt, "Boats moored beside waterfront restaurants at dusk.", "hero image has meaningful scenic alt text");
+    assert.match(heroVisual.src, /^https:\/\/images\.unsplash\.com\/photo-1789931123652-6d22f2ef7cc7/, "hero uses the reviewed Unsplash photograph");
+    assert.match(heroVisual.srcset, /960w.*1440w.*1920w/, "hero offers responsive desktop image sizes");
+    assert.match(heroVisual.mobileSource, /480w.*780w.*1080w/, "hero offers a separate mobile crop");
+    assert.equal(heroVisual.mobileMedia, "(max-width: 540px)", "mobile image source has a defined breakpoint");
+    assert.equal(heroVisual.sizes, "100vw", "hero image size matches the full-width composition");
+    assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
+    assert.ok(heroVisual.coversHero, "hero image covers its background region");
+    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha.every(alpha => alpha >= 0.8), "dark overlay preserves text contrast over the photo");
+    assert.equal(heroVisual.primaryHref, "#enquire", "primary hero CTA keeps its destination");
+    assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
+
     const carousel = await page.evaluate(() => {
       const deck = document.querySelector("#concept-deck");
       const bounds = element => {
