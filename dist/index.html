@@ -81,7 +81,9 @@ main:focus{outline:none}
 #brief input::placeholder,#brief textarea::placeholder{color:#575c54;opacity:1}
 #brief input:disabled,#brief select:disabled,#brief textarea:disabled{background:#e3dfd5;border-color:#828a81;color:#4b514c;cursor:not-allowed;opacity:1}
 #brief [aria-invalid="true"]{border-color:#743037;background:#fff7f5;box-shadow:inset 4px 0 0 #743037}
+#brief input[aria-invalid="true"],#brief select[aria-invalid="true"],#brief textarea[aria-invalid="true"]{border-color:#743037;background:#fff7f5;box-shadow:inset 4px 0 0 #743037}
 #brief input:focus-visible,#brief select:focus-visible,#brief textarea:focus-visible{outline:3px solid #754c2d;outline-offset:3px;border-color:#754c2d}
+#brief input[aria-invalid="true"]:focus-visible,#brief select[aria-invalid="true"]:focus-visible,#brief textarea[aria-invalid="true"]:focus-visible{border-color:#743037}
 .form-feedback{display:flex;align-items:center;box-sizing:border-box;min-height:96px;margin:16px 0 0;padding:11px 14px;border-left:4px solid #758078;background:#f8f5ee;font-size:13px;line-height:1.55;color:#424b45}
 .form-feedback[data-state="error"]{border-left-color:#743037;background:#fff1ef;color:#743037}
 .form-feedback[data-state="success"]{border-left-color:#174c3b;background:#eef5ef;color:#174c3b}
