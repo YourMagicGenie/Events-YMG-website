@@ -84,6 +84,86 @@ try {
     assert.ok(metrics.logoRight <= metrics.actionsLeft + 0.5, `${width}px logo and enquiry controls do not collide: ${JSON.stringify(metrics)}`);
     assert.ok(metrics.subtitleTop >= metrics.wordmarkBottom - 1, `${width}px brand subtitle remains legible below the wordmark: ${JSON.stringify(metrics)}`);
 
+    const typeScale = await page.evaluate(() => {
+      const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
+      return [
+        ["body copy", size("body"), 15],
+        ["supporting copy", size(".intro p:not(.lead)"), 14],
+        ["concept description", size(".concept p"), 14],
+        ["concept number", size(".concept small"), 11],
+        ["form label", size("label"), 13],
+        ["eyebrow", size(".eyebrow"), 11],
+        ["brand subtitle", size(".logo small"), 10],
+        ["footer copy", size("footer p"), 12],
+      ];
+    });
+    for (const [name, actual, minimum] of typeScale) {
+      assert.ok(actual >= minimum, `${name} is ${actual}px at ${width}px; expected at least ${minimum}px`);
+    }
+
+    const audit = await page.evaluate(() => {
+      const rgb = color => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+      const luminance = color => rgb(color).map(value => value / 255).map(value =>
+        value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+        .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+      const contrast = (foreground, background) => {
+        const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+        return Number(((values[0] + 0.05) / (values[1] + 0.05)).toFixed(2));
+      };
+      const style = selector => getComputedStyle(document.querySelector(selector));
+      const body = style("body");
+      const hero = style(".hero");
+      const partnerships = style(".partnerships");
+      const enquiry = style(".enquiry");
+      const feedback = document.querySelector("#form-feedback");
+      feedback.dataset.state = "error";
+      const errorColor = getComputedStyle(feedback).color;
+      feedback.dataset.state = "success";
+      const successColor = getComputedStyle(feedback).color;
+      delete feedback.dataset.state;
+      const readings = [
+        ["main copy", body.color, body.backgroundColor],
+        ["muted copy on paper", style(".intro p:not(.lead)").color, body.backgroundColor],
+        ["muted copy on warm ivory", style(".about p").color, style(".about").backgroundColor],
+        ["muted copy on enquiry surface", style(".enquiry .description").color, enquiry.backgroundColor],
+        ["red section accent", style(".intro h2 em").color, body.backgroundColor],
+        ["red section accent on warm ivory", style(".about h2 em").color, style(".about").backgroundColor],
+        ["hero supporting copy", style(".hero p").color, hero.backgroundColor],
+        ["hero eyebrow", style(".hero .eyebrow").color, hero.backgroundColor],
+        ["hero heading accent", style(".hero h1 em").color, hero.backgroundColor],
+        ["partnership supporting copy", style(".partnerships p").color, partnerships.backgroundColor],
+        ["partnership heading accent", style(".partnerships h2 em").color, partnerships.backgroundColor],
+        ["header navigation", style("header nav a").color, style("header").backgroundColor],
+        ["header enquiry link", style(".header-cta").color, style("header").backgroundColor],
+        ["enquiry field labels", style("label").color, enquiry.backgroundColor],
+        ["primary enquiry button", style(".hero .btn.primary").color, style(".hero .btn.primary").backgroundColor],
+        ["band accent", style(".band span").color, style(".band").backgroundColor],
+        ["enabled carousel arrow", style('.deck-arrow:not([aria-disabled="true"])').color, style('.deck-arrow:not([aria-disabled="true"])').backgroundColor],
+        ["preview notice", style(".site-note").color, style(".site-note").backgroundColor],
+        ["enquiry error message", errorColor, enquiry.backgroundColor],
+        ["enquiry success message", successColor, enquiry.backgroundColor],
+        ["footer supporting text", style("footer p").color, style("footer").backgroundColor],
+      ].map(([name, foreground, background]) => ({ name, ratio: contrast(foreground, background) }));
+      const selectors = [
+        ".menu-toggle", ".header-cta", "header .logo", ".primary-nav > a:not(.btn)",
+        ".deck-arrow", ".concept button", ".partnerships .btn",
+        "#brief input:not([type=hidden]):not(#bot-field)", "#brief select", "#brief textarea",
+        "#submit-enquiry", "footer a", ".site-note a", ".enquiry .small a",
+      ];
+      const targets = selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(element => {
+        const rect = element.getBoundingClientRect();
+        const visible = rect.width > 0 && rect.height > 0 && getComputedStyle(element).visibility !== "hidden";
+        return visible ? { selector, width: rect.width, height: rect.height } : null;
+      }).filter(Boolean));
+      return { readings, targets };
+    });
+    for (const reading of audit.readings) {
+      assert.ok(reading.ratio >= 4.5, `${reading.name} contrast is ${reading.ratio}:1 at ${width}px; expected at least 4.5:1`);
+    }
+    for (const target of audit.targets) {
+      assert.ok(target.width >= 44 && target.height >= 44, `${target.selector} is a ${target.width.toFixed(1)}x${target.height.toFixed(1)}px target at ${width}px; expected at least 44x44px`);
+    }
+
     const toggle = page.getByRole("button", { name: "Open navigation menu" });
     const nav = page.getByRole("navigation", { name: "Main navigation" });
     if (width <= 850) {
@@ -234,6 +314,35 @@ try {
   await privacy.route("https://fonts.gstatic.com/**", route => route.abort());
   const privacyResponse = await privacy.goto(`${baseUrl}/privacy.html`, { waitUntil: "load" });
   assert.equal(privacyResponse.status(), 200, "privacy page is available");
+  const privacyReadability = await privacy.evaluate(() => {
+    const rgb = color => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+    const luminance = color => rgb(color).map(value => value / 255).map(value =>
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+    const contrast = (foreground, background) => {
+      const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+      return Number(((values[0] + 0.05) / (values[1] + 0.05)).toFixed(2));
+    };
+    const main = document.querySelector("main");
+    const body = getComputedStyle(document.body);
+    return {
+      fontSize: Number.parseFloat(body.fontSize),
+      lineHeight: Number.parseFloat(body.lineHeight) / Number.parseFloat(body.fontSize),
+      bodyContrast: contrast(body.color, body.backgroundColor),
+      smallContrast: contrast(getComputedStyle(document.querySelector("small")).color, body.backgroundColor),
+      links: [...main.querySelectorAll("a[href]")].map(link => {
+        const rect = link.getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      }),
+    };
+  });
+  assert.ok(privacyReadability.fontSize >= 16, `privacy text is ${privacyReadability.fontSize}px or larger`);
+  assert.ok(privacyReadability.lineHeight >= 1.7, `privacy text line spacing remains generous: ${privacyReadability.lineHeight}`);
+  assert.ok(privacyReadability.bodyContrast >= 4.5, `privacy body contrast is ${privacyReadability.bodyContrast}:1`);
+  assert.ok(privacyReadability.smallContrast >= 4.5, `privacy small-text contrast is ${privacyReadability.smallContrast}:1`);
+  for (const link of privacyReadability.links) {
+    assert.ok(link.width >= 24 && link.height >= 24, `privacy text link is a ${link.width.toFixed(1)}x${link.height.toFixed(1)}px target; expected at least 24x24px`);
+  }
   const missingResponse = await privacy.goto(`${baseUrl}/does-not-exist`, { waitUntil: "load" });
   assert.equal(missingResponse.status(), 404, "unknown static paths keep a real 404 status");
   await privacy.close();
