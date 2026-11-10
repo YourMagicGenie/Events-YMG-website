@@ -144,7 +144,7 @@ try {
       const deck = document.querySelector("#concept-deck");
       const bounds = element => {
         const rect = element.getBoundingClientRect();
-        return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
+        return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left, width: rect.width, height: rect.height };
       };
       return {
         display: getComputedStyle(deck).display,
