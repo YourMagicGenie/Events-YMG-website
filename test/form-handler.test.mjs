@@ -8,6 +8,7 @@ const env = {
   TURNSTILE_SECRET_KEY: "test-secret",
   GOOGLE_RELAY_URL: "https://script.google.com/macros/s/test-deployment/exec",
   GOOGLE_RELAY_SECRET: "test-relay-secret",
+  EVENTS_SUBMISSION_LIMITER: { limit: async () => ({ success: true }) },
 };
 const form = (overrides = {}) => new URLSearchParams({
   name: "Jane Doe", email: "jane@example.org", business: "Terrace Genova",
@@ -16,14 +17,16 @@ const form = (overrides = {}) => new URLSearchParams({
   "cf-turnstile-response": "test-token", ...overrides,
 });
 const request = (params = form(), headers = {}) => new Request(`${origin}/api/events/enquiry`, {
-  method: "POST", headers: { origin, "content-type": "application/x-www-form-urlencoded", ...headers },
+  method: "POST", headers: { origin, "content-type": "application/x-www-form-urlencoded", "cf-connecting-ip": "198.51.100.24", ...headers },
   body: params.toString(),
 });
 
-test("configuration is withheld when the relay is not configured", async () => {
+test("configuration is withheld when relay or rate limiting is not configured", async () => {
   const response = await handleEventsApi(new Request(`${origin}/api/events/config`), { ...env, GOOGLE_RELAY_SECRET: "" });
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { ready: false });
+  const missingLimiter = await handleEventsApi(new Request(`${origin}/api/events/config`), { ...env, EVENTS_SUBMISSION_LIMITER: undefined });
+  assert.equal(missingLimiter.status, 503);
 });
 
 test("direct-send path checks origin, fields, honeypot and Turnstile before relay", async () => {
@@ -73,6 +76,40 @@ test("a relay failure reports an error instead of claiming delivery", async () =
       : Response.json({ ok: false, code: "RELAY_FAILED" }));
   assert.equal(response.status, 503);
   assert.equal((await response.json()).ok, false);
+});
+
+test("rate limiting rejects excess requests before Turnstile or relay", async () => {
+  let fetchCalls = 0;
+  let rateKey;
+  const response = await handleEventsApi(request(), {
+    ...env,
+    EVENTS_SUBMISSION_LIMITER: { limit: async ({ key }) => { rateKey = key; return { success: false }; } },
+  }, async () => { fetchCalls++; return Response.json({ ok: true }); });
+  assert.equal(response.status, 429);
+  assert.equal(response.headers.get("retry-after"), "60");
+  assert.equal(rateKey, "198.51.100.24");
+  assert.equal(fetchCalls, 0);
+});
+
+test("rate limiter failure fails closed without logging or forwarding the enquiry", async () => {
+  let fetchCalls = 0;
+  const response = await handleEventsApi(request(), {
+    ...env,
+    EVENTS_SUBMISSION_LIMITER: { limit: async () => { throw new Error("private limiter detail"); } },
+  }, async () => { fetchCalls++; return Response.json({ ok: true }); });
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { ok: false, error: "Online submission is temporarily unavailable." });
+  assert.equal(fetchCalls, 0);
+});
+
+test("a missing Cloudflare client address prevents submission", async () => {
+  let fetchCalls = 0;
+  const response = await handleEventsApi(request(form(), { "cf-connecting-ip": "" }), env, async () => {
+    fetchCalls++;
+    return Response.json({ ok: true });
+  });
+  assert.equal(response.status, 503);
+  assert.equal(fetchCalls, 0);
 });
 
 test("the page's curly-apostrophe default event format passes validation", async () => {

@@ -38,6 +38,7 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /class="skip-link" href="#main-content"/);
   assert.match(privacy, /Cloudflare Turnstile/);
   assert.match(privacy, /Google Apps Script/);
+  assert.match(privacy, /temporary request threshold/);
   assert.match(privacy, /does not create a submissions database/);
 });
 
@@ -54,6 +55,11 @@ test("Worker config serves this repo's assets from a separate preview worker", (
   });
   assert.equal("routes" in config, false, "preview config must not attach a route");
   assert.equal("custom_domains" in config, false, "preview config must not attach a custom domain");
+  assert.deepEqual(config.ratelimits, [{
+    name: "EVENTS_SUBMISSION_LIMITER",
+    namespace_id: "2026111010",
+    simple: { limit: 5, period: 60 },
+  }]);
 });
 
 test("event formats form a six-card carousel without filters or mockup disclaimers", () => {
@@ -89,6 +95,7 @@ test("enquiry form collects reply email and submits inline through the Worker", 
   assert.match(interactions, /sendEventsEnquiry\(new FormData\(form\), turnstileToken\)/);
   assert.match(interactions, /submit\.disabled = true/);
   assert.match(interactions, /events_enquiry/);
+  assert.match(interactions, /if \(submitting\) return/);
   assert.ok(existsSync(new URL("../dist/assets/enquiry-client.js", import.meta.url)));
 });
 
