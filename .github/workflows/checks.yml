@@ -56,3 +56,40 @@ jobs:
           path: test-results/responsive/
           if-no-files-found: ignore
           retention-days: 3
+
+  performance:
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'codex/issue-25-performance')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: baseline
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Restore Playwright browser cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+      - name: Compare base and candidate performance
+        env:
+          PERFORMANCE_BASE_DIR: ${{ github.workspace }}/baseline
+        run: npm run audit:performance
+      - name: Upload Lighthouse comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: events-performance-${{ github.sha }}
+          path: test-results/performance/
+          if-no-files-found: ignore
+          retention-days: 3

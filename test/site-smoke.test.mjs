@@ -42,6 +42,38 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /temporary request threshold/);
   assert.match(privacy, /does not create a submissions database/);
   assert.match(privacy, /served from Unsplash’s image CDN/);
+  assert.match(privacy, /page’s fonts are served from this website/);
+  assert.doesNotMatch(privacy, /Google Fonts/);
+});
+
+test("variable fonts are self-hosted, licensed, preloaded, and disclosed accurately", () => {
+  const fontAssets = [
+    "dm-sans-latin.woff2",
+    "dm-sans-latin-ext.woff2",
+    "playfair-display-latin.woff2",
+    "playfair-display-latin-ext.woff2",
+    "playfair-display-italic-latin.woff2",
+    "playfair-display-italic-latin-ext.woff2",
+    "OFL-dmsans.txt",
+    "OFL-playfairdisplay.txt",
+  ];
+  for (const asset of fontAssets) assert.ok(existsSync(new URL(`../dist/assets/fonts/${asset}`, import.meta.url)), `${asset} is present`);
+  for (const page of [html, italianHtml]) {
+    assert.doesNotMatch(page, /fonts\.googleapis\.com|fonts\.gstatic\.com|@import/);
+    assert.equal([...page.matchAll(/@font-face\{/g)].length, 6, "English and Italian pages retain all weight, style, and language subsets");
+    for (const asset of ["dm-sans-latin.woff2", "playfair-display-latin.woff2"]) {
+      assert.ok(page.includes(`<link rel="preload" href="/assets/fonts/${asset}" as="font" type="font/woff2" crossorigin>`), `${asset} is preloaded for first-viewport text`);
+    }
+    assert.match(page, /font-display:swap/);
+  }
+  const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
+  assert.match(italianPrivacy, /I font sono serviti da questo sito web/);
+  assert.doesNotMatch(italianPrivacy, /Google Fonts/);
+  const provenance = readFileSync(new URL("../docs/FONT-ASSET-PROVENANCE.md", import.meta.url), "utf8");
+  assert.match(provenance, /SIL Open Font License 1\.1/);
+  for (const unusedPhoto of ["hero.jpg", "dinner.jpg", "rooftop-night.jpg"]) {
+    assert.ok(!existsSync(new URL(`../dist/assets/${unusedPhoto}`, import.meta.url)), `${unusedPhoto} is not shipped as an unreferenced asset`);
+  }
 });
 
 test("English and Italian branded recovery pages are accessible and excluded from indexing", () => {
