@@ -537,6 +537,34 @@ test("enquiry form collects reply email and submits inline through the Worker", 
 
 
 
+test("enquiry controls expose bilingual required guidance and accessible states", () => {
+  const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+  const messages = readFileSync(new URL("../dist/assets/i18n.js", import.meta.url), "utf8");
+
+  assert.match(html, /id="form-required-note" class="form-required-note">Fields marked \* are required\./);
+  assert.match(italian, /id="form-required-note" class="form-required-note">I campi contrassegnati con \* sono obbligatori\./);
+  for (const page of [html, italian]) {
+    assert.match(page, /id="intent" name="intent" required aria-describedby="intent-help form-required-note"/);
+    assert.match(page, /id="name" name="name" autocomplete="name" maxlength="120" placeholder="[^"]+" aria-describedby="form-required-note"/);
+    assert.match(page, /id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="[^"]+" aria-describedby="form-required-note"/);
+    assert.match(page, /id="business" name="business"[^>]*aria-describedby="business-help form-required-note"/);
+    assert.match(page, /#brief input:not\(\[type=hidden\]\),#brief select,#brief textarea\{[^}]*min-height:48px[^}]*border:1px solid[^}]*background:#faf8f2/);
+    assert.match(page, /#brief input:focus-visible,#brief select:focus-visible,#brief textarea:focus-visible\{outline:3px solid/);
+    assert.match(page, /#brief \[aria-invalid="true"\]\{border-color:#743037/);
+    assert.match(page, /#brief input:disabled,#brief select:disabled,#brief textarea:disabled\{/);
+    assert.match(page, /\.form-feedback\[data-state="error"\]\{/);
+    assert.match(page, /\.form-feedback\[data-state="success"\]\{/);
+    assert.match(page, /\.form-feedback\{[^}]*min-height:96px/);
+  }
+  assert.match(interactions, /form\.addEventListener\("invalid"/);
+  assert.match(interactions, /form\.addEventListener\("input", updateFieldValidity\)/);
+  assert.match(interactions, /control\.setAttribute\("aria-invalid", "true"\)/);
+  assert.match(interactions, /restoreFeedbackIfValid/);
+  assert.match(messages, /invalidFields: "Please check the highlighted fields and correct any errors\."/);
+  assert.match(messages, /invalidFields: "Controlla i campi evidenziati e correggi gli eventuali errori\."/);
+});
+
 test("English and Italian pages publish reciprocal language signals and translated journeys", () => {
   const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
   const englishPrivacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");

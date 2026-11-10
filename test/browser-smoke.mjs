@@ -323,11 +323,51 @@ try {
       const partnerships = style(".partnerships");
       const enquiry = style(".enquiry");
       const feedback = document.querySelector("#form-feedback");
+      const originalFeedback = { text: feedback.textContent, state: feedback.dataset.state || "" };
       feedback.dataset.state = "error";
       const errorColor = getComputedStyle(feedback).color;
+      const errorBackground = getComputedStyle(feedback).backgroundColor;
       feedback.dataset.state = "success";
       const successColor = getComputedStyle(feedback).color;
-      delete feedback.dataset.state;
+      const successBackground = getComputedStyle(feedback).backgroundColor;
+      const statusHeights = [];
+      for (const [state, text] of [
+        ["", "Connecting to the secure enquiry service…"],
+        ["error", "Online enquiries are temporarily unavailable. Please email us directly using the address shown here."],
+        ["success", "Your enquiry has been accepted for processing. We’ll follow up at the email address you provided."],
+      ]) {
+        if (state) feedback.dataset.state = state;
+        else delete feedback.dataset.state;
+        feedback.textContent = text;
+        statusHeights.push(Math.round(feedback.getBoundingClientRect().height));
+      }
+      if (originalFeedback.state) feedback.dataset.state = originalFeedback.state;
+      else delete feedback.dataset.state;
+      feedback.textContent = originalFeedback.text;
+      const invalidField = document.querySelector("#name");
+      invalidField.setAttribute("aria-invalid", "true");
+      const invalidFieldStyle = getComputedStyle(invalidField);
+      const errorField = {
+        borderColor: invalidFieldStyle.borderTopColor,
+        backgroundColor: invalidFieldStyle.backgroundColor,
+      };
+      invalidField.removeAttribute("aria-invalid");
+      const fields = [...document.querySelectorAll("#intent,#name,#email,#business,#format,#guests,#idea")].map(field => {
+        const style = getComputedStyle(field);
+        const bounds = field.getBoundingClientRect();
+        const label = document.querySelector(`label[for="${field.id}"]`);
+        const labelBounds = label?.getBoundingClientRect();
+        return {
+          id: field.id,
+          minHeight: bounds.height,
+          borderStyle: style.borderTopStyle,
+          borderWidth: parseFloat(style.borderTopWidth),
+          backgroundColor: style.backgroundColor,
+          disabled: field.disabled,
+          opacity: style.opacity,
+          labelOverlaps: Boolean(labelBounds && labelBounds.bottom > bounds.top + 1),
+        };
+      });
       const readings = [
         ["main copy", body.color, body.backgroundColor],
         ["muted copy on paper", style(".intro p:not(.lead)").color, body.backgroundColor],
@@ -348,8 +388,8 @@ try {
         ["band accent", style(".band span").color, style(".band").backgroundColor],
         ["enabled carousel arrow", style('.deck-arrow:not([aria-disabled="true"])').color, style('.deck-arrow:not([aria-disabled="true"])').backgroundColor],
         ["preview notice", style(".site-note").color, style(".site-note").backgroundColor],
-        ["enquiry error message", errorColor, enquiry.backgroundColor],
-        ["enquiry success message", successColor, enquiry.backgroundColor],
+        ["enquiry error message", errorColor, errorBackground],
+        ["enquiry success message", successColor, successBackground],
         ["footer supporting text", style("footer p").color, style("footer").backgroundColor],
       ].map(([name, foreground, background]) => ({ name, ratio: contrast(foreground, background) }));
       const selectors = [
@@ -363,7 +403,7 @@ try {
         const visible = rect.width > 0 && rect.height > 0 && getComputedStyle(element).visibility !== "hidden";
         return visible ? { selector, width: rect.width, height: rect.height } : null;
       }).filter(Boolean));
-      return { readings, targets };
+      return { readings, targets, fields, statusHeights, errorField };
     });
     for (const reading of audit.readings) {
       assert.ok(reading.ratio >= 4.5, `${reading.name} contrast is ${reading.ratio}:1 at ${width}px; expected at least 4.5:1`);
@@ -371,6 +411,20 @@ try {
     for (const target of audit.targets) {
       assert.ok(target.width >= 44 && target.height >= 44, `${target.selector} is a ${target.width.toFixed(1)}x${target.height.toFixed(1)}px target at ${width}px; expected at least 44x44px`);
     }
+    for (const field of audit.fields) {
+      assert.ok(field.minHeight >= 44, `${field.id} control is ${field.minHeight.toFixed(1)}px high at ${width}px`);
+      assert.equal(field.borderStyle, "solid", `${field.id} has a visible solid boundary at ${width}px`);
+      assert.ok(field.borderWidth >= 1, `${field.id} boundary is at least 1px at ${width}px`);
+      assert.notEqual(field.backgroundColor, "rgba(0, 0, 0, 0)", `${field.id} has its own field surface at ${width}px`);
+      assert.equal(field.labelOverlaps, false, `${field.id} label remains above its control at ${width}px`);
+    }
+    const disabledBusinessField = audit.fields.find(field => field.id === "business");
+    assert.equal(disabledBusinessField.disabled, true, `${width}px shows the conditional business field as disabled before a path is selected`);
+    assert.equal(disabledBusinessField.opacity, "1", `${width}px disabled field remains fully legible`);
+    assert.notEqual(disabledBusinessField.backgroundColor, audit.fields.find(field => field.id === "name").backgroundColor, `${width}px disabled and editable fields have distinct surfaces`);
+    assert.equal(new Set(audit.statusHeights).size, 1, `neutral, error and success feedback reserve the same height at ${width}px: ${JSON.stringify(audit.statusHeights)}`);
+    assert.equal(audit.errorField.borderColor, "rgb(116, 48, 55)", `${width}px error fields use the accessible red border`);
+    assert.notEqual(audit.errorField.backgroundColor, "#faf8f2", `${width}px error fields receive a distinct surface`);
 
     const toggle = page.getByRole("button", { name: "Open navigation menu" });
     const nav = page.getByRole("navigation", { name: "Main navigation" });
@@ -525,6 +579,39 @@ try {
   assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific illustration descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
   assert.equal(await mobile.locator(".menu-toggle").getAttribute("aria-label"), "Apri il menu di navigazione");
+  await mobile.locator("#intent").selectOption("venue_partnership");
+  assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue path makes the business field required");
+  const italianFieldGeometry = await mobile.evaluate(() => {
+    const label = document.querySelector('label[for="business"]');
+    const field = document.querySelector("#business");
+    const labelBounds = label.getBoundingClientRect();
+    const fieldBounds = field.getBoundingClientRect();
+    return {
+      viewportWidth: window.innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      labelBottom: labelBounds.bottom,
+      fieldTop: fieldBounds.top,
+      labelWidth: labelBounds.width,
+    };
+  });
+  assert.ok(italianFieldGeometry.documentWidth <= italianFieldGeometry.viewportWidth, `Italian long field labels keep the mobile form within the viewport: ${JSON.stringify(italianFieldGeometry)}`);
+  assert.ok(italianFieldGeometry.labelBottom <= italianFieldGeometry.fieldTop + 1, `Italian long field label stays above its control: ${JSON.stringify(italianFieldGeometry)}`);
+  assert.equal(await mobile.locator("#brief").evaluate(form => form.checkValidity()), false, "native constraint validation rejects an incomplete enquiry without submitting it");
+  assert.deepEqual(await mobile.locator("#brief [aria-invalid='true']").evaluateAll(fields => fields.map(field => field.id)), ["name", "email", "business"], "all invalid required controls receive visible error state");
+  assert.equal(await mobile.locator("#form-feedback").textContent(), "Controlla i campi evidenziati e correggi gli eventuali errori.", "Italian validation feedback is announced in the live status");
+  assert.ok((await mobile.locator("#name").getAttribute("aria-describedby")).includes("form-required-note"), "the name field explains the required marker to assistive technology");
+  assert.equal(await mobile.locator("#business").evaluate(field => getComputedStyle(field).borderTopColor), "rgb(116, 48, 55)", "invalid venue field shows the red error border");
+  await mobile.getByLabel("Nome e cognome *").fill("Dante");
+  await mobile.getByLabel("Indirizzo email *").fill("dante@example.com");
+  assert.equal(await mobile.locator("#name").getAttribute("aria-invalid"), null, "valid name input clears its error state");
+  assert.equal(await mobile.locator("#email").getAttribute("aria-invalid"), null, "valid email input clears its error state");
+  assert.equal(await mobile.locator("#business").getAttribute("aria-invalid"), "true", "the remaining missing venue keeps its error state");
+  await mobile.locator("#intent").selectOption("private_celebration");
+  assert.equal(await mobile.locator("#business").evaluate(input => input.required), false, "private path makes the business field optional");
+  assert.equal(await mobile.locator("#business").getAttribute("aria-invalid"), null, "making the business field optional clears its stale error state");
+  assert.ok((await mobile.locator("#form-feedback").textContent()).includes("L’invio online non è momentaneamente disponibile"), "resolving field errors restores the service status that preceded validation");
+  assert.equal(await mobile.locator("#submit-enquiry").isDisabled(), true, "validation checks do not send or enable the enquiry");
+
   const ItalianRooftopButton = mobile.getByRole("button", { name: "Esplora una serata in terrazza" });
   await ItalianRooftopButton.scrollIntoViewIfNeeded();
   await ItalianRooftopButton.click();
