@@ -597,6 +597,30 @@ test("venue offer and commercial FAQ are clear, localized and carefully qualifie
   assert.match(italian, /Non si garantiscono vendite o affluenza/);
 });
 
+test("format cards are visibly ideas, while scheduled-event content remains absent until verified", () => {
+  const model = readFileSync(new URL("../docs/editorial/CONTENT-MODEL.md", import.meta.url), "utf8");
+  const template = readFileSync(new URL("../docs/editorial/RECORD-TEMPLATE.md", import.meta.url), "utf8");
+  const conceptIntros = [
+    [html, "These are not scheduled events or ticket listings."],
+    [italianHtml, "Non sono eventi già programmati né biglietti in vendita."],
+  ];
+
+  for (const [page, distinction] of conceptIntros) {
+    const section = page.match(/<section class="concepts" id="concepts"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(section, "the localized format section exists");
+    assert.ok(section.includes(distinction), "the format cards are identified as ideas, not scheduled listings");
+    assert.doesNotMatch(section, /<time\b|countdown|buy tickets|acquista i biglietti/i);
+    assert.doesNotMatch(page, /id="upcoming-events"|class="[^"]*upcoming-events[^"]*"/i);
+  }
+
+  for (const phrase of ["seasonal_concept", "scheduled_event", "Dante David", "expires_on", "Europe/Rome", "issue #36", "Do not build a second calendar"]) {
+    assert.ok(model.includes(phrase), `editorial model defines ${phrase}`);
+  }
+  assert.match(template, /type: seasonal_concept[\s\S]*type: scheduled_event/);
+  assert.match(template, /deliberately has no event date, confirmed venue, price, availability, or ticket URL/);
+  assert.match(template, /Do not store ticket availability here/);
+});
+
 
 test("venue outreach one-pager is small, factual and withheld from the live download path pending approval", () => {
   const pdf = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.pdf", import.meta.url));
