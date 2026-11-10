@@ -40,6 +40,7 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /Google Apps Script/);
   assert.match(privacy, /temporary request threshold/);
   assert.match(privacy, /does not create a submissions database/);
+  assert.match(privacy, /served from Unsplash’s image CDN/);
 });
 
 test("Worker config serves this repo's assets from a separate preview worker", () => {
@@ -108,7 +109,6 @@ test("hero uses licensed coastal photography without implying a YMG event", () =
   const provenance = readFileSync(new URL("../docs/ASSET-PROVENANCE.md", import.meta.url), "utf8");
   assert.match(provenance, /Arlind Photography/);
   assert.match(provenance, /Unsplash License/);
-  assert.match(privacy, /served from Unsplash’s image CDN/);
 });
 
 test("enquiry form collects reply email and submits inline through the Worker", () => {
