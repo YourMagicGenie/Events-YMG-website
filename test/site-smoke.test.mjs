@@ -584,3 +584,21 @@ test("venue offer and commercial FAQ are clear, localized and carefully qualifie
   assert.match(italian, /Non c’è una ripartizione standard dei ricavi/);
   assert.match(italian, /Non si garantiscono vendite o affluenza/);
 });
+
+
+test("venue outreach one-pager is small, factual and withheld from the live download path pending approval", () => {
+  const pdf = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.pdf", import.meta.url));
+  const source = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.md", import.meta.url), "utf8");
+  const pdfText = pdf.toString("latin1");
+
+  assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")), "one-pager is a PDF");
+  assert.ok(pdf.length < 250_000, "PDF remains small for email and WhatsApp");
+  assert.ok(pdfText.includes("mailto:hello@ymgconsultingservices.com"), "email contact is embedded as a clickable link");
+  assert.ok(pdfText.includes("subject=Collaborazione%20con%20YMG%20Events"), "QR email subject is prefilled with the event collaboration");
+  for (const claim of ["ospitalità", "responsabilità", "vendite e affluenza non sono garantite", "Non esiste una ripartizione standard"]) {
+    assert.ok(source.includes(claim), `source copy preserves factual offer and commercial limits: ${claim}`);
+  }
+  for (const page of [html, italianHtml]) {
+    assert.doesNotMatch(page, /venue-partnership-one-pager-it\.pdf/, "website download link waits for owner approval");
+  }
+});
