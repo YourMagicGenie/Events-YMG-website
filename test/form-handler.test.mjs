@@ -42,7 +42,9 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
   const invalidEmail = await handleEventsApi(request(form({ email: "nope" })), env, fetcher);
   assert.equal(invalidEmail.status, 400);
   const overlongFormat = await handleEventsApi(request(form({ format: "x".repeat(101) })), env, fetcher);
+  const unlistedFormat = await handleEventsApi(request(form({ format: "Rooftop evenings\r\nBCC: extra@example.org" })), env, fetcher);
   assert.equal(overlongFormat.status, 400);
+  assert.equal(unlistedFormat.status, 400, "arbitrary format text cannot be injected into the email subject");
   const honeypot = await handleEventsApi(request(form({ "bot-field": "robot" })), env, fetcher);
   assert.equal(honeypot.status, 202);
   assert.equal(calls.length, 0);
@@ -53,7 +55,7 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
   assert.equal(calls.length, 2);
   const payload = JSON.parse(calls[1].options.body);
   assert.equal(payload.replyTo, "jane@example.org");
-  assert.equal(payload.subject, "New YMG Events enquiry — Venue partnership — Jane Doe");
+  assert.equal(payload.subject, "New YMG Events enquiry — Venue partnership — Rooftop evenings — Jane Doe");
   for (const expected of ["Enquiry type: Venue partnership", "Enquiry source: Events website", "Terrace Genova", "June evening", "€2000", "A sunset event", "60–100"]) {
     assert.ok(payload.text.includes(expected));
   }
@@ -61,9 +63,9 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
 
 test("each enquiry pathway carries its type and source, with venue details required only for organizations", async () => {
   const cases = [
-    { intent: "venue_partnership", business: "Harbor Restaurant", type: "Venue partnership", field: "Venue or hospitality business" },
-    { intent: "corporate_event", business: "North Star Studio", type: "Corporate event", field: "Company or team" },
-    { intent: "private_celebration", business: "", type: "Private celebration", field: "Preferred venue or location" },
+    { intent: "venue_partnership", business: "Harbor Restaurant", type: "Venue partnership", format: "Jazz & Cocktails", field: "Venue or hospitality business" },
+    { intent: "corporate_event", business: "North Star Studio", type: "Corporate event", format: "Corporate Social", field: "Company or team" },
+    { intent: "private_celebration", business: "", type: "Private celebration", format: "Private celebrations", field: "Preferred venue or location" },
   ];
   for (const example of cases) {
     let relayPayload;
@@ -74,9 +76,10 @@ test("each enquiry pathway carries its type and source, with venue details requi
     });
     assert.equal(response.status, 202, `${example.intent} enquiries can be submitted`);
     assert.equal(relayPayload.replyTo, "jane@example.org", "the visitor email remains the Reply-To value");
-    assert.equal(relayPayload.subject, `New YMG Events enquiry — ${example.type} — Jane Doe`);
+    assert.equal(relayPayload.subject, `New YMG Events enquiry — ${example.type} — ${example.format} — Jane Doe`);
     assert.ok(relayPayload.text.includes(`Enquiry type: ${example.type}`));
     assert.ok(relayPayload.text.includes("Enquiry source: Events website"));
+    assert.ok(relayPayload.text.includes(`Event format: ${example.format}`));
     assert.ok(relayPayload.text.includes(`${example.field}: ${example.business || "(not provided)"}`));
   }
 });
@@ -154,6 +157,27 @@ test("the page's curly-apostrophe default event format passes validation", async
   assert.equal(response.status, 202);
 });
 
-test("subject removes header controls from sender name", () => {
-  assert.equal(eventsNotificationSubject("Jane\r\nBCC: extra@example.org"), "New YMG Events enquiry — Venue partnership — Jane BCC: extra@example.org");
+test("a cleared event format falls back to the selected enquiry path's generic format", async () => {
+  for (const [intent, format] of [
+    ["venue_partnership", "Let’s explore a partnership"],
+    ["corporate_event", "Corporate Social"],
+    ["private_celebration", "Private celebrations"],
+  ]) {
+    let relayPayload;
+    const response = await handleEventsApi(request(form({ intent, format: "", business: intent === "private_celebration" ? "" : "Example venue" })), env, async (url, options) => {
+      if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" });
+      relayPayload = JSON.parse(options.body);
+      return Response.json({ ok: true });
+    });
+    assert.equal(response.status, 202, `${intent} accepts an enquiry with no specific format`);
+    assert.ok(relayPayload.text.includes(`Event format: ${format}`));
+    assert.ok(relayPayload.subject.includes(`— ${format} —`));
+  }
+});
+
+test("subject removes header controls from sender name and event format", () => {
+  assert.equal(
+    eventsNotificationSubject("Jane\r\nBCC: extra@example.org", "venue_partnership", "Jazz\r\nBCC: extra@example.org"),
+    "New YMG Events enquiry — Venue partnership — Jazz BCC: extra@example.org — Jane BCC: extra@example.org",
+  );
 });
