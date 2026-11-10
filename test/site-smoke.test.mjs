@@ -149,3 +149,51 @@ test("enquiry form collects reply email and submits inline through the Worker", 
   assert.ok(existsSync(new URL("../dist/assets/enquiry-client.js", import.meta.url)));
 });
 
+
+
+test("English and Italian pages publish reciprocal language signals and translated journeys", () => {
+  const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+  const englishPrivacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
+  const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
+  const sitemap = readFileSync(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+  const messages = readFileSync(new URL("../dist/assets/i18n.js", import.meta.url), "utf8");
+  const navigation = readFileSync(new URL("../dist/assets/navigation.js", import.meta.url), "utf8");
+
+  assert.match(html, /<html lang="en">/);
+  assert.match(italian, /<html lang="it">/);
+  assert.match(html, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/">/);
+  assert.match(italian, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/it\/">/);
+  assert.match(html, /hreflang="it" href="https:\/\/events\.ymgconsultingservices\.com\/it\//);
+  assert.match(italian, /hreflang="en" href="https:\/\/events\.ymgconsultingservices\.com\//);
+  assert.match(englishPrivacy, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/privacy\.html"/);
+  assert.match(italianPrivacy, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/it\/privacy\.html"/);
+  assert.match(italianPrivacy, /hreflang="en" href="https:\/\/events\.ymgconsultingservices\.com\/privacy\.html"/);
+  assert.match(italianPrivacy, /id="privacy-language-switch"[^>]*href="\/privacy\.html"/);
+
+  for (const route of ["/it/", "/it/privacy.html"]) {
+    assert.ok(sitemap.includes(`https://events.ymgconsultingservices.com${route}`), `${route} is in the sitemap`);
+  }
+  assert.match(italian, /L’eleganza ha un/);
+  assert.match(italian, /aria-label="Apri il menu di navigazione"/);
+  assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
+  assert.match(italian, /alt="Barche ormeggiate accanto ai ristoranti sul porto al tramonto\."/);
+  assert.match(italian, /<label for="name">Nome e cognome \*<\/label>/);
+  assert.match(italian, /placeholder="Come possiamo chiamarti\?"/);
+  assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);
+  assert.match(italian, /<button[^>]*data-concept="Rooftop evenings"/);
+  assert.match(italian, /href="\/it\/privacy.html"[^>]*>Scopri come trattiamo i tuoi dati/);
+  assert.match(italianPrivacy, /Informativa sulla privacy/);
+  assert.match(italianPrivacy, /Visita del sito/);
+  assert.match(italianPrivacy, /Invio di una richiesta/);
+  assert.match(interactions, /language: messages\.turnstileLanguage/);
+  assert.match(messages, /turnstileLanguage: "it"/);
+  assert.match(messages, /formUnavailable: "L’invio online/);
+  assert.match(navigation, /Chiudi il menu di navigazione/);
+
+  const italianAssets = [...italian.matchAll(/(?:src|href)="(\.\.\/assets\/[^"]+)"/g)].map(match => match[1]);
+  assert.ok(italianAssets.length > 0, "Italian page has local asset references");
+  for (const asset of italianAssets) {
+    assert.ok(existsSync(new URL(`../dist/it/${asset}`, import.meta.url)), `${asset} resolves from the Italian route`);
+  }
+});
