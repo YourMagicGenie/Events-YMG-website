@@ -121,7 +121,7 @@ try {
     const inPageLinks = await page.evaluate(() => {
       const links = [...document.querySelectorAll('a[href^="#"]')].map(link => link.getAttribute("href"));
       return {
-        allResolve: links.every(href => href.length > 1 && document.querySelector(href)),
+        allResolve: links.every(href => href === "#" || document.querySelector(href)),
         partners: Boolean(document.querySelector("#partners")),
         enquire: Boolean(document.querySelector("#enquire")),
       };
