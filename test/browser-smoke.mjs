@@ -288,13 +288,27 @@ try {
   const touchY = Math.round(artBounds.y + artBounds.height / 2);
   const touchStart = Math.round(artBounds.x + artBounds.width - 18);
   const touchEnd = Math.round(artBounds.x + 18);
-  await touchSession.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ id: 0, x: touchStart, y: touchY }] });
+  await touchSession.send("Emulation.setTouchEmulationEnabled", { enabled: true, configuration: "mobile" });
+  const touchPoint = x => ({ id: 0, x, y: touchY, radiusX: 5, radiusY: 5, force: 1 });
+  await touchSession.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [touchPoint(touchStart)] });
   for (const fraction of [2 / 3, 1 / 3, 0]) {
     const x = Math.round(touchStart + (touchEnd - touchStart) * fraction);
-    await touchSession.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ id: 0, x, y: touchY }] });
+    await touchSession.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [touchPoint(x)] });
   }
   await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await touch.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft > 5);
+  await touch.waitForTimeout(250);
+  const touchState = await touch.evaluate(() => {
+    const deck = document.querySelector("#concept-deck");
+    return {
+      scrollLeft: deck.scrollLeft,
+      scrollWidth: deck.scrollWidth,
+      clientWidth: deck.clientWidth,
+      maxTouchPoints: navigator.maxTouchPoints,
+      coarsePointer: matchMedia("(pointer: coarse)").matches,
+      touchAction: getComputedStyle(deck).touchAction,
+    };
+  });
+  assert.ok(touchState.scrollLeft > 5, `mobile touch swipe advances the horizontal deck: ${JSON.stringify(touchState)}`);
   await touch.close();
   await touchContext.close();
 
