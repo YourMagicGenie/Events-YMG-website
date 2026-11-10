@@ -330,6 +330,19 @@ test("Worker config serves this repo's assets from a separate preview worker", (
   ]);
 });
 
+test("source and deployment docs identify one editable source and the separate production bundle", () => {
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  const deployment = readFileSync(new URL("../deploy/README.md", import.meta.url), "utf8");
+
+  assert.match(readme, /`dist\/`: editable buildless website/);
+  assert.match(readme, /current generated bundle remains in the Sites-managed source/);
+  assert.doesNotMatch(readme, /deploy\/cloudflare-worker\.mjs/);
+  assert.match(deployment, /current GitHub source has\s+an inline form/);
+  assert.match(deployment, /original live bundle is a generated standalone[\s\S]*in the Sites-managed source/);
+  assert.match(deployment, /\*\*not\*\* copied as a second editable source of truth/);
+  assert.match(deployment, /No GitHub Actions\s+deployment controller or automatic custom-domain release is configured/);
+});
+
 test("event formats form a six-card carousel without filters or mockup disclaimers", () => {
   assert.match(html, /<div class="eyebrow">SEVERAL WAYS THE NIGHT COULD UNFOLD<\/div>/);
   assert.doesNotMatch(html, /THREE WAYS THE NIGHT COULD UNFOLD/);
