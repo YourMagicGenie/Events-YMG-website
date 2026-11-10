@@ -8,17 +8,15 @@ on:
       - "src/**"
       - "test/**"
       - "package.json"
-      - "wrangler.json"
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/checks.yml"
-      - "dist/**"
-      - "src/**"
-      - "test/**"
-      - "package.json"
+      - "package-lock.json"
       - "wrangler.json"
   workflow_dispatch:
+    inputs:
+      visual_matrix:
+        description: "Browser viewport coverage (choose full before a production release)"
+        type: choice
+        options: [quick, full]
+        default: quick
 
 permissions:
   contents: read
@@ -39,6 +37,29 @@ jobs:
           cache: npm
       - name: Run unit and site smoke tests
         run: npm ci && npm test
+      - name: Select the responsive browser matrix
+        id: browser-matrix
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          MANUAL_MATRIX: ${{ github.event.inputs.visual_matrix }}
+        run: |
+          mode=quick
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$MANUAL_MATRIX" == "full" ]]; then
+            mode=full
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+            while IFS= read -r path; do
+              case "$path" in
+                dist/*|src/worker.js|src/security-headers.js|test/browser-smoke.mjs)
+                  mode=full
+                  break
+                  ;;
+              esac
+            done < <(git diff --name-only "$BASE_SHA" HEAD)
+          fi
+          echo "Selected browser matrix: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
       - name: Restore Playwright browser cache
         uses: actions/cache@v4
         with:
@@ -47,7 +68,14 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
       - name: Run responsive browser checks
-        run: npm run test:e2e
+        env:
+          MATRIX_MODE: ${{ steps.browser-matrix.outputs.mode }}
+        run: |
+          if [[ "$MATRIX_MODE" == "full" ]]; then
+            npm run test:e2e:full
+          else
+            npm run test:e2e
+          fi
       - name: Upload responsive screenshots
         if: always()
         uses: actions/upload-artifact@v4

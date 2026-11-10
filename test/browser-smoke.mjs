@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdir, readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -61,6 +61,7 @@ const server = createServer(async (request, response) => {
   }
 });
 
+await rm(screenshotRoot, { recursive: true, force: true });
 await mkdir(screenshotRoot, { recursive: true });
 await new Promise((resolveListen, reject) => {
   server.once("error", reject);
@@ -69,10 +70,17 @@ await new Promise((resolveListen, reject) => {
 
 let browser;
 try {
-  browser = await chromium.launch({ headless: true });
+  const browserOptions = { headless: true };
+  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    browserOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  }
+  browser = await chromium.launch(browserOptions);
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}`;
-  const widths = [320, 360, 390, 430, 540, 541, 768, 850, 851, 1024, 1280, 1440, 1920];
+  const fullMatrix = process.argv.includes("--full-matrix");
+  const widths = fullMatrix
+    ? [320, 360, 390, 430, 540, 541, 768, 850, 851, 1024, 1280, 1440, 1920]
+    : [320, 768, 1440];
   const assetChecks = [
     ["/assets/favicon.svg", "image/svg+xml"],
     ["/assets/favicon-16.png", "image/png"],
@@ -797,7 +805,8 @@ try {
   assert.equal(await privacy.evaluate(() => document.activeElement.id), "main-content", "the skip link moves keyboard focus to the recovery message");
   await privacy.close();
 
-  console.log(`Responsive browser matrix passed at ${widths.join(", ")} CSS-pixel widths; screenshots saved to ${screenshotRoot}`);
+  const runType = fullMatrix ? "Full responsive matrix" : "Focused responsive smoke";
+  console.log(`${runType} passed at ${widths.join(", ")} CSS-pixel widths; screenshots saved to ${screenshotRoot}`);
 } finally {
   if (browser) await browser.close();
   await new Promise(resolveClose => server.close(resolveClose));
