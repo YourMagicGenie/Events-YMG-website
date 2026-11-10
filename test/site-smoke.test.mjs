@@ -303,6 +303,11 @@ test("Worker config serves this repo's assets from a separate preview worker", (
   assert.notEqual(config.name, "ymg-events-website");
   assert.equal(config.main, "src/worker.js");
   assert.equal(config.workers_dev, true);
+  assert.equal(config.vars.EVENTS_METRICS_ENABLED, "false", "analytics remains disabled until privacy review and production activation");
+  assert.deepEqual(config.analytics_engine_datasets, [{
+    binding: "EVENTS_ANALYTICS",
+    dataset: "ymg_events_preview_metrics",
+  }], "the Analytics Engine dataset is isolated to preview");
   assert.deepEqual(config.assets, {
     directory: "./dist",
     binding: "ASSETS",
@@ -311,11 +316,18 @@ test("Worker config serves this repo's assets from a separate preview worker", (
   });
   assert.equal("routes" in config, false, "preview config must not attach a route");
   assert.equal("custom_domains" in config, false, "preview config must not attach a custom domain");
-  assert.deepEqual(config.ratelimits, [{
-    name: "EVENTS_SUBMISSION_LIMITER",
-    namespace_id: "2026111010",
-    simple: { limit: 5, period: 60 },
-  }]);
+  assert.deepEqual(config.ratelimits, [
+    {
+      name: "EVENTS_SUBMISSION_LIMITER",
+      namespace_id: "2026111010",
+      simple: { limit: 5, period: 60 },
+    },
+    {
+      name: "EVENTS_METRICS_LIMITER",
+      namespace_id: "2026111030",
+      simple: { limit: 30, period: 60 },
+    },
+  ]);
 });
 
 test("event formats form a six-card carousel without filters or mockup disclaimers", () => {

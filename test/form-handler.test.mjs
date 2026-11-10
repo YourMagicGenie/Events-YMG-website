@@ -181,3 +181,32 @@ test("subject removes header controls from sender name and event format", () => 
     "New YMG Events enquiry — Venue partnership — Jazz BCC: extra@example.org — Jane BCC: extra@example.org",
   );
 });
+
+test("aggregate form metrics distinguish a relay acceptance from a relay failure without PII", async () => {
+  const points = [];
+  const metricsEnv = {
+    ...env,
+    EVENTS_METRICS_ENABLED: "true",
+    EVENTS_ANALYTICS: { writeDataPoint: point => points.push(point) },
+    EVENTS_METRICS_LIMITER: { limit: async () => ({ success: true }) },
+  };
+  const accepted = await handleEventsApi(request(form({ locale: "it" })), metricsEnv, async url =>
+    url.includes("turnstile")
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      : Response.json({ ok: true }));
+  assert.equal(accepted.status, 202);
+  assert.deepEqual(points.map(point => point.indexes[0]), ["enquiry_attempt", "relay_accepted"]);
+  assert.deepEqual(points[0].blobs.slice(0, 4), ["it", "", "venue_partnership", "Rooftop evenings"]);
+  assert.doesNotMatch(JSON.stringify(points), /Jane Doe|jane@example\.org|Terrace Genova|198\.51\.100\.24|sunset event|€2000/);
+  assert.ok(!points.some(point => point.indexes[0] === "delivered" || point.indexes[0] === "confirmed"));
+
+  points.length = 0;
+  const failed = await handleEventsApi(request(form({ locale: "it" })), metricsEnv, async url =>
+    url.includes("turnstile")
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      : new Response("unavailable", { status: 503 }));
+  assert.equal(failed.status, 503);
+  assert.deepEqual(points.map(point => point.indexes[0]), ["enquiry_attempt", "enquiry_failure", "relay_failure"]);
+  assert.equal(points[1].blobs[4], "relay_failure");
+  assert.doesNotMatch(JSON.stringify(points), /Jane Doe|jane@example\.org|Terrace Genova|198\.51\.100\.24|sunset event|€2000/);
+});

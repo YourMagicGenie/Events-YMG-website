@@ -1,5 +1,8 @@
 import { sendEventsEnquiry } from "./enquiry-client.js";
 import { messages } from "./i18n.js";
+import { startEventsMetrics } from "./metrics-client.js";
+
+void startEventsMetrics();
 
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
