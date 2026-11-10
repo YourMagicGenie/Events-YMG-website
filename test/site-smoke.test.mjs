@@ -64,6 +64,78 @@ test("hero photos use responsive compressed sources and explicit priority", () =
   }
 });
 
+test("indexing metadata and sitemap cover only canonical public pages", () => {
+  const routes = [
+    ["/", html],
+    ["/privacy.html", readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8")],
+    ["/it/", italianHtml],
+    ["/it/privacy.html", readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8")],
+  ];
+  const origin = "https://events.ymgconsultingservices.com";
+  const sitemap = readFileSync(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
+  const robots = readFileSync(new URL("../dist/robots.txt", import.meta.url), "utf8");
+  const listed = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+
+  assert.match(robots, /^User-agent: \*\nAllow: \/\nSitemap: https:\/\/events\.ymgconsultingservices\.com\/sitemap\.xml\n$/);
+  assert.deepEqual(listed, routes.map(([route]) => `${origin}${route}`), "the sitemap contains every canonical English/Italian public page once");
+  for (const [route, page] of routes) {
+    assert.doesNotMatch(page, /<meta name="robots" content="noindex/, `${route} does not block indexing`);
+    if (route === "/" || route === "/it/") assert.match(page, /<meta name="robots" content="index,follow">/, `${route} explicitly allows indexing`);
+    assert.match(page, new RegExp(`<link rel="canonical" href="${origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `${route} declares its canonical URL`);
+    assert.match(page, /<title>[^<]+<\/title>/, `${route} has a title`);
+    assert.match(page, /<meta name="description" content="[^"]+">/, `${route} has a description`);
+    assert.match(page, /<meta property="og:title" content="[^"]+">/, `${route} has an Open Graph title`);
+  }
+  for (const notFound of [
+    readFileSync(new URL("../dist/404.html", import.meta.url), "utf8"),
+    readFileSync(new URL("../dist/it/404.html", import.meta.url), "utf8"),
+  ]) {
+    assert.match(notFound, /<meta name="robots" content="noindex,follow">/);
+    assert.doesNotMatch(notFound, /rel="canonical"/);
+  }
+});
+
+test("home page publishes factual Organization and WebSite JSON-LD", () => {
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  assert.equal(blocks.length, 1, "the English subdomain home page has one structured-data block");
+  const data = JSON.parse(blocks[0][1]);
+  assert.equal(data["@context"], "https://schema.org");
+  assert.equal(data["@graph"].length, 2);
+  const [organization, website] = data["@graph"];
+  const origin = "https://events.ymgconsultingservices.com/";
+
+  assert.equal(organization["@type"], "Organization");
+  assert.equal(organization["@id"], `${origin}#organization`);
+  assert.equal(organization.name, "YMG Events");
+  assert.equal(organization.url, origin);
+  assert.deepEqual(organization.logo, {
+    "@type": "ImageObject",
+    url: `${origin}assets/apple-touch-icon.png`,
+    width: 180,
+    height: 180,
+  });
+  assert.deepEqual(organization.contactPoint, {
+    "@type": "ContactPoint",
+    contactType: "general inquiries",
+    email: "hello@ymgconsultingservices.com",
+  });
+  assert.equal(website["@type"], "WebSite");
+  assert.equal(website["@id"], `${origin}#website`);
+  assert.equal(website.name, "YMG Events");
+  assert.equal(website.url, origin);
+  assert.deepEqual(website.publisher, { "@id": `${origin}#organization` });
+  assert.deepEqual(Object.keys(organization).sort(), ["@id", "@type", "contactPoint", "logo", "name", "url"].sort());
+  assert.deepEqual(Object.keys(website).sort(), ["@id", "@type", "name", "publisher", "url"].sort());
+  assert.deepEqual(data["@graph"].map((node) => node["@type"]), ["Organization", "WebSite"]);
+  assert.doesNotMatch(italianHtml, /application\/ld\+json/, "the site-level name preference is declared only at the subdomain home page");
+  assert.match(html, /YMG Events/);
+  assert.match(html, /href="mailto:hello@ymgconsultingservices\.com"/);
+
+  const logo = readFileSync(new URL("../dist/assets/apple-touch-icon.png", import.meta.url));
+  assert.ok(logo.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])));
+  assert.deepEqual([logo.readUInt32BE(16), logo.readUInt32BE(20)], [180, 180]);
+});
+
 test("self-hosted fonts are licensed, preloaded, and disclosed accurately", () => {
   const fontAssets = [
     "dm-sans-latin.woff2",
