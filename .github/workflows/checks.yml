@@ -36,5 +36,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - name: Run unit and site smoke tests
-        run: npm test
+        run: npm ci && npm test
+      - name: Restore Playwright browser cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+      - name: Run responsive browser checks
+        run: npm run test:e2e
+      - name: Upload responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: events-responsive-screenshots-${{ github.sha }}
+          path: test-results/responsive/
+          if-no-files-found: ignore
+          retention-days: 3

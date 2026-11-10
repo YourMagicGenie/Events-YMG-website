@@ -29,4 +29,6 @@ See [Issue #3](https://github.com/YourMagicGenie/Events-YMG-website/issues/3) fo
 
 ## Local checks
 
-The site is buildless. With Node.js 22 or newer, run `npm test` to execute the form-handler, inline-client, Worker-route and static-site smoke tests. To preview the static files locally, run `python3 -m http.server 4173 --directory dist` and open `http://localhost:4173/`. A static server does not run `src/worker.js`, so the direct-send button stays unavailable and only the visible email fallback works in this preview. These checks do not deploy or contact production.
+The site is buildless. With Node.js 22 or newer, run `npm ci` and `npm test` for the form-handler, inline-client, Worker-route and static-site smoke tests. For rendered browser coverage, install Playwright's Chromium with `npx playwright install chromium` and run `npm run test:e2e`. The browser check writes full-page responsive screenshots under `test-results/responsive/` at the tested CSS-pixel widths; it also exercises the mobile menu, carousel, privacy page and 404 response.
+
+To preview the static files locally, run `python3 -m http.server 4173 --directory dist` and open `http://localhost:4173/`. A static server does not run `src/worker.js`, so the direct-send button stays unavailable and only the visible email fallback works in this preview. These checks do not deploy or contact production.

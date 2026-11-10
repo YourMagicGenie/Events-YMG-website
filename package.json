@@ -4,6 +4,10 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "test:site": "node --test test/site-smoke.test.mjs"
+    "test:site": "node --test test/site-smoke.test.mjs",
+    "test:e2e": "node test/browser-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
   }
 }
