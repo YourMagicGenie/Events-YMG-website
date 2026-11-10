@@ -477,6 +477,7 @@ try {
     "#primary-navigation a[href='#approach']",
     "#primary-navigation a[href='#concepts']",
     "#primary-navigation a[href='#partners']",
+    "#language-switch",
     ".header-cta",
   ];
   for (const selector of expectedFocusOrder) {
