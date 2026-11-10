@@ -227,3 +227,26 @@ test("venue, corporate and private enquiries have explicit localized routes and 
   assert.match(englishPrivacy, /enquiry type \(venue partnership, corporate event or private celebration\)/);
   assert.match(italianPrivacy, /tipo di richiesta \(collaborazione con una location, evento aziendale o occasione privata\)/);
 });
+
+test("venue offer and commercial FAQ are clear, localized and carefully qualified", () => {
+  const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+
+  for (const page of [html, italian]) {
+    assert.match(page, /<section class="offer-faq" id="venue-offer"/);
+    assert.equal((page.match(/class="offer-item"/g) ?? []).length, 6, "the partnership offer covers six practical work areas");
+    assert.equal((page.match(/class="faq-item"/g) ?? []).length, 7, "the FAQ addresses common venue questions");
+    assert.match(page, /<details class="faq-item"><summary>/, "answers use native keyboard-accessible disclosure controls");
+  }
+
+  for (const phrase of ["Creative concept", "Entertainment coordination", "Ticket proposition", "Promotion plan", "Practical production"]) {
+    assert.ok(html.includes(phrase), `English offer covers ${phrase}`);
+  }
+  for (const phrase of ["Concept e percorso degli ospiti", "Coordinamento dell’intrattenimento", "Proposta di biglietteria", "Piano di promozione", "Produzione operativa"]) {
+    assert.ok(italian.includes(phrase), `Italian offer covers ${phrase}`);
+  }
+
+  assert.match(html, /There is no standard revenue split/);
+  assert.match(html, /Ticket sales and attendance are not guaranteed/);
+  assert.match(italian, /Non c’è una ripartizione standard dei ricavi/);
+  assert.match(italian, /Non si garantiscono vendite o affluenza/);
+});

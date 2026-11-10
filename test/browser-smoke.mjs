@@ -71,6 +71,7 @@ try {
       wordmarkRange.setStart(logo.firstChild, 0);
       wordmarkRange.setEnd(finalWordmarkNode, finalWordmarkNode.textContent.length);
       const wordmark = wordmarkRange.getBoundingClientRect();
+      const faqSummary = document.querySelector(".faq-item summary");
       return {
         viewportWidth: window.innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -78,11 +79,17 @@ try {
         actionsLeft: document.querySelector(".header-actions").getBoundingClientRect().left,
         subtitleTop: subtitle.getBoundingClientRect().top,
         wordmarkBottom: wordmark.bottom,
+        offerCards: document.querySelectorAll(".offer-item").length,
+        faqQuestions: document.querySelectorAll(".faq-item").length,
+        faqSummaryHeight: faqSummary.getBoundingClientRect().height,
       };
     });
     assert.ok(metrics.documentWidth <= metrics.viewportWidth, `${width}px has no horizontal document overflow: ${JSON.stringify(metrics)}`);
     assert.ok(metrics.logoRight <= metrics.actionsLeft + 0.5, `${width}px logo and enquiry controls do not collide: ${JSON.stringify(metrics)}`);
     assert.ok(metrics.subtitleTop >= metrics.wordmarkBottom - 1, `${width}px brand subtitle remains legible below the wordmark: ${JSON.stringify(metrics)}`);
+    assert.equal(metrics.offerCards, 6, `${width}px shows the full venue offer`);
+    assert.equal(metrics.faqQuestions, 7, `${width}px shows all venue FAQs`);
+    assert.ok(metrics.faqSummaryHeight >= 44, `${width}px FAQ controls remain easy to tap: ${JSON.stringify(metrics)}`);
 
     const typeScale = await page.evaluate(() => {
       const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
@@ -335,6 +342,16 @@ try {
   await contactInvitation.scrollIntoViewIfNeeded();
   await contactInvitation.click();
   assert.equal(new URL(mobile.url()).hash, "#enquire", "the contact invitation navigates to the enquiry form");
+  await mobile.locator("#venue-offer").scrollIntoViewIfNeeded();
+  assert.equal(await mobile.locator(".offer-item").count(), 6, "the venue offer is available on mobile");
+  const firstFaq = mobile.locator(".faq-item").first();
+  const firstFaqSummary = firstFaq.locator("summary");
+  await firstFaqSummary.focus();
+  await mobile.keyboard.press("Space");
+  assert.equal(await firstFaq.evaluate(details => details.open), true, "venue FAQ disclosures open from the keyboard");
+  await mobile.screenshot({ path: resolve(screenshotRoot, "venue-offer-faq-open-390px.png"), fullPage: true });
+  await mobile.keyboard.press("Space");
+  assert.equal(await firstFaq.evaluate(details => details.open), false, "venue FAQ disclosures close from the keyboard");
   await menu.click();
   const englishLanguageSwitch = mobile.getByRole("link", { name: "Read this site in Italian" });
   assert.ok(await englishLanguageSwitch.isVisible(), "the Italian language switch is available in the mobile navigation");
@@ -350,6 +367,14 @@ try {
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the Italian card chooses the venue partnership pathway");
   assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
+  assert.equal(await mobile.locator(".offer-item").count(), 6, "the Italian page provides the same six partnership work areas");
+  assert.equal(await mobile.locator(".faq-item").count(), 7, "the Italian page answers all seven venue questions");
+  const italianFaq = mobile.locator(".faq-item").first();
+  assert.equal(await italianFaq.locator("summary").textContent(), "Come funziona il primo confronto?");
+  await italianFaq.locator("summary").focus();
+  await mobile.keyboard.press("Space");
+  assert.equal(await italianFaq.evaluate(details => details.open), true, "Italian FAQ disclosures open from the keyboard");
+  await mobile.keyboard.press("Space");
   const ItalianMobileMetrics = await mobile.evaluate(() => ({
     width: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
