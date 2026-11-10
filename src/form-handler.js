@@ -1,5 +1,5 @@
 // Adapted from the validated YMG Consulting Services intake Worker.
-// This module is NOT connected to the live Events Worker until issue #10 is implemented.
+// This source path is not deployed to the live Events Worker until its release gates pass.
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const MAX_BODY_BYTES = 48_000;
 const FORMAT_CHOICES = new Set([
@@ -14,13 +14,14 @@ const FORMAT_CHOICES = new Set([
 ]);
 const GUEST_CHOICES = new Set(["Still exploring", "Under 30", "30–60", "60–100", "100+"]);
 
-function json(status, body) {
+function json(status, body, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
       "x-content-type-options": "nosniff",
+      ...extraHeaders,
     },
   });
 }
@@ -81,7 +82,8 @@ function relayReady(env) {
 }
 
 function configured(env) {
-  return Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY && relayReady(env));
+  return Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY && relayReady(env) &&
+    typeof env.EVENTS_SUBMISSION_LIMITER?.limit === "function");
 }
 
 export async function handleEventsApi(request, env, fetcher = fetch) {
@@ -130,9 +132,22 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   }
   if (!configured(env)) return json(503, { ok: false, error: "Online submission is unavailable." });
 
-  const verifyParams = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token });
   const remoteIp = request.headers.get("cf-connecting-ip");
-  if (remoteIp) verifyParams.set("remoteip", remoteIp);
+  if (!remoteIp) return json(503, { ok: false, error: "Online submission is unavailable." });
+  try {
+    const rateLimit = await env.EVENTS_SUBMISSION_LIMITER.limit({ key: remoteIp });
+    if (!rateLimit?.success) {
+      return json(429, { ok: false, error: "Please wait a little before sending another enquiry, or contact us directly." }, {
+        "retry-after": "60",
+      });
+    }
+  } catch {
+    // Fail closed if abuse protection is unavailable; do not log client data.
+    return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
+  }
+
+  const verifyParams = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token });
+  verifyParams.set("remoteip", remoteIp);
   let challenge;
   try {
     const response = await fetcher(VERIFY_URL, {

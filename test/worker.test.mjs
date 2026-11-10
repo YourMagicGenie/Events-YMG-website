@@ -8,6 +8,7 @@ const env = {
   TURNSTILE_SECRET_KEY: "test-secret",
   GOOGLE_RELAY_URL: "https://script.google.com/macros/s/test-deployment/exec",
   GOOGLE_RELAY_SECRET: "test-relay-secret",
+  EVENTS_SUBMISSION_LIMITER: { limit: async () => ({ success: true }) },
 };
 
 test("Worker routes configuration requests to the Events handler", async () => {
@@ -39,7 +40,7 @@ test("Worker routes inline submissions through Turnstile and the shared relay", 
   });
   const response = await worker.fetch(new Request(origin + "/api/events/enquiry", {
     method: "POST",
-    headers: { origin, "content-type": "application/x-www-form-urlencoded" },
+    headers: { origin, "content-type": "application/x-www-form-urlencoded", "cf-connecting-ip": "198.51.100.24" },
     body: body.toString(),
   }), env);
 

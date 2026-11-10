@@ -39,6 +39,15 @@ hostname. Without runtime variables, `/api/events/config` correctly reports
 that direct submission is unavailable. The form's email fallback remains
 available, while mocked success and failure paths are covered by `npm test`.
 
+The config also defines the non-secret `EVENTS_SUBMISSION_LIMITER` binding at
+five requests per minute per source IP. Cloudflare's Worker Rate Limiting API
+is approximate and each Cloudflare location maintains its own count; it is an
+abuse-control layer, not a strict global quota. The binding uses account-local
+namespace ID `2026111010`; confirm that number is unused in the target account
+before deployment and change it if it is already assigned. Use Wrangler
+4.36.0 or newer for this binding. See [Cloudflare's Rate Limiting API
+documentation](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
+
 The same config can be used for an isolated `workers.dev` preview once a
 scoped Cloudflare credential is available. Do not change the config name or
 attach a custom domain as part of a preview. Verify anonymous access, `/`,
