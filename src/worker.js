@@ -1,4 +1,5 @@
 import { handleEventsApi } from "./form-handler.js";
+import { withEventsSecurityHeaders } from "./security-headers.js";
 
 const eventsRoutes = new Set(["/api/events/config", "/api/events/enquiry"]);
 
@@ -6,18 +7,24 @@ export function createEventsWorker(fetcher = fetch) {
   return {
     async fetch(request, env) {
       const { pathname } = new URL(request.url);
-      if (eventsRoutes.has(pathname)) return handleEventsApi(request, env, fetcher);
-      if (pathname.startsWith("/api/")) {
-        return Response.json({ ok: false, error: "Not found." }, {
+      let response;
+      if (eventsRoutes.has(pathname)) {
+        response = await handleEventsApi(request, env, fetcher);
+      } else if (pathname.startsWith("/api/")) {
+        response = Response.json({ ok: false, error: "Not found." }, {
+          status: 404,
+          headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
+        });
+      } else if (env.ASSETS?.fetch) {
+        response = await env.ASSETS.fetch(request);
+      } else {
+        response = new Response("Not found", {
           status: 404,
           headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
         });
       }
-      if (env.ASSETS?.fetch) return env.ASSETS.fetch(request);
-      return new Response("Not found", {
-        status: 404,
-        headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" },
-      });
+
+      return withEventsSecurityHeaders(request, response);
     },
   };
 }
