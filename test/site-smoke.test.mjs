@@ -46,6 +46,23 @@ test("local assets and public crawl files are present", () => {
   assert.doesNotMatch(privacy, /Google Fonts/);
 });
 
+test("hero photos use responsive compressed sources and explicit priority", () => {
+  for (const page of [html, italianHtml]) {
+    const start = page.indexOf('<div class="hero-atmosphere">');
+    const end = page.indexOf("</picture>", start);
+    assert.notEqual(start, -1, "hero atmosphere exists");
+    assert.notEqual(end, -1, "hero picture markup exists");
+    const hero = page.slice(start, end + "</picture>".length);
+    assert.match(hero, /<source media="\(max-width: 540px\)" sizes="100vw" srcset=/);
+    assert.match(hero, /w=480&amp;h=854&amp;q=70 480w/);
+    assert.match(hero, /w=780&amp;h=1388&amp;q=70 780w/);
+    assert.match(hero, /w=960&amp;h=540&amp;q=70 960w/);
+    assert.match(hero, /w=1440&amp;h=810&amp;q=70 1440w/);
+    assert.match(hero, /width="1600" height="900"/);
+    assert.match(hero, /loading="eager" fetchpriority="high" decoding="async"/);
+  }
+});
+
 test("variable fonts are self-hosted, licensed, preloaded, and disclosed accurately", () => {
   const fontAssets = [
     "dm-sans-latin.woff2",
