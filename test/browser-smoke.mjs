@@ -16,6 +16,7 @@ const mimeTypes = {
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".woff2": "font/woff2",
   ".txt": "text/plain; charset=utf-8",
   ".xml": "application/xml; charset=utf-8",
 };
@@ -71,6 +72,12 @@ try {
     ["/assets/apple-touch-icon.png", "image/png"],
     ["/assets/social-card.png", "image/png"],
     ["/assets/social-card-it.png", "image/png"],
+    ["/assets/fonts/dm-sans-latin.woff2", "font/woff2"],
+    ["/assets/fonts/dm-sans-latin-ext.woff2", "font/woff2"],
+    ["/assets/fonts/playfair-display-latin.woff2", "font/woff2"],
+    ["/assets/fonts/playfair-display-latin-ext.woff2", "font/woff2"],
+    ["/assets/fonts/playfair-display-italic-latin.woff2", "font/woff2"],
+    ["/assets/fonts/playfair-display-italic-latin-ext.woff2", "font/woff2"],
   ];
   for (const [path, contentType] of assetChecks) {
     const response = await fetch(`${baseUrl}${path}`);
@@ -83,8 +90,26 @@ try {
     await context.route("https://fonts.googleapis.com/**", route => route.abort());
     await context.route("https://fonts.gstatic.com/**", route => route.abort());
     const page = await context.newPage();
+    const externalFontRequests = [];
+    page.on("request", request => {
+      if (/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(request.url())) externalFontRequests.push(request.url());
+    });
     const pageResponse = await page.goto(baseUrl, { waitUntil: "load" });
     assert.equal(pageResponse.status(), 200, `${width}px homepage responds successfully`);
+
+    if (width === 320) {
+      const loadedFonts = await page.evaluate(async () => {
+        const [sans, serif, italic] = await Promise.all([
+          document.fonts.load('600 16px "DM Sans"', "città Genova hospitality"),
+          document.fonts.load('400 24px "Playfair Display"', "Elegance after hours"),
+          document.fonts.load('italic 400 20px "Playfair Display"', "dopo il tramonto"),
+        ]);
+        return [...sans, ...serif, ...italic].map(face => ({ family: face.family, status: face.status }));
+      });
+      assert.ok(loadedFonts.some(face => face.family === "DM Sans" && face.status === "loaded"), "self-hosted variable sans font loads on the page");
+      assert.ok(loadedFonts.some(face => face.family === "Playfair Display" && face.status === "loaded"), "self-hosted regular and italic display fonts load on the page");
+    }
+    assert.equal(externalFontRequests.length, 0, `${width}px page loads no Google Fonts stylesheet or font file`);
 
     const metrics = await page.evaluate(() => {
       const logo = document.querySelector(".logo");
@@ -417,6 +442,14 @@ try {
   assert.ok(await englishLanguageSwitch.isVisible(), "the Italian language switch is available in the mobile navigation");
   await englishLanguageSwitch.click();
   assert.equal(new URL(mobile.url()).pathname, "/it/", "the mobile language switch opens the Italian home page");
+  const italianFontStatuses = await mobile.evaluate(async () => {
+    const [sans, serif] = await Promise.all([
+      document.fonts.load('400 16px "DM Sans"', "città, ospitalità, Genova"),
+      document.fonts.load('400 48px "Playfair Display"', "L’eleganza è in città"),
+    ]);
+    return [...sans, ...serif].map(face => face.status);
+  });
+  assert.ok(italianFontStatuses.length >= 2 && italianFontStatuses.every(status => status === "loaded"), "the Italian page loads local fonts for accented text");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
   assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "L’eleganza ha unlato notturno.");
   const expectedItalianArtAlts = [
