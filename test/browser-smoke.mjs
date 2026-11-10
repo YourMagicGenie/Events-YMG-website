@@ -134,6 +134,101 @@ try {
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "concept action selects its enquiry format");
   await mobile.close();
 
+  const keyboard = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await keyboard.route("https://fonts.googleapis.com/**", route => route.abort());
+  await keyboard.route("https://fonts.gstatic.com/**", route => route.abort());
+  await keyboard.goto(baseUrl, { waitUntil: "load" });
+  await keyboard.keyboard.press("Tab");
+  assert.equal(await keyboard.evaluate(() => document.activeElement.matches(".skip-link")), true, "skip link is the first keyboard stop");
+  const skipState = await keyboard.evaluate(() => {
+    const link = document.querySelector(".skip-link");
+    const style = getComputedStyle(link);
+    const bounds = link.getBoundingClientRect();
+    return { outlineStyle: style.outlineStyle, outlineWidth: parseFloat(style.outlineWidth), top: bounds.top, bottom: bounds.bottom };
+  });
+  assert.ok(skipState.top >= 0 && skipState.bottom <= 844, `skip link is visible when focused: ${JSON.stringify(skipState)}`);
+  assert.ok(skipState.outlineStyle !== "none" && skipState.outlineWidth >= 3, `skip link has visible keyboard focus: ${JSON.stringify(skipState)}`);
+  await keyboard.keyboard.press("Enter");
+  await keyboard.waitForFunction(() => location.hash === "#main-content" && document.activeElement.id === "main-content");
+  assert.ok(await keyboard.getByRole("main").count(), "the skip target is the page's main landmark");
+  await keyboard.close();
+
+  const desktopKeyboard = await browser.newPage({ viewport: { width: 1024, height: 900 } });
+  await desktopKeyboard.route("https://fonts.googleapis.com/**", route => route.abort());
+  await desktopKeyboard.route("https://fonts.gstatic.com/**", route => route.abort());
+  await desktopKeyboard.goto(baseUrl, { waitUntil: "load" });
+  const expectedFocusOrder = [
+    ".skip-link",
+    ".logo",
+    "#primary-navigation a[href='#approach']",
+    "#primary-navigation a[href='#concepts']",
+    "#primary-navigation a[href='#partners']",
+    ".header-cta",
+  ];
+  for (const selector of expectedFocusOrder) {
+    await desktopKeyboard.keyboard.press("Tab");
+    assert.equal(await desktopKeyboard.evaluate(selector => document.activeElement.matches(selector), selector), true, `Tab reaches ${selector} in document order`);
+    const outline = await desktopKeyboard.evaluate(() => {
+      const style = getComputedStyle(document.activeElement);
+      return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+    });
+    assert.ok(outline.style !== "none" && outline.width >= 3, `${selector} shows keyboard focus: ${JSON.stringify(outline)}`);
+  }
+  let emailReached = false;
+  for (let index = 0; index < 80 && !emailReached; index++) {
+    await desktopKeyboard.keyboard.press("Tab");
+    emailReached = await desktopKeyboard.evaluate(() => document.activeElement.id === "email");
+  }
+  assert.ok(emailReached, "keyboard navigation reaches the enquiry email field without a trap");
+  const emailFocus = await desktopKeyboard.evaluate(() => {
+    const style = getComputedStyle(document.activeElement);
+    return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+  });
+  assert.ok(emailFocus.style !== "none" && emailFocus.width >= 3, `form focus remains visible: ${JSON.stringify(emailFocus)}`);
+  assert.ok(await desktopKeyboard.getByLabel("Your name *").count(), "the name field has an accessible label");
+  assert.ok(await desktopKeyboard.getByLabel("Email address *").count(), "the email field has an accessible label");
+  assert.equal(await desktopKeyboard.getByRole("status").getAttribute("aria-live"), "polite", "form feedback is announced politely");
+  await desktopKeyboard.close();
+
+  const reducedMotion = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  await reducedMotion.route("https://fonts.googleapis.com/**", route => route.abort());
+  await reducedMotion.route("https://fonts.gstatic.com/**", route => route.abort());
+  await reducedMotion.addInitScript(() => {
+    window.__scrollCalls = [];
+    const record = (method, options) => {
+      const behavior = typeof options === "string" ? options : options?.behavior ?? "auto";
+      window.__scrollCalls.push({ method, behavior });
+    };
+    const scrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function(options) {
+      record("scrollIntoView", options);
+      return scrollIntoView.call(this, options);
+    };
+    const scrollBy = Element.prototype.scrollBy;
+    Element.prototype.scrollBy = function(options, y) {
+      record("scrollBy", options);
+      return scrollBy.call(this, options, y);
+    };
+  });
+  await reducedMotion.goto(baseUrl, { waitUntil: "load" });
+  const motionStyles = await reducedMotion.evaluate(() => ({
+    preference: matchMedia("(prefers-reduced-motion: reduce)").matches,
+    scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
+    transitionSeconds: Number.parseFloat(getComputedStyle(document.querySelector(".header-cta")).transitionDuration),
+  }));
+  assert.equal(motionStyles.preference, true, "browser reduced-motion preference reaches the page");
+  assert.equal(motionStyles.scrollBehavior, "auto", "CSS anchor scrolling stops being smooth for reduced-motion users");
+  assert.ok(motionStyles.transitionSeconds <= 0.0001, `nonessential transitions are reduced: ${JSON.stringify(motionStyles)}`);
+  await reducedMotion.getByRole("button", { name: "Next event formats" }).click();
+  await reducedMotion.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft > 0);
+  await reducedMotion.getByRole("button", { name: /Explore a rooftop evening/ }).click();
+  assert.equal(await reducedMotion.locator("#format").inputValue(), "Rooftop evenings", "reduced-motion preference keeps concept navigation usable");
+  const scrollCalls = await reducedMotion.evaluate(() => window.__scrollCalls);
+  assert.ok(scrollCalls.some(call => call.method === "scrollBy" && call.behavior === "auto"), `carousel avoids smooth scrolling: ${JSON.stringify(scrollCalls)}`);
+  assert.ok(scrollCalls.some(call => call.method === "scrollIntoView" && call.behavior === "auto"), `concept actions avoid smooth scrolling: ${JSON.stringify(scrollCalls)}`);
+  assert.ok(scrollCalls.every(call => call.behavior !== "smooth"), `no recorded interaction overrides the reduced-motion preference: ${JSON.stringify(scrollCalls)}`);
+  await reducedMotion.close();
+
   const privacy = await browser.newPage();
   await privacy.route("https://fonts.googleapis.com/**", route => route.abort());
   await privacy.route("https://fonts.gstatic.com/**", route => route.abort());
