@@ -118,6 +118,16 @@ try {
     });
     const pageResponse = await page.goto(baseUrl, { waitUntil: "load" });
     assert.equal(pageResponse.status(), 200, `${width}px homepage responds successfully`);
+    const inPageLinks = await page.evaluate(() => {
+      const links = [...document.querySelectorAll('a[href^="#"]')].map(link => link.getAttribute("href"));
+      return {
+        allResolve: links.every(href => href === "#" || document.querySelector(href)),
+        partners: Boolean(document.querySelector("#partners")),
+        enquire: Boolean(document.querySelector("#enquire")),
+      };
+    });
+    assert.ok(inPageLinks.allResolve, `${width}px in-page links resolve to their destinations`);
+    assert.ok(inPageLinks.partners && inPageLinks.enquire, `${width}px retains the partnership and enquiry anchors`);
     const responseHeaders = await pageResponse.allHeaders();
     assert.ok(responseHeaders["content-security-policy"], `${width}px HTML response has a CSP`);
     assert.equal(responseHeaders["x-frame-options"], "DENY", `${width}px response cannot be framed`);

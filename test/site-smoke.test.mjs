@@ -12,6 +12,38 @@ test("partnership section uses the tighter desktop gutter in both locales", () =
   }
 });
 
+test("lower-page story progresses from process to founder to enquiry in both locales", () => {
+  const cases = [
+    {
+      page: html,
+      stages: ["From idea to a clear plan", "Your local point of contact", "Start a conversation"],
+      founder: "The formats shown here are ideas to develop with venue partners, not a record of previous YMG bookings.",
+      enquiry: "Whether it’s a venue partnership, a company event or a private occasion",
+      stale: /A thoughtful collaboration|A beautiful concept needs a practical plan|The right setting\./,
+    },
+    {
+      page: italianHtml,
+      stages: ["Dall’idea a un piano chiaro", "Il tuo referente a Genova", "Iniziamo una conversazione"],
+      founder: "I format presentati qui sono idee da sviluppare con le location, non costituiscono un portfolio di eventi già realizzati da YMG.",
+      enquiry: "Che si tratti di una collaborazione con una location, di un evento aziendale o di un’occasione privata",
+      stale: /Una collaborazione concreta|Dietro a una bella idea serve un progetto pratico|La location giusta\./,
+    },
+  ];
+
+  for (const { page, stages, founder, enquiry, stale } of cases) {
+    const positions = stages.map(stage => page.indexOf(stage));
+    assert.ok(positions.every(position => position >= 0));
+    assert.ok(positions[0] < positions[1] && positions[1] < positions[2], "process, founder and enquiry appear in order");
+    assert.match(page, /<div class="steps"><div class="step">[\s\S]*?<\/div><div class="step">[\s\S]*?<\/div><div class="step">/);
+    assert.ok(page.includes(founder), "the factual founder and non-portfolio clarification remain");
+    assert.ok(page.includes(enquiry), "the enquiry invitation names the intended audiences");
+    assert.match(page, /id="partners"[\s\S]*?id="enquire"/);
+    assert.match(page, /href="#partners"/);
+    assert.match(page, /href="#enquire"/);
+    assert.doesNotMatch(page, stale, "repeated generic introductions have been removed");
+  }
+});
+
 
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [
