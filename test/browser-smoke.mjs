@@ -110,6 +110,7 @@ try {
       return {
         display: getComputedStyle(deck).display,
         overflowX: getComputedStyle(deck).overflowX,
+        scrollLeft: deck.scrollLeft,
         clientWidth: deck.clientWidth,
         scrollWidth: deck.scrollWidth,
         previousDisabled: document.querySelector("#deck-previous").getAttribute("aria-disabled"),
@@ -138,7 +139,7 @@ try {
     assert.equal(carousel.overflowX, "auto", `${width}px allows horizontal carousel scrolling`);
     assert.ok(carousel.scrollWidth > carousel.clientWidth, `${width}px keeps more formats available by scrolling`);
     assert.equal(carousel.slides.length, 6, `${width}px exposes all six slides in the carousel`);
-    assert.equal(carousel.previousDisabled, "true", `${width}px identifies that no previous slide is available at the start`);
+    assert.equal(carousel.previousDisabled, "true", `${width}px identifies the starting position: ${JSON.stringify({ scrollLeft: carousel.scrollLeft, clientWidth: carousel.clientWidth, scrollWidth: carousel.scrollWidth, previousDisabled: carousel.previousDisabled })}`);
     assert.equal(carousel.nextDisabled, "false", `${width}px identifies that more slides are available`);
     const expectedTitles = ["The Rooftop Social", "Strings After Dark", "The Private Occasion", "The Supper Club", "Jazz & Cocktails", "The Corporate Social"];
     for (const slide of carousel.slides) {
