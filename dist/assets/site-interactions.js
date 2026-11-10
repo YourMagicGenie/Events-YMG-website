@@ -223,11 +223,47 @@ if (form) {
   let turnstileToken = "";
   let widgetId = null;
   let submitting = false;
+  let validationFeedback = null;
 
+  const hasInvalidFields = () => Boolean(form.querySelector('[aria-invalid="true"]:not(:disabled)'));
   const setFeedback = (message, state = "") => {
+    if (validationFeedback) {
+      validationFeedback = { message, state };
+      if (hasInvalidFields()) return;
+    }
     feedback.textContent = message;
     feedback.dataset.state = state;
   };
+  const showInvalidFields = () => {
+    if (!validationFeedback) validationFeedback = { message: feedback.textContent, state: feedback.dataset.state || "" };
+    feedback.textContent = messages.invalidFields;
+    feedback.dataset.state = "error";
+  };
+  const restoreFeedbackIfValid = () => {
+    if (hasInvalidFields() || !validationFeedback) return;
+    const previous = validationFeedback;
+    validationFeedback = null;
+    setFeedback(previous.message, previous.state);
+  };
+  const updateFieldValidity = event => {
+    const control = event.target;
+    if (!(control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement)) return;
+    if (!control.disabled && control.validity.valid) control.removeAttribute("aria-invalid");
+    restoreFeedbackIfValid();
+  };
+
+  form.addEventListener("invalid", event => {
+    const control = event.target;
+    if (!(control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement)) return;
+    control.setAttribute("aria-invalid", "true");
+    showInvalidFields();
+  }, true);
+  form.addEventListener("input", updateFieldValidity);
+  form.addEventListener("change", updateFieldValidity);
+  intent?.addEventListener("change", () => {
+    if (business.disabled || !business.required || business.validity.valid) business.removeAttribute("aria-invalid");
+    restoreFeedbackIfValid();
+  });
 
   const loadTurnstile = () => new Promise((resolve, reject) => {
     if (window.turnstile) return resolve(window.turnstile);
