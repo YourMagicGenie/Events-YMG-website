@@ -71,3 +71,5 @@ nav .language-switch { display: inline-flex; align-items: center; justify-conten
   .primary-nav { gap: 10px; font-size: 12px; }
   .primary-nav .language-switch { min-width: 44px; padding-left: 4px; }
 }
+
+.field-help { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }

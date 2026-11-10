@@ -13,6 +13,12 @@ const FORMAT_CHOICES = new Set([
   "Corporate Social",
 ]);
 const GUEST_CHOICES = new Set(["Still exploring", "Under 30", "30–60", "60–100", "100+"]);
+const ENQUIRY_TYPES = new Map([
+  ["venue_partnership", "Venue partnership"],
+  ["corporate_event", "Corporate event"],
+  ["private_celebration", "Private celebration"],
+]);
+const ENQUIRY_SOURCES = new Map([["events_website_form", "Events website"]]);
 
 function json(status, body, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
@@ -66,8 +72,9 @@ function subjectName(value) {
   return Array.from(cleaned).slice(0, 60).join("") || "Unnamed sender";
 }
 
-export function eventsNotificationSubject(name) {
-  return `New YMG Events enquiry — ${subjectName(name)}`;
+export function eventsNotificationSubject(name, intent = "venue_partnership") {
+  const type = ENQUIRY_TYPES.get(intent) || "Events enquiry";
+  return `New YMG Events enquiry — ${type} — ${subjectName(name)}`;
 }
 
 function relayReady(env) {
@@ -117,7 +124,9 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
 
   const name = field(params, "name", 120, true);
   const email = field(params, "email", 254, true);
-  const business = field(params, "business", 160, true);
+  const intent = field(params, "intent", 40, true);
+  const source = field(params, "source", 40, true);
+  const business = field(params, "business", 160);
   const rawFormat = field(params, "format", 100);
   const rawGuests = field(params, "guests", 40);
   const format = rawFormat === "" ? "Let’s explore a partnership" : rawFormat;
@@ -126,8 +135,10 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   const budget = field(params, "budget", 120);
   const idea = field(params, "idea", 5000);
   const token = field(params, "cf-turnstile-response", 2048, true);
-  if ([name, email, business, rawFormat, rawGuests, timing, budget, idea, token].includes(null) ||
-      !validEmail(email || "") || !FORMAT_CHOICES.has(format) || !GUEST_CHOICES.has(guests)) {
+  const businessRequired = intent !== "private_celebration";
+  if ([name, email, intent, source, business, rawFormat, rawGuests, timing, budget, idea, token].includes(null) ||
+      !validEmail(email || "") || !ENQUIRY_TYPES.has(intent || "") || !ENQUIRY_SOURCES.has(source || "") ||
+      (businessRequired && !business) || !FORMAT_CHOICES.has(format) || !GUEST_CHOICES.has(guests)) {
     return json(400, { ok: false, error: "Please check the required fields and try again." });
   }
   if (!configured(env)) return json(503, { ok: false, error: "Online submission is unavailable." });
@@ -166,9 +177,14 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   }
 
   const show = value => value || "(not provided)";
+  const businessLabel = intent === "venue_partnership"
+    ? "Venue or hospitality business"
+    : intent === "corporate_event" ? "Company or team" : "Preferred venue or location";
   const text = [
     "New YMG Events enquiry", "",
-    `Name: ${name}`, `Reply email: ${email}`, `Venue or organisation: ${business}`,
+    `Enquiry type: ${ENQUIRY_TYPES.get(intent)}`,
+    `Enquiry source: ${ENQUIRY_SOURCES.get(source)}`,
+    `Name: ${name}`, `Reply email: ${email}`, `${businessLabel}: ${show(business)}`,
     `Event format: ${format}`, `Guest count: ${guests}`, `Timing: ${show(timing)}`,
     `Indicative budget: ${show(budget)}`, "", "Venue or occasion details:", show(idea),
   ].join("\n");
@@ -179,7 +195,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
       body: JSON.stringify({
         secret: env.GOOGLE_RELAY_SECRET,
         replyTo: email,
-        subject: eventsNotificationSubject(name),
+        subject: eventsNotificationSubject(name, intent),
         text,
       }),
       redirect: "follow",

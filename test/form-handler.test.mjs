@@ -11,7 +11,7 @@ const env = {
   EVENTS_SUBMISSION_LIMITER: { limit: async () => ({ success: true }) },
 };
 const form = (overrides = {}) => new URLSearchParams({
-  name: "Jane Doe", email: "jane@example.org", business: "Terrace Genova",
+  name: "Jane Doe", email: "jane@example.org", intent: "venue_partnership", source: "events_website_form", business: "Terrace Genova",
   format: "Rooftop evenings", guests: "60–100", timing: "June evening",
   budget: "€2000", idea: "A sunset event with live music",
   "cf-turnstile-response": "test-token", ...overrides,
@@ -53,10 +53,43 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
   assert.equal(calls.length, 2);
   const payload = JSON.parse(calls[1].options.body);
   assert.equal(payload.replyTo, "jane@example.org");
-  assert.equal(payload.subject, "New YMG Events enquiry — Jane Doe");
-  for (const expected of ["Terrace Genova", "June evening", "€2000", "A sunset event", "60–100"]) {
+  assert.equal(payload.subject, "New YMG Events enquiry — Venue partnership — Jane Doe");
+  for (const expected of ["Enquiry type: Venue partnership", "Enquiry source: Events website", "Terrace Genova", "June evening", "€2000", "A sunset event", "60–100"]) {
     assert.ok(payload.text.includes(expected));
   }
+});
+
+test("each enquiry pathway carries its type and source, with venue details required only for organizations", async () => {
+  const cases = [
+    { intent: "venue_partnership", business: "Harbor Restaurant", type: "Venue partnership", field: "Venue or hospitality business" },
+    { intent: "corporate_event", business: "North Star Studio", type: "Corporate event", field: "Company or team" },
+    { intent: "private_celebration", business: "", type: "Private celebration", field: "Preferred venue or location" },
+  ];
+  for (const example of cases) {
+    let relayPayload;
+    const response = await handleEventsApi(request(form(example)), env, async (url, options) => {
+      if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" });
+      relayPayload = JSON.parse(options.body);
+      return Response.json({ ok: true });
+    });
+    assert.equal(response.status, 202, `${example.intent} enquiries can be submitted`);
+    assert.equal(relayPayload.replyTo, "jane@example.org", "the visitor email remains the Reply-To value");
+    assert.equal(relayPayload.subject, `New YMG Events enquiry — ${example.type} — Jane Doe`);
+    assert.ok(relayPayload.text.includes(`Enquiry type: ${example.type}`));
+    assert.ok(relayPayload.text.includes("Enquiry source: Events website"));
+    assert.ok(relayPayload.text.includes(`${example.field}: ${example.business || "(not provided)"}`));
+  }
+});
+
+test("venue and corporate enquiries require an organization name while private enquiries do not", async () => {
+  for (const intent of ["venue_partnership", "corporate_event"]) {
+    const response = await handleEventsApi(request(form({ intent, business: "" })), env, async () => Response.json({ ok: true }));
+    assert.equal(response.status, 400, `${intent} requires a venue or organization name`);
+  }
+  const invalidIntent = await handleEventsApi(request(form({ intent: "other" })), env);
+  const invalidSource = await handleEventsApi(request(form({ source: "external" })), env);
+  assert.equal(invalidIntent.status, 400);
+  assert.equal(invalidSource.status, 400);
 });
 
 test("a Turnstile action mismatch prevents delivery", async () => {
@@ -122,5 +155,5 @@ test("the page's curly-apostrophe default event format passes validation", async
 });
 
 test("subject removes header controls from sender name", () => {
-  assert.equal(eventsNotificationSubject("Jane\r\nBCC: extra@example.org"), "New YMG Events enquiry — Jane BCC: extra@example.org");
+  assert.equal(eventsNotificationSubject("Jane\r\nBCC: extra@example.org"), "New YMG Events enquiry — Venue partnership — Jane BCC: extra@example.org");
 });

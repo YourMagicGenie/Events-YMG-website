@@ -30,6 +30,8 @@ test("Worker routes inline submissions through Turnstile and the shared relay", 
   const body = new URLSearchParams({
     name: "Jane Doe",
     email: "jane@example.org",
+    intent: "venue_partnership",
+    source: "events_website_form",
     business: "Terrace Genova",
     format: "Supper Club",
     guests: "30–60",
@@ -49,7 +51,7 @@ test("Worker routes inline submissions through Turnstile and the shared relay", 
   assert.equal(calls.length, 2);
   const message = JSON.parse(calls[1].options.body);
   assert.equal(message.replyTo, "jane@example.org");
-  assert.equal(message.subject, "New YMG Events enquiry — Jane Doe");
+  assert.equal(message.subject, "New YMG Events enquiry — Venue partnership — Jane Doe");
   assert.match(message.text, /Supper Club/);
   assert.match(message.text, /A dinner with live music/);
 });

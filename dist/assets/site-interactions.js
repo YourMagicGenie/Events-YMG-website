@@ -56,11 +56,123 @@ if (deck) {
   updateDeckState();
 }
 
+const intent = document.getElementById("intent");
+const business = document.getElementById("business");
+const businessLabel = document.getElementById("business-label");
+const businessHelp = document.getElementById("business-help");
+const ideaLabel = document.getElementById("idea-label");
+const idea = document.getElementById("idea");
+const format = document.getElementById("format");
+const pathCopy = messages.turnstileLanguage === "it" ? {
+  businessInitial: "Seleziona prima il tipo di richiesta",
+  businessPlaceholder: "Scegli il tipo di richiesta per adattare questo campo",
+  businessHelpInitial: "Seleziona il percorso più adatto: ti chiederemo solo i dettagli utili.",
+  venueLabel: "Location o attività ricettiva *",
+  venuePlaceholder: "Nome della location o dell’attività",
+  venueHelp: "Indica la location con cui vorresti collaborare.",
+  companyLabel: "Azienda o gruppo *",
+  companyPlaceholder: "Nome dell’azienda o del gruppo",
+  companyHelp: "Indica l’azienda o il gruppo per cui stai organizzando l’evento.",
+  privateLabel: "Location preferita (facoltativa)",
+  privatePlaceholder: "Aggiungila solo se l’hai già scelta",
+  privateHelp: "Non serve avere già scelto una location per inviare la richiesta.",
+  ideaInitialLabel: "Raccontaci cosa hai in mente",
+  ideaInitialPlaceholder: "Dopo aver scelto il tipo di richiesta, puoi aggiungere qualche dettaglio…",
+  venueIdeaLabel: "Raccontaci della location e dell’evento che vorresti creare",
+  venueIdeaPlaceholder: "Spazio, ospitalità, musica e ospiti che vorresti accogliere…",
+  companyIdeaLabel: "Cosa vorresti offrire al tuo team o ai tuoi ospiti?",
+  companyIdeaPlaceholder: "Obiettivo dell’incontro, partecipanti, atmosfera o programma…",
+  privateIdeaLabel: "Cosa festeggi e che tipo di serata immagini?",
+  privateIdeaPlaceholder: "Occasione, ospiti, atmosfera o dettagli che vorresti condividere…",
+  defaults: {
+    venue_partnership: "Let’s explore a partnership",
+    corporate_event: "Corporate Social",
+    private_celebration: "Private celebrations",
+  },
+} : {
+  businessInitial: "Choose an enquiry type first",
+  businessPlaceholder: "Choose an enquiry type to tailor this field",
+  businessHelpInitial: "Choose the path that fits best; we’ll ask only for useful details.",
+  venueLabel: "Venue or hospitality business *",
+  venuePlaceholder: "Name of your venue or hospitality business",
+  venueHelp: "Tell us which venue you would like to work with.",
+  companyLabel: "Company or team *",
+  companyPlaceholder: "Name of your company or group",
+  companyHelp: "Tell us which company or group you are planning for.",
+  privateLabel: "Preferred venue or location (optional)",
+  privatePlaceholder: "Add this only if you have already chosen a place",
+  privateHelp: "You do not need to have chosen a venue before getting in touch.",
+  ideaInitialLabel: "Tell us what you have in mind",
+  ideaInitialPlaceholder: "Choose an enquiry type, then add any details that would help…",
+  venueIdeaLabel: "Tell us about your venue and the event you want to create",
+  venueIdeaPlaceholder: "Your setting, hospitality, music and the guests you would like to welcome…",
+  companyIdeaLabel: "What would you like your team or guests to experience?",
+  companyIdeaPlaceholder: "The purpose of the gathering, attendees, atmosphere or programme…",
+  privateIdeaLabel: "What are you celebrating, and what kind of evening do you have in mind?",
+  privateIdeaPlaceholder: "The occasion, guests, atmosphere or any details you would like to share…",
+  defaults: {
+    venue_partnership: "Let’s explore a partnership",
+    corporate_event: "Corporate Social",
+    private_celebration: "Private celebrations",
+  },
+};
+
+let previousIntent = "";
+const updateEnquiryPath = () => {
+  const selected = intent?.value || "";
+  if (previousIntent && previousIntent !== selected) business.value = "";
+  business.disabled = !selected;
+  business.required = selected === "venue_partnership" || selected === "corporate_event";
+  if (!selected) {
+    businessLabel.textContent = pathCopy.businessInitial;
+    business.placeholder = pathCopy.businessPlaceholder;
+    businessHelp.textContent = pathCopy.businessHelpInitial;
+    ideaLabel.textContent = pathCopy.ideaInitialLabel;
+    idea.placeholder = pathCopy.ideaInitialPlaceholder;
+  } else if (selected === "venue_partnership") {
+    businessLabel.textContent = pathCopy.venueLabel;
+    business.placeholder = pathCopy.venuePlaceholder;
+    businessHelp.textContent = pathCopy.venueHelp;
+    ideaLabel.textContent = pathCopy.venueIdeaLabel;
+    idea.placeholder = pathCopy.venueIdeaPlaceholder;
+  } else if (selected === "corporate_event") {
+    businessLabel.textContent = pathCopy.companyLabel;
+    business.placeholder = pathCopy.companyPlaceholder;
+    businessHelp.textContent = pathCopy.companyHelp;
+    ideaLabel.textContent = pathCopy.companyIdeaLabel;
+    idea.placeholder = pathCopy.companyIdeaPlaceholder;
+  } else {
+    businessLabel.textContent = pathCopy.privateLabel;
+    business.placeholder = pathCopy.privatePlaceholder;
+    businessHelp.textContent = pathCopy.privateHelp;
+    ideaLabel.textContent = pathCopy.privateIdeaLabel;
+    idea.placeholder = pathCopy.privateIdeaPlaceholder;
+  }
+  if (selected && (!previousIntent || format.value === pathCopy.defaults[previousIntent])) {
+    format.value = pathCopy.defaults[selected];
+  }
+  previousIntent = selected;
+};
+
+intent?.addEventListener("change", updateEnquiryPath);
+updateEnquiryPath();
+
 document.querySelectorAll("[data-concept]").forEach(button => {
   button.addEventListener("click", () => {
-    document.getElementById("format").value = button.dataset.concept;
+    if (button.dataset.intent) {
+      intent.value = button.dataset.intent;
+      intent.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    format.value = button.dataset.concept;
     document.getElementById("enquire").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
-    document.getElementById("format").focus({ preventScroll: true });
+    format.focus({ preventScroll: true });
+  });
+});
+
+document.querySelectorAll("[data-enquiry-intent]").forEach(link => {
+  link.addEventListener("click", () => {
+    intent.value = link.dataset.enquiryIntent;
+    intent.dispatchEvent(new Event("change", { bubbles: true }));
   });
 });
 

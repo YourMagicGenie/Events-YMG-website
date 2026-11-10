@@ -106,7 +106,7 @@ test("hero uses licensed coastal photography without implying a YMG event", () =
   assert.match(html, /media="\(max-width: 540px\)"[^>]+480w/);
   assert.match(html, /fetchpriority="high"[^>]+referrerpolicy="no-referrer"/);
   assert.doesNotMatch(html, /Discover the atmosphere|We’re developing/);
-  assert.match(html, /<a class="btn primary" href="#enquire">Talk about an event/);
+  assert.match(html, /<a class="btn primary" href="#enquire">Tell us what you’re planning/);
   assert.match(html, /assets\/social-card\.png/);
   const provenance = readFileSync(new URL("../docs/ASSET-PROVENANCE.md", import.meta.url), "utf8");
   assert.match(provenance, /Arlind Photography/);
@@ -196,4 +196,34 @@ test("English and Italian pages publish reciprocal language signals and translat
   for (const asset of italianAssets) {
     assert.ok(existsSync(new URL(`../dist/it/${asset}`, import.meta.url)), `${asset} resolves from the Italian route`);
   }
+});
+
+test("venue, corporate and private enquiries have explicit localized routes and minimal fields", () => {
+  const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+  const englishPrivacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
+  const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
+  const handler = readFileSync(new URL("../src/form-handler.js", import.meta.url), "utf8");
+  const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
+
+  for (const page of [html, italian]) {
+    assert.match(page, /name="source" value="events_website_form"/);
+    for (const intent of ["venue_partnership", "corporate_event", "private_celebration"]) {
+      assert.ok(page.includes(`<option value="${intent}">`), `${intent} is a selectable enquiry path`);
+    }
+    assert.match(page, /id="intent" name="intent" required/);
+    assert.match(page, /id="business" name="business"/);
+    assert.match(page, /data-enquiry-intent="venue_partnership"/);
+  }
+  assert.match(html, /data-concept="Private celebrations" data-intent="private_celebration"/);
+  assert.match(html, /data-concept="Corporate Social" data-intent="corporate_event"/);
+  assert.match(italian, /data-concept="Private celebrations" data-intent="private_celebration"/);
+  assert.match(italian, /data-concept="Corporate Social" data-intent="corporate_event"/);
+  assert.match(interactions, /business\.required = selected === "venue_partnership" \|\| selected === "corporate_event"/);
+  assert.match(interactions, /You do not need to have chosen a venue before getting in touch/);
+  assert.match(interactions, /Non serve avere già scelto una location per inviare la richiesta/);
+  assert.match(handler, /Enquiry type: \$\{ENQUIRY_TYPES\.get\(intent\)\}/);
+  assert.match(handler, /Enquiry source: \$\{ENQUIRY_SOURCES\.get\(source\)\}/);
+  assert.match(handler, /eventsNotificationSubject\(name, intent\)/);
+  assert.match(englishPrivacy, /enquiry type \(venue partnership, corporate event or private celebration\)/);
+  assert.match(italianPrivacy, /tipo di richiesta \(collaborazione con una location, evento aziendale o occasione privata\)/);
 });

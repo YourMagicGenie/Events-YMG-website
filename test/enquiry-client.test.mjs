@@ -5,6 +5,8 @@ import { sendEventsEnquiry } from "../dist/assets/enquiry-client.js";
 const values = new URLSearchParams({
   name: "Jane Doe",
   email: "jane@example.org",
+  intent: "venue_partnership",
+  source: "events_website_form",
   business: "Terrace Genova",
   format: "Jazz & Cocktails",
   guests: "30–60",
