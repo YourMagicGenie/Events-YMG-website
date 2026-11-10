@@ -286,17 +286,22 @@ try {
   const artBounds = await touch.locator("#concept-deck .art").first().boundingBox();
   const touchSession = await touchContext.newCDPSession(touch);
   const touchY = Math.round(artBounds.y + artBounds.height / 2);
-  const touchStart = Math.round(artBounds.x + artBounds.width - 18);
-  const touchEnd = Math.round(artBounds.x + 18);
   await touchSession.send("Emulation.setTouchEmulationEnabled", { enabled: true, configuration: "mobile" });
-  const touchPoint = x => ({ id: 0, x, y: touchY, radiusX: 5, radiusY: 5, force: 1 });
-  await touchSession.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [touchPoint(touchStart)] });
-  for (const fraction of [2 / 3, 1 / 3, 0]) {
-    const x = Math.round(touchStart + (touchEnd - touchStart) * fraction);
-    await touchSession.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [touchPoint(x)] });
-  }
-  await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  const synthesizeTouchScroll = xDistance => touchSession.send("Input.synthesizeScrollGesture", {
+    x: Math.round(artBounds.x + artBounds.width / 2),
+    y: touchY,
+    xDistance,
+    yDistance: 0,
+    speed: 600,
+    gestureSourceType: "touch",
+    preventFling: true,
+  });
+  await synthesizeTouchScroll(260);
   await touch.waitForTimeout(250);
+  if (await touch.locator("#concept-deck").evaluate(deck => deck.scrollLeft) <= 5) {
+    await synthesizeTouchScroll(-260);
+    await touch.waitForTimeout(250);
+  }
   const touchState = await touch.evaluate(() => {
     const deck = document.querySelector("#concept-deck");
     return {
