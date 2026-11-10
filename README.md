@@ -7,7 +7,7 @@ Canonical source and issue tracker for the live [YMG Events website](https://eve
 This repository was initialized on 2026-11-09 from the selected YMG Events Sites-managed source (`appgprj_6af1846f038c8191a5028170979bd4b3`, commit `76dd4f9580e546dac33e6605534414ad77408f10`). The live public domain is hosted separately on the Cloudflare Worker **`ymg-events-website`**. GitHub pushes are **not** wired to publish this domain. Publishing a Sites preview also does not update production.
 
 - `dist/`: editable buildless website, privacy notice, assets, robots/sitemap copied from the current Events source.
-- `deploy/`: notes and the standalone Worker bundle used by the current production architecture. A future pipeline should generate and verify the bundle from source rather than hand-editing embedded content.
+- `deploy/`: deployment and recovery notes for the separate production Worker. Its current generated bundle remains in the Sites-managed source and is not copied here as a second editable source; a future release pipeline must build from `dist/` and `src/` and verify parity rather than hand-edit embedded content.
 - `reference/`: vetted, non-secret implementation patterns borrowed from the [main YMG website](https://github.com/YourMagicGenie/ymg-scientific-website) to accelerate Events-specific direct enquiry delivery. Reference code is **not** wired to production until tested and explicitly integrated.
 
 ## Coding-agent handoff
