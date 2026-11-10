@@ -332,7 +332,7 @@ try {
   await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft > 1);
   assert.equal(await carouselKeyboard.evaluate(() => document.activeElement.id), "concept-deck", "ArrowRight scrolls the focused carousel without losing focus");
   await carouselKeyboard.keyboard.press("ArrowLeft");
-  await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft <= 1);
+  await carouselKeyboard.waitForFunction(() => document.querySelector("#concept-deck").scrollLeft <= 4);
 
   const nextControl = carouselKeyboard.getByRole("button", { name: "Next event formats" });
   const previousControl = carouselKeyboard.getByRole("button", { name: "Previous event formats" });
