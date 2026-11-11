@@ -32,3 +32,6 @@ Google references:
 - [Site names in Google Search](https://developers.google.com/search/docs/appearance/site-names)
 - [URL Inspection tool](https://support.google.com/webmasters/answer/9012289)
 - [Ask Google to recrawl a URL](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl)
+
+## 11 November live refresh
+Public HTTP smoke passes on all four canonical pages, sitemap and robots; source schema/hreflang tests pass. Fresh cloud-browser Search Console access reaches the public about/sign-in page, not an authenticated property. URL Inspection, Google-selected canonical, actual index status and recrawl request remain unverified; this is an authenticated-access dependency. No claim that a public site: query proves indexing.

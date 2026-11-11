@@ -113,7 +113,10 @@ jobs:
       - name: Compare base and candidate performance
         env:
           PERFORMANCE_BASE_DIR: ${{ github.workspace }}/baseline
+          PERFORMANCE_LIVE_ORIGIN: https://events.ymgconsultingservices.com
         run: npm run audit:performance
+      - name: Audit live security and privacy behavior
+        run: node test/live-browser-audit.mjs
       - name: Upload Lighthouse comparison
         if: always()
         uses: actions/upload-artifact@v4

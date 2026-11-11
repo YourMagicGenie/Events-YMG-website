@@ -204,6 +204,13 @@ try {
       outputs[`${label}-${profile.name}`] = result.metrics;
       await writeFile(path.join(resultDirectory, `${label}-${profile.name}.json`), JSON.stringify({ profile, metrics: result.metrics }, null, 2));
     }
+    if (process.env.PERFORMANCE_LIVE_ORIGIN) {
+      const live = new URL(process.env.PERFORMANCE_LIVE_ORIGIN);
+      if (live.origin !== "https://events.ymgconsultingservices.com") throw new Error("Live audit is restricted to Events");
+      const result = await audit(live.origin + "/", profile, executablePath, "live");
+      outputs[`live-${profile.name}`] = result.metrics;
+      await writeFile(path.join(resultDirectory, `live-${profile.name}.json`), JSON.stringify({profile, metrics:result.metrics}, null, 2));
+    }
   }
 } finally {
   await Promise.all([baseline.server.close(), candidate.server.close()]);
@@ -211,7 +218,7 @@ try {
 
 const rows = [];
 for (const profile of profiles) {
-  for (const label of ["before", "after"]) {
+  for (const label of ["before", "after", ...(process.env.PERFORMANCE_LIVE_ORIGIN ? ["live"] : [])]) {
     const m = outputs[`${label}-${profile.name}`];
     const inpDisplay = m.inpMs === null ? "≤16 ms" : `${fmt(m.inpMs)} ms`;
     rows.push(`| ${label} | ${profile.name} | ${m.performanceScore === null ? "n/a" : Math.round(m.performanceScore * 100)} | ${fmt(m.lcpMs / 1000, 2)} s | ${fmt(m.cls, 3)} | ${inpDisplay} | ${fmt(m.tbtMs)} ms | ${fmt(m.transferBytes / 1024)} KiB | ${fmt(m.heroBytes / 1024)} KiB (${m.heroRequests}) | ${fmt(m.fontBytes / 1024)} KiB (${m.fontRequests}) |`);
@@ -220,7 +227,7 @@ for (const profile of profiles) {
 const report = [
   "# Events performance comparison",
   "",
-  "Lighthouse 13.3.0 user-flow audits ran against the base-branch and candidate static builds on the same hosted runner. Mobile used 390×844 CSS px, DPR 2, 150 ms RTT, 1.6 Mbps and 4× CPU slowdown; desktop used 1440×900 CSS px, DPR 1, 40 ms RTT and no CPU slowdown. INP is the measured event-format selection interaction from Chrome Event Timing, grouped by interaction ID; if no entry clears Chrome’s 16 ms observation threshold, the result is reported as ≤16 ms. These are lab samples, not field CrUX data.",
+  "Lighthouse 13.3.0 user-flow audits ran against the base-branch and candidate static builds on the same hosted runner. Mobile used 390×844 CSS px, DPR 2, 150 ms RTT, 1.6 Mbps and 4× CPU slowdown; desktop used 1440×900 CSS px, DPR 1, 40 ms RTT and no CPU slowdown. INP is the measured event-format selection interaction from Chrome Event Timing, grouped by interaction ID; if no entry clears Chrome’s 16 ms observation threshold, the result is reported as ≤16 ms. An optional live row measures the production Events hostname with the same profile. These are lab samples, not field CrUX data.",
   "",
   "| Build | Profile | Performance | LCP | CLS | INP | TBT | Page transfer | Hero image | Fonts |",
   "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
