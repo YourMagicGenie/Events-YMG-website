@@ -10,6 +10,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "wrangler.json"
+      - "wrangler.production.json"
   workflow_dispatch:
     inputs:
       visual_matrix:

@@ -78,8 +78,8 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
     assert.ok(footer.includes(atlasLabel));
     assert.match(footer, /href="https:\/\/ymgconsultingservices\.com\//);
     assert.match(footer, /href="#enquire"/);
-    assert.doesNotMatch(footer, /(?:P\.?IVA|Partita IVA|VAT|REA|sede legale)/i,
-      "unverified legal identifiers and addresses are withheld pending owner review");
+    assert.match(footer, /Frederic David · P.IVA 03044510992/);
+    assert.doesNotMatch(footer, /REA|sede legale|Via Val Trebbia/i, "no unverified registry claim or private street address");
   }
 });
 
@@ -115,23 +115,15 @@ test("local assets and public crawl files are present", () => {
   }
   const privacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
   assert.match(privacy, /class="skip-link" href="#main-content"/);
-  assert.match(privacy, /form on the currently published website prepares an email in your email app/);
-  assert.match(privacy, /does not automatically submit or store the form fields/);
-  assert.match(privacy, /not deployed on the public website/);
-  assert.match(privacy, /Google Fonts/);
-  assert.match(privacy, /does not request it from Unsplash/);
-  assert.match(privacy, /We do not use analytics or advertising pixels/);
-  assert.match(privacy, /Article 6\(1\)\(b\) GDPR/);
-  assert.match(privacy, /European Economic Area/);
-  assert.match(privacy, /specific transfer mechanism and safeguards configured/);
-  assert.match(privacy, /href="https:\/\/www\.garanteprivacy\.it\/diritti\/come-agire-per-tutelare-i-tuoi-dati-personali\/reclamo"/);
-  assert.doesNotMatch(privacy, /Cloudflare Turnstile checks|Valid submissions are forwarded through Google Apps Script/);
+  for (const subject of ["Frederic David", "03044510992", "Cloudflare Turnstile", "Google Apps Script", "Google Workspace", "European Economic Area", "standard contractual clauses", "How long information is kept", "Your rights"]) assert.ok(privacy.includes(subject));
+  assert.match(privacy, /When online sending is available/);
+  assert.match(privacy, /Optional conversion measurement is disabled/);
+  assert.match(privacy, /If online sending is unavailable/);
+  assert.doesNotMatch(privacy, /this repository|draft must|qualified adviser|being confirmed/);
   const dataFlow = readFileSync(new URL("../docs/PRIVACY-DATA-FLOW.md", import.meta.url), "utf8");
-  assert.match(dataFlow, /current production flow/);
-  assert.match(dataFlow, /no runtime bindings, variable names or secret names/);
-  assert.match(dataFlow, /direct-send form is not deployed/);
-  assert.match(dataFlow, /Confirm the data controller's full legal identity/);
-  assert.match(dataFlow, /qualified privacy adviser/);
+  assert.match(dataFlow, /Production remains on the earlier/);
+  assert.match(dataFlow, /self-managed/);
+
 });
 
 test("hero photos use responsive compressed sources and explicit priority", () => {
@@ -142,12 +134,10 @@ test("hero photos use responsive compressed sources and explicit priority", () =
     assert.notEqual(end, -1, "hero picture markup exists");
     const hero = page.slice(start, end + "</picture>".length);
     assert.match(hero, /<source media="\(max-width: 540px\)" sizes="100vw" srcset=/);
-    assert.match(hero, /auto=format&amp;fit=crop/);
-    assert.match(hero, /w=480&amp;h=854&amp;q=\d+ 480w/);
-    assert.match(hero, /w=780&amp;h=1388&amp;q=\d+ 780w/);
-    assert.match(hero, /w=960&amp;h=540&amp;q=\d+ 960w/);
-    assert.match(hero, /w=1440&amp;h=810&amp;q=\d+ 1440w/);
-    assert.match(hero, /width="1600" height="900"/);
+    for (const width of [480, 780]) assert.ok(hero.includes(`/assets/event-hero-mobile-${width}.webp ${width}w`));
+    for (const width of [480, 960, 1440]) assert.ok(hero.includes(`/assets/event-hero-${width}.webp ${width}w`));
+    assert.match(hero, /width="1440" height="810"/);
+    assert.doesNotMatch(hero, /https:\/\//);
     assert.match(hero, /loading="eager" fetchpriority="high" decoding="async"/);
   }
 });
@@ -247,8 +237,8 @@ test("self-hosted fonts are licensed, preloaded, and disclosed accurately", () =
     assert.match(page, /font-display:swap/);
   }
   const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
-  assert.match(italianPrivacy, /La pagina attualmente pubblicata richiede i font a Google Fonts/);
-  assert.match(italianPrivacy, /modulo di invio diretto presente nel codice sorgente.*non è attivo sul sito pubblico/);
+  assert.match(italianPrivacy, /I caratteri e il ritratto del fondatore sono ospitati insieme al sito/);
+  assert.match(italianPrivacy, /Quando l’invio online è disponibile/);
   assert.match(italianPrivacy, /href="https:\/\/www\.garanteprivacy\.it\/diritti\/come-agire-per-tutelare-i-tuoi-dati-personali\/reclamo"/);
   const provenance = readFileSync(new URL("../docs/FONT-ASSET-PROVENANCE.md", import.meta.url), "utf8");
   assert.match(provenance, /SIL Open Font License 1\.1/);
@@ -467,18 +457,13 @@ test("event card illustrations are local, format-specific, responsive and docume
   }
 });
 
-test("hero uses licensed coastal photography without implying a YMG event", () => {
-  assert.match(html, /<div class="hero-atmosphere"><picture>/);
-  assert.match(html, /images\.unsplash\.com\/photo-1789931123652-6d22f2ef7cc7/);
-  assert.match(html, /alt="Boats moored beside waterfront restaurants at dusk\."/);
-  assert.match(html, /media="\(max-width: 540px\)"[^>]+480w/);
-  assert.match(html, /fetchpriority="high"[^>]+referrerpolicy="no-referrer"/);
-  assert.doesNotMatch(html, /Discover the atmosphere|We’re developing/);
-  assert.match(html, /<a class="btn primary" href="#enquire">Tell us what you’re planning/);
-  assert.match(html, /assets\/social-card\.png/);
+test("hero restores the owner-selected event atmosphere with local illustrative imagery", () => {
+  assert.match(html, /event-hero-1440.webp/);
+  assert.match(html, /illustrative scene/);
+  assert.doesNotMatch(html, /Discover the atmosphere|images\.unsplash\.com/);
   const provenance = readFileSync(new URL("../docs/ASSET-PROVENANCE.md", import.meta.url), "utf8");
-  assert.match(provenance, /Arlind Photography/);
-  assert.match(provenance, /Unsplash License/);
+  assert.match(provenance, /AI-generated illustrative marketing imagery/);
+  assert.match(provenance, /not documentary evidence/);
 });
 
 test("public positioning is venue-facing, factual, and consistent with metadata", () => {
@@ -591,15 +576,15 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /L’eleganza ha un/);
   assert.match(italian, /aria-label="Apri il menu di navigazione"/);
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
-  assert.match(italian, /alt="Barche ormeggiate accanto ai ristoranti sul porto al tramonto\."/);
+  assert.match(italian, /alt="Ospiti a un aperitivo su una terrazza sul porto al tramonto; scena illustrativa\."/);
   assert.match(italian, /<label for="name">Nome e cognome \*<\/label>/);
   assert.match(italian, /placeholder="Come possiamo chiamarti\?"/);
   assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);
   assert.match(italian, /<button[^>]*data-concept="Rooftop evenings"/);
   assert.match(italian, /href="\/it\/privacy.html"[^>]*>Scopri come trattiamo i tuoi dati/);
-  assert.match(italianPrivacy, /Informativa sulla privacy/);
-  assert.match(italianPrivacy, /Quando visiti il sito/);
-  assert.match(italianPrivacy, /Inviare una richiesta/);
+  assert.match(italianPrivacy, /Informativa privacy/);
+  assert.match(italianPrivacy, /Navigazione e sicurezza/);
+  assert.match(italianPrivacy, /Contatti e richieste di eventi/);
   assert.match(interactions, /language: messages\.turnstileLanguage/);
   assert.match(messages, /turnstileLanguage: "it"/);
   assert.match(messages, /formUnavailable: "L’invio online/);
@@ -639,8 +624,8 @@ test("venue, corporate and private enquiries have explicit localized routes and 
   assert.match(handler, /Enquiry type: \$\{ENQUIRY_TYPES\.get\(intent\)\}/);
   assert.match(handler, /Enquiry source: \$\{ENQUIRY_SOURCES\.get\(source\)\}/);
   assert.match(handler, /eventsNotificationSubject\(name, intent, format\)/);
-  assert.match(englishPrivacy, /prepared message may include your name, venue or business, chosen event direction, approximate guest count, timing, budget and any description/);
-  assert.match(italianPrivacy, /Il messaggio preparato può includere nome, location o azienda, direzione dell’evento scelta, numero indicativo di ospiti, tempistiche, budget e la descrizione/);
+  assert.match(englishPrivacy, /name, reply email, enquiry type, organization or venue/);
+  assert.match(italianPrivacy, /nome, email di risposta, tipo di richiesta, azienda o location/);
 });
 
 test("event format context is bilingual, explicit, clearable and sent through the existing form field", () => {
