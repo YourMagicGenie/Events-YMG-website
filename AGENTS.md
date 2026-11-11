@@ -27,3 +27,7 @@ from `YourMagicGenie/ymg-scientific-website` where applicable. Do not copy
 secrets, scientific content, domain-specific route redirects or unrelated
 production settings into this public repository. Keep conceptual event
 offerings truthful: do not invent delivered event history or clients.
+
+## Owner language and design decisions
+
+Use American **inquiry / inquiries / inquiring** in all visitor-facing English copy, accessible labels, feedback and errors. Keep the current share artwork readable within square crops and match the website green/gold/ivory palette. The owner explicitly restored the original launch rooftop hero on 11 November 2026; do not replace it with another realism edit or split mobile image layout. Broad editorial rewrite #74 is deferred until the owner supplies its specifics.

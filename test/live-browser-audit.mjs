@@ -11,8 +11,11 @@ try {
   page.on('request',r=>requests.push(r.url()));
   page.on('console',m=>{if(/Content Security Policy|Refused to (?:load|execute|connect)/i.test(m.text()))errors.push(m.text());});
   await page.addInitScript(()=>{window.__eventsCsp=[];addEventListener('securitypolicyviolation',e=>window.__eventsCsp.push({directive:e.effectiveDirective,blocked:e.blockedURI}));});
-  const response=await page.goto(origin+route,{waitUntil:'networkidle',timeout:45000});
+  const response=await page.goto(origin+route,{waitUntil:'domcontentloaded',timeout:45000});
   assert.equal(response.status(),200);
+  // Turnstile can keep background requests open; wait for meaningful page state.
+  await page.waitForFunction(()=>document.fonts.status==='loaded' && (!document.querySelector('.hero-atmosphere img') || document.querySelector('.hero-atmosphere img').complete),{timeout:15000});
+  await page.waitForTimeout(2000);
   const headers=await response.allHeaders();
   for(const h of ['content-security-policy','strict-transport-security','x-frame-options','x-content-type-options','referrer-policy'])assert.ok(headers[h],route+' '+h);
   const state=await page.evaluate(()=>({csp:window.__eventsCsp,local:localStorage.length,session:sessionStorage.length,overflow:document.documentElement.scrollWidth>innerWidth,text:document.body.innerText,images:[...document.images].filter(i=>i.complete&&i.currentSrc).map(i=>({url:i.currentSrc,loaded:i.naturalWidth>0}))}));
