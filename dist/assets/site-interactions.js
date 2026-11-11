@@ -1,4 +1,4 @@
-import { sendEventsEnquiry } from "./enquiry-client.js";
+import { sendEventsInquiry } from "./inquiry-client.js";
 import { messages } from "./i18n.js";
 import { startEventsMetrics } from "./metrics-client.js";
 
@@ -96,8 +96,8 @@ const pathCopy = messages.turnstileLanguage === "it" ? {
     private_celebration: "Private celebrations",
   },
 } : {
-  businessInitial: "Choose an enquiry type first",
-  businessPlaceholder: "Choose an enquiry type to tailor this field",
+  businessInitial: "Choose an inquiry type first",
+  businessPlaceholder: "Choose an inquiry type to tailor this field",
   businessHelpInitial: "Choose the path that fits best; we’ll ask only for useful details.",
   venueLabel: "Venue or hospitality business *",
   venuePlaceholder: "Name of your venue or hospitality business",
@@ -109,7 +109,7 @@ const pathCopy = messages.turnstileLanguage === "it" ? {
   privatePlaceholder: "Add this only if you have already chosen a place",
   privateHelp: "You do not need to have chosen a venue before getting in touch.",
   ideaInitialLabel: "Tell us what you have in mind",
-  ideaInitialPlaceholder: "Choose an enquiry type, then add any details that would help…",
+  ideaInitialPlaceholder: "Choose an inquiry type, then add any details that would help…",
   venueIdeaLabel: "Tell us about your venue and the event you want to create",
   venueIdeaPlaceholder: "Your setting, hospitality, music and the guests you would like to welcome…",
   companyIdeaLabel: "What would you like your team or guests to experience?",
@@ -125,7 +125,7 @@ const pathCopy = messages.turnstileLanguage === "it" ? {
 
 let previousIntent = "";
 let selectedFromConcept = false;
-const updateEnquiryPath = () => {
+const updateInquiryPath = () => {
   const selected = intent?.value || "";
   if (previousIntent && previousIntent !== selected) business.value = "";
   business.disabled = !selected;
@@ -174,11 +174,11 @@ const renderFormatContext = () => {
 };
 
 intent?.addEventListener("change", () => {
-  updateEnquiryPath();
+  updateInquiryPath();
   selectedFromConcept = false;
   renderFormatContext();
 });
-updateEnquiryPath();
+updateInquiryPath();
 renderFormatContext();
 if (clearFormat) clearFormat.textContent = messages.clearFormat;
 
@@ -202,14 +202,14 @@ document.querySelectorAll("[data-concept]").forEach(button => {
     format.value = button.dataset.concept;
     selectedFromConcept = true;
     renderFormatContext();
-    document.getElementById("enquire").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+    document.getElementById("inquire").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
     format.focus({ preventScroll: true });
   });
 });
 
-document.querySelectorAll("[data-enquiry-intent]").forEach(link => {
+document.querySelectorAll("[data-inquiry-intent]").forEach(link => {
   link.addEventListener("click", () => {
-    intent.value = link.dataset.enquiryIntent;
+    intent.value = link.dataset.inquiryIntent;
     intent.dispatchEvent(new Event("change", { bubbles: true }));
   });
 });
@@ -217,7 +217,7 @@ document.querySelectorAll("[data-enquiry-intent]").forEach(link => {
 const form = document.getElementById("brief");
 if (form) {
   const feedback = document.getElementById("form-feedback");
-  const submit = document.getElementById("submit-enquiry");
+  const submit = document.getElementById("submit-inquiry");
   const submitLabel = submit.querySelector(".submit-label");
   let challengeReady = false;
   let turnstileToken = "";
@@ -295,7 +295,7 @@ if (form) {
       setFeedback(messages.turnstileCheck);
       widgetId = turnstile.render("#turnstile-widget", {
         sitekey: config.siteKey,
-        action: config.action === "assessment" ? "assessment" : "events_enquiry",
+        action: config.action === "assessment" ? "assessment" : "events_inquiry",
         language: messages.turnstileLanguage,
         callback: token => {
           turnstileToken = token;
@@ -337,7 +337,7 @@ if (form) {
     submitLabel.textContent = messages.sending;
     setFeedback(messages.sending);
     try {
-      await sendEventsEnquiry(new FormData(form), turnstileToken);
+      await sendEventsInquiry(new FormData(form), turnstileToken);
       setFeedback(messages.accepted, "success");
     } catch {
       setFeedback(messages.failed, "error");

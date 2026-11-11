@@ -16,7 +16,7 @@ const form = (overrides = {}) => new URLSearchParams({
   budget: "€2000", idea: "A sunset event with live music",
   "cf-turnstile-response": "test-token", ...overrides,
 });
-const request = (params = form(), headers = {}) => new Request(`${origin}/api/events/enquiry`, {
+const request = (params = form(), headers = {}) => new Request(`${origin}/api/events/inquiry`, {
   method: "POST", headers: { origin, "content-type": "application/x-www-form-urlencoded", "cf-connecting-ip": "198.51.100.24", ...headers },
   body: params.toString(),
 });
@@ -33,7 +33,7 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
   const calls = [];
   const fetcher = async (url, options) => {
     calls.push({ url, options });
-    if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" });
+    if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" });
     return Response.json({ ok: true });
   };
 
@@ -55,13 +55,13 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
   assert.equal(calls.length, 2);
   const payload = JSON.parse(calls[1].options.body);
   assert.equal(payload.replyTo, "jane@example.org");
-  assert.equal(payload.subject, "New YMG Events enquiry — Venue partnership — Rooftop evenings — Jane Doe");
-  for (const expected of ["Enquiry type: Venue partnership", "Enquiry source: Events website", "Terrace Genova", "June evening", "€2000", "A sunset event", "60–100"]) {
+  assert.equal(payload.subject, "New YMG Events inquiry — Venue partnership — Rooftop evenings — Jane Doe");
+  for (const expected of ["Inquiry type: Venue partnership", "Inquiry source: Events website", "Terrace Genova", "June evening", "€2000", "A sunset event", "60–100"]) {
     assert.ok(payload.text.includes(expected));
   }
 });
 
-test("each enquiry pathway carries its type and source, with venue details required only for organizations", async () => {
+test("each inquiry pathway carries its type and source, with venue details required only for organizations", async () => {
   const cases = [
     { intent: "venue_partnership", business: "Harbor Restaurant", type: "Venue partnership", format: "Jazz & Cocktails", field: "Venue or hospitality business" },
     { intent: "corporate_event", business: "North Star Studio", type: "Corporate event", format: "Corporate Social", field: "Company or team" },
@@ -70,21 +70,21 @@ test("each enquiry pathway carries its type and source, with venue details requi
   for (const example of cases) {
     let relayPayload;
     const response = await handleEventsApi(request(form(example)), env, async (url, options) => {
-      if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" });
+      if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" });
       relayPayload = JSON.parse(options.body);
       return Response.json({ ok: true });
     });
-    assert.equal(response.status, 202, `${example.intent} enquiries can be submitted`);
+    assert.equal(response.status, 202, `${example.intent} inquiries can be submitted`);
     assert.equal(relayPayload.replyTo, "jane@example.org", "the visitor email remains the Reply-To value");
-    assert.equal(relayPayload.subject, `New YMG Events enquiry — ${example.type} — ${example.format} — Jane Doe`);
-    assert.ok(relayPayload.text.includes(`Enquiry type: ${example.type}`));
-    assert.ok(relayPayload.text.includes("Enquiry source: Events website"));
+    assert.equal(relayPayload.subject, `New YMG Events inquiry — ${example.type} — ${example.format} — Jane Doe`);
+    assert.ok(relayPayload.text.includes(`Inquiry type: ${example.type}`));
+    assert.ok(relayPayload.text.includes("Inquiry source: Events website"));
     assert.ok(relayPayload.text.includes(`Event format: ${example.format}`));
     assert.ok(relayPayload.text.includes(`${example.field}: ${example.business || "(not provided)"}`));
   }
 });
 
-test("venue and corporate enquiries require an organization name while private enquiries do not", async () => {
+test("venue and corporate inquiries require an organization name while private inquiries do not", async () => {
   for (const intent of ["venue_partnership", "corporate_event"]) {
     const response = await handleEventsApi(request(form({ intent, business: "" })), env, async () => Response.json({ ok: true }));
     assert.equal(response.status, 400, `${intent} requires a venue or organization name`);
@@ -108,7 +108,7 @@ test("a Turnstile action mismatch prevents delivery", async () => {
 test("a relay failure reports an error instead of claiming delivery", async () => {
   const response = await handleEventsApi(request(), env, async url =>
     url.includes("turnstile")
-      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" })
       : Response.json({ ok: false, code: "RELAY_FAILED" }));
   assert.equal(response.status, 503);
   assert.equal((await response.json()).ok, false);
@@ -127,7 +127,7 @@ test("rate limiting rejects excess requests before Turnstile or relay", async ()
   assert.equal(fetchCalls, 0);
 });
 
-test("rate limiter failure fails closed without logging or forwarding the enquiry", async () => {
+test("rate limiter failure fails closed without logging or forwarding the inquiry", async () => {
   let fetchCalls = 0;
   const response = await handleEventsApi(request(), {
     ...env,
@@ -152,12 +152,12 @@ test("the page's curly-apostrophe default event format passes validation", async
   const defaultFormat = form({ format: "Let’s explore a partnership" });
   const response = await handleEventsApi(request(defaultFormat), env, async url =>
     url.includes("turnstile")
-      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" })
       : Response.json({ ok: true }));
   assert.equal(response.status, 202);
 });
 
-test("a cleared event format falls back to the selected enquiry path's generic format", async () => {
+test("a cleared event format falls back to the selected inquiry path's generic format", async () => {
   for (const [intent, format] of [
     ["venue_partnership", "Let’s explore a partnership"],
     ["corporate_event", "Corporate Social"],
@@ -165,11 +165,11 @@ test("a cleared event format falls back to the selected enquiry path's generic f
   ]) {
     let relayPayload;
     const response = await handleEventsApi(request(form({ intent, format: "", business: intent === "private_celebration" ? "" : "Example venue" })), env, async (url, options) => {
-      if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" });
+      if (url.includes("turnstile")) return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" });
       relayPayload = JSON.parse(options.body);
       return Response.json({ ok: true });
     });
-    assert.equal(response.status, 202, `${intent} accepts an enquiry with no specific format`);
+    assert.equal(response.status, 202, `${intent} accepts an inquiry with no specific format`);
     assert.ok(relayPayload.text.includes(`Event format: ${format}`));
     assert.ok(relayPayload.subject.includes(`— ${format} —`));
   }
@@ -178,7 +178,7 @@ test("a cleared event format falls back to the selected enquiry path's generic f
 test("subject removes header controls from sender name and event format", () => {
   assert.equal(
     eventsNotificationSubject("Jane\r\nBCC: extra@example.org", "venue_partnership", "Jazz\r\nBCC: extra@example.org"),
-    "New YMG Events enquiry — Venue partnership — Jazz BCC: extra@example.org — Jane BCC: extra@example.org",
+    "New YMG Events inquiry — Venue partnership — Jazz BCC: extra@example.org — Jane BCC: extra@example.org",
   );
 });
 
@@ -192,10 +192,10 @@ test("aggregate form metrics distinguish a relay acceptance from a relay failure
   };
   const accepted = await handleEventsApi(request(form({ locale: "it" })), metricsEnv, async url =>
     url.includes("turnstile")
-      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" })
       : Response.json({ ok: true }));
   assert.equal(accepted.status, 202);
-  assert.deepEqual(points.map(point => point.indexes[0]), ["enquiry_attempt", "relay_accepted"]);
+  assert.deepEqual(points.map(point => point.indexes[0]), ["inquiry_attempt", "relay_accepted"]);
   assert.deepEqual(points[0].blobs.slice(0, 4), ["it", "", "venue_partnership", "Rooftop evenings"]);
   assert.doesNotMatch(JSON.stringify(points), /Jane Doe|jane@example\.org|Terrace Genova|198\.51\.100\.24|sunset event|€2000/);
   assert.ok(!points.some(point => point.indexes[0] === "delivered" || point.indexes[0] === "confirmed"));
@@ -203,10 +203,10 @@ test("aggregate form metrics distinguish a relay acceptance from a relay failure
   points.length = 0;
   const failed = await handleEventsApi(request(form({ locale: "it" })), metricsEnv, async url =>
     url.includes("turnstile")
-      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" })
+      ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" })
       : new Response("unavailable", { status: 503 }));
   assert.equal(failed.status, 503);
-  assert.deepEqual(points.map(point => point.indexes[0]), ["enquiry_attempt", "enquiry_failure", "relay_failure"]);
+  assert.deepEqual(points.map(point => point.indexes[0]), ["inquiry_attempt", "inquiry_failure", "relay_failure"]);
   assert.equal(points[1].blobs[4], "relay_failure");
   assert.doesNotMatch(JSON.stringify(points), /Jane Doe|jane@example\.org|Terrace Genova|198\.51\.100\.24|sunset event|€2000/);
 });

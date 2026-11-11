@@ -12,34 +12,34 @@ test("partnership section uses the tighter desktop gutter in both locales", () =
   }
 });
 
-test("lower-page story progresses from process to founder to enquiry in both locales", () => {
+test("lower-page story progresses from process to founder to inquiry in both locales", () => {
   const cases = [
     {
       page: html,
       stages: ["From idea to a clear plan", "Your local point of contact", "Start a conversation"],
       founder: "The formats shown here are ideas to develop with venue partners, not a record of previous YMG bookings.",
-      enquiry: "Whether it’s a venue partnership, a company event or a private occasion",
+      inquiry: "Whether it’s a venue partnership, a company event or a private occasion",
       stale: /A thoughtful collaboration|A beautiful concept needs a practical plan|The right setting\./,
     },
     {
       page: italianHtml,
       stages: ["Dall’idea a un piano chiaro", "Il tuo referente a Genova", "Iniziamo una conversazione"],
       founder: "I format presentati qui sono idee da sviluppare con le location, non costituiscono un portfolio di eventi già realizzati da YMG.",
-      enquiry: "Che si tratti di una collaborazione con una location, di un evento aziendale o di un’occasione privata",
+      inquiry: "Che si tratti di una collaborazione con una location, di un evento aziendale o di un’occasione privata",
       stale: /Una collaborazione concreta|Dietro a una bella idea serve un progetto pratico|La location giusta\./,
     },
   ];
 
-  for (const { page, stages, founder, enquiry, stale } of cases) {
+  for (const { page, stages, founder, inquiry, stale } of cases) {
     const positions = stages.map(stage => page.indexOf(stage));
     assert.ok(positions.every(position => position >= 0));
-    assert.ok(positions[0] < positions[1] && positions[1] < positions[2], "process, founder and enquiry appear in order");
+    assert.ok(positions[0] < positions[1] && positions[1] < positions[2], "process, founder and inquiry appear in order");
     assert.match(page, /<div class="steps"><div class="step">[\s\S]*?<\/div><div class="step">[\s\S]*?<\/div><div class="step">/);
     assert.ok(page.includes(founder), "the factual founder and non-portfolio clarification remain");
-    assert.ok(page.includes(enquiry), "the enquiry invitation names the intended audiences");
-    assert.match(page, /id="partners"[\s\S]*?id="enquire"/);
+    assert.ok(page.includes(inquiry), "the inquiry invitation names the intended audiences");
+    assert.match(page, /id="partners"[\s\S]*?id="inquire"/);
     assert.match(page, /href="#partners"/);
-    assert.match(page, /href="#enquire"/);
+    assert.match(page, /href="#inquire"/);
     assert.doesNotMatch(page, stale, "repeated generic introductions have been removed");
   }
 });
@@ -77,17 +77,17 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
     assert.ok(footer.includes(ariaLabel));
     assert.ok(footer.includes(atlasLabel));
     assert.match(footer, /href="https:\/\/ymgconsultingservices\.com\//);
-    assert.match(footer, /href="#enquire"/);
+    assert.match(footer, /href="#inquire"/);
     assert.match(footer, /Frederic David · P.IVA 03044510992/);
     assert.doesNotMatch(footer, /REA|sede legale|Via Val Trebbia/i, "no unverified registry claim or private street address");
   }
 });
 
-test("main page exposes mobile navigation and a direct enquiry control", () => {
+test("main page exposes mobile navigation and a direct inquiry control", () => {
   assert.match(html, /<nav class="primary-nav" id="primary-navigation" aria-label="Main navigation">/);
   assert.match(html, /class="menu-toggle"[^>]*aria-expanded="false"[^>]*aria-controls="primary-navigation"/);
-  assert.match(html, /class="btn header-cta" href="#enquire"/);
-  for (const section of ["approach", "concepts", "partners", "enquire"]) {
+  assert.match(html, /class="btn header-cta" href="#inquire"/);
+  for (const section of ["approach", "concepts", "partners", "inquire"]) {
     assert.ok(html.includes(`href="#${section}"`));
     assert.match(html, new RegExp(`id="${section}"`));
   }
@@ -136,7 +136,7 @@ test("hero photos use responsive compressed sources and explicit priority", () =
     assert.match(hero, /<source media="\(max-width: 540px\)" sizes="100vw" srcset=/);
     for (const width of [480, 780]) assert.ok(hero.includes(`/assets/event-hero-mobile-${width}.webp ${width}w`));
     for (const width of [480, 960, 1440]) assert.ok(hero.includes(`/assets/event-hero-${width}.webp ${width}w`));
-    assert.match(hero, /width="1440" height="810"/);
+    assert.match(hero, /width="1440" height="960"/);
     assert.doesNotMatch(hero, /https:\/\//);
     assert.match(hero, /loading="eager" fetchpriority="high" decoding="async"/);
   }
@@ -251,21 +251,21 @@ test("English and Italian branded recovery pages are accessible and excluded fro
   const variants = [
     {
       path: "404.html", page: readFileSync(new URL("../dist/404.html", import.meta.url), "utf8"),
-      lang: "en", heading: "We couldn’t find that page.", home: 'href="/"', concepts: 'href="/#concepts"', enquire: 'href="/#enquire"', privacy: 'href="/privacy.html"', otherLanguage: 'href="/it/"',
+      lang: "en", heading: "We couldn’t find that page.", home: 'href="/"', concepts: 'href="/#concepts"', inquire: 'href="/#inquire"', privacy: 'href="/privacy.html"', otherLanguage: 'href="/it/"',
     },
     {
       path: "it/404.html", page: readFileSync(new URL("../dist/it/404.html", import.meta.url), "utf8"),
-      lang: "it", heading: "Non troviamo questa pagina.", home: 'href="/it/"', concepts: 'href="/it/#concepts"', enquire: 'href="/it/#enquire"', privacy: 'href="/it/privacy.html"', otherLanguage: 'href="/"',
+      lang: "it", heading: "Non troviamo questa pagina.", home: 'href="/it/"', concepts: 'href="/it/#concepts"', inquire: 'href="/it/#inquire"', privacy: 'href="/it/privacy.html"', otherLanguage: 'href="/"',
     },
   ];
   const sitemap = readFileSync(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
-  for (const { path, page, lang, heading, home, concepts, enquire, privacy, otherLanguage } of variants) {
+  for (const { path, page, lang, heading, home, concepts, inquire, privacy, otherLanguage } of variants) {
     assert.ok(existsSync(new URL(`../dist/${path}`, import.meta.url)), `${path} exists`);
     assert.match(page, new RegExp(`<html lang="${lang}">`));
     assert.match(page, /<meta name="robots" content="noindex,follow">/);
     assert.match(page, /<main id="main-content" tabindex="-1">/);
     assert.ok(page.includes(`<h1>${heading}</h1>`), `${path} gives a clear not-found message`);
-    for (const href of [home, concepts, enquire, privacy, otherLanguage]) assert.ok(page.includes(href), `${path} provides ${href}`);
+    for (const href of [home, concepts, inquire, privacy, otherLanguage]) assert.ok(page.includes(href), `${path} provides ${href}`);
     assert.match(page, /class="skip-link" href="#main-content"/);
     assert.match(page, /min-height:48px/);
     assert.doesNotMatch(page, /https?:\/\//, `${path} has no remote assets or external dependency`);
@@ -278,7 +278,7 @@ test("brand icons and bilingual social previews use documented local assets", ()
     {
       name: "English",
       page: html,
-      image: "social-card-v2.png",
+      image: "social-card-v3.png",
       title: "YMG Events — Events in Genova",
       description: "Events, activities and celebrations in Genova. Tell us what you have in mind.",
       alt: "YMG Events — Events in Genova.",
@@ -286,7 +286,7 @@ test("brand icons and bilingual social previews use documented local assets", ()
     {
       name: "Italian",
       page: italianHtml,
-      image: "social-card-it-v2.png",
+      image: "social-card-it-v3.png",
       title: "YMG Events — Eventi a Genova",
       description: "Attività, feste ed eventi a Genova. Raccontaci cosa hai in mente.",
       alt: "YMG Events — Eventi a Genova.",
@@ -406,7 +406,7 @@ test("event formats form a six-card carousel without filters or mockup disclaime
   assert.match(html, /id="deck-previous"/);
   assert.match(html, /id="deck-next"/);
   assert.doesNotMatch(html, /data-filter|All concepts|Concept imagery|Proposed event formats|A YMG Event Concept/i);
-  assert.match(html, /<p class="caption"><a class="textlink" href="#enquire">Contact us to discuss availability and a tailored proposal\.<\/a><\/p>/);
+  assert.match(html, /<p class="caption"><a class="textlink" href="#inquire">Contact us to discuss availability and a tailored proposal\.<\/a><\/p>/);
   assert.doesNotMatch(html, /concept imagery|proposed event formats|a ymg event concept|prototype|mockup|demo (?:site|event)|sample concept|preview[- ]only/i);
   const formats = ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Jazz &amp; Cocktails", "Corporate Social"];
   for (const format of formats) {
@@ -459,7 +459,7 @@ test("event card illustrations are local, format-specific, responsive and docume
 
 test("hero restores the owner-selected event atmosphere with local illustrative imagery", () => {
   assert.match(html, /event-hero-1440.webp/);
-  assert.match(html, /illustrative scene/);
+  assert.match(html, /Illustrative event scene/);
   assert.doesNotMatch(html, /Discover the atmosphere|images\.unsplash\.com/);
   const provenance = readFileSync(new URL("../docs/ASSET-PROVENANCE.md", import.meta.url), "utf8");
   assert.match(provenance, /AI-generated illustrative marketing imagery/);
@@ -505,24 +505,24 @@ test("founder credibility uses first-party community experience and keeps the br
   assert.match(styles, /\.about p\.founder-reference a[\s\S]*?min-height: 44px/);
 });
 
-test("enquiry form collects reply email and submits inline through the Worker", () => {
+test("inquiry form collects reply email and submits inline through the Worker", () => {
   assert.match(html, /<input required id="email" name="email" type="email" autocomplete="email"/);
-  assert.match(html, /id="submit-enquiry" type="submit" disabled><span class="submit-label">Send my inquiry email/);
+  assert.match(html, /id="submit-inquiry" type="submit" disabled><span class="submit-label">Send my inquiry email/);
   assert.match(html, /id="turnstile-widget"/);
   assert.match(html, /id="form-feedback"[^>]*aria-live="polite"/);
   assert.match(html, /href="mailto:hello@ymgconsultingservices\.com"/);
-  assert.doesNotMatch(html, /Open email app|Prepare my enquiry email|Nothing is sent until you send/);
+  assert.doesNotMatch(html, /Open email app|Prepare my inquiry email|Nothing is sent until you send/);
   const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
-  assert.match(interactions, /sendEventsEnquiry\(new FormData\(form\), turnstileToken\)/);
+  assert.match(interactions, /sendEventsInquiry\(new FormData\(form\), turnstileToken\)/);
   assert.match(interactions, /submit\.disabled = true/);
-  assert.match(interactions, /events_enquiry/);
+  assert.match(interactions, /events_inquiry/);
   assert.match(interactions, /if \(submitting\) return/);
-  assert.ok(existsSync(new URL("../dist/assets/enquiry-client.js", import.meta.url)));
+  assert.ok(existsSync(new URL("../dist/assets/inquiry-client.js", import.meta.url)));
 });
 
 
 
-test("enquiry controls expose bilingual required guidance and accessible states", () => {
+test("inquiry controls expose bilingual required guidance and accessible states", () => {
   const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
   const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
   const messages = readFileSync(new URL("../dist/assets/i18n.js", import.meta.url), "utf8");
@@ -576,7 +576,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /L’eleganza ha un/);
   assert.match(italian, /aria-label="Apri il menu di navigazione"/);
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
-  assert.match(italian, /alt="Ospiti a un aperitivo su una terrazza sul porto al tramonto; scena illustrativa\."/);
+  assert.match(italian, /alt="Scena illustrativa di un evento con balli, violino e cena su una terrazza sul porto di Genova\."/);
   assert.match(italian, /<label for="name">Nome e cognome \*<\/label>/);
   assert.match(italian, /placeholder="Come possiamo chiamarti\?"/);
   assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);
@@ -598,7 +598,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   }
 });
 
-test("venue, corporate and private enquiries have explicit localized routes and minimal fields", () => {
+test("venue, corporate and private inquiries have explicit localized routes and minimal fields", () => {
   const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
   const englishPrivacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
   const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
@@ -608,11 +608,11 @@ test("venue, corporate and private enquiries have explicit localized routes and 
   for (const page of [html, italian]) {
     assert.match(page, /name="source" value="events_website_form"/);
     for (const intent of ["venue_partnership", "corporate_event", "private_celebration"]) {
-      assert.ok(page.includes(`<option value="${intent}">`), `${intent} is a selectable enquiry path`);
+      assert.ok(page.includes(`<option value="${intent}">`), `${intent} is a selectable inquiry path`);
     }
     assert.match(page, /id="intent" name="intent" required/);
     assert.match(page, /id="business" name="business"/);
-    assert.match(page, /data-enquiry-intent="venue_partnership"/);
+    assert.match(page, /data-inquiry-intent="venue_partnership"/);
   }
   assert.match(html, /data-concept="Private celebrations" data-intent="private_celebration"/);
   assert.match(html, /data-concept="Corporate Social" data-intent="corporate_event"/);
@@ -621,10 +621,10 @@ test("venue, corporate and private enquiries have explicit localized routes and 
   assert.match(interactions, /business\.required = selected === "venue_partnership" \|\| selected === "corporate_event"/);
   assert.match(interactions, /You do not need to have chosen a venue before getting in touch/);
   assert.match(interactions, /Non serve avere già scelto una location per inviare la richiesta/);
-  assert.match(handler, /Enquiry type: \$\{ENQUIRY_TYPES\.get\(intent\)\}/);
-  assert.match(handler, /Enquiry source: \$\{ENQUIRY_SOURCES\.get\(source\)\}/);
+  assert.match(handler, /Inquiry type: \$\{INQUIRY_TYPES\.get\(intent\)\}/);
+  assert.match(handler, /Inquiry source: \$\{INQUIRY_SOURCES\.get\(source\)\}/);
   assert.match(handler, /eventsNotificationSubject\(name, intent, format\)/);
-  assert.match(englishPrivacy, /name, reply email, enquiry type, organization or venue/);
+  assert.match(englishPrivacy, /name, reply email, inquiry type, organization or venue/);
   assert.match(italianPrivacy, /nome, email di risposta, tipo di richiesta, azienda o location/);
 });
 

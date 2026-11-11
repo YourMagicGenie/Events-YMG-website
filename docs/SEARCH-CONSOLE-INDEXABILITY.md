@@ -8,7 +8,7 @@
 - `dist/robots.txt` allows crawling and points to the Events `sitemap.xml`.
 - `dist/sitemap.xml` contains the canonical English and Italian home and privacy pages once each. The two 404 pages are excluded.
 - The four public pages declare self-canonicals, titles, descriptions and Open Graph titles; none blocks indexing. The home pages explicitly set `index,follow`. English/Italian home and privacy routes publish reciprocal `hreflang` links.
-- The English subdomain home page publishes `Organization` and `WebSite` JSON-LD for the visible **YMG Events** name, the Events site URL, its 180×180 brand icon and the public general-enquiry address `hello@ymgconsultingservices.com`. It does not assert an unverified legal name, physical address, phone, social profile, rating, review or event.
+- The English subdomain home page publishes `Organization` and `WebSite` JSON-LD for the visible **YMG Events** name, the Events site URL, its 180×180 brand icon and the public general-inquiry address `hello@ymgconsultingservices.com`. It does not assert an unverified legal name, physical address, phone, social profile, rating, review or event.
 - The branded English and Italian 404 pages are `noindex,follow` and are absent from the sitemap.
 
 These are source checks. They do not establish the live Worker response or Google’s crawl/index status. Structured data expresses a preference and helps describe the site; it does not promise a rich result or indexing.

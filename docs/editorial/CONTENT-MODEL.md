@@ -6,7 +6,7 @@ This model keeps YMG Events’ venue-partnership ideas separate from public even
 
 | Type | What it means | Public content and call to action |
 | --- | --- | --- |
-| `seasonal_concept` | A proposed format or seasonal angle that YMG and a venue could explore. No event has been agreed. | Publish only after Dante approves the idea and its English and Italian copy. Label it as an idea. Link to the existing enquiry form. Do not show a date, booked venue, price, availability, ticket link, or countdown. |
+| `seasonal_concept` | A proposed format or seasonal angle that YMG and a venue could explore. No event has been agreed. | Publish only after Dante approves the idea and its English and Italian copy. Label it as an idea. Link to the existing inquiry form. Do not show a date, booked venue, price, availability, ticket link, or countdown. |
 | `scheduled_event` | A specific event that has been confirmed with the responsible organizer and venue. | Publish only after every displayed fact and the booking destination have been checked against current primary sources. Link ticket buyers to the organizer’s or ticket provider’s page. |
 
 Do not render an Upcoming Events heading or an empty event block when there are no publishable `scheduled_event` records. Do not add a calendar database, ticketing service, automatic feed, or countdown for this model.
@@ -21,7 +21,7 @@ Do not render an Upcoming Events heading or an empty event block when there are 
 - Dante David is the editorial owner and final approver. Approval confirms that the idea is suitable to present, not that a venue or event is booked.
 - Each published concept needs `reviewed_on` and `expires_on`. Set an expiry when it is published; review it before that date and either refresh it with a new expiry or remove it.
 - On expiry or withdrawal, remove the idea from public pages and language variants. Do not leave stale content live or imply that it rolled into a real booking.
-- An enquiry is only an enquiry. It does not change the concept’s status or create an event listing.
+- An inquiry is only an inquiry. It does not change the concept’s status or create an event listing.
 
 ### Scheduled events
 
@@ -32,7 +32,7 @@ Do not render an Upcoming Events heading or an empty event block when there are 
 - Before publication, check every visible claim and test the exact external booking link. Include a price only when the amount, currency, and inclusions are confirmed; label a free event only when the organizer confirms it is free.
 - Do not copy changing ticket availability onto the Events site. The linked organizer or ticket provider remains the source of truth for sales and availability.
 - Recheck details before each material update. If cancelled, unpublish promptly and replace the listing with an accurate cancellation notice only when the owner approves one. Remove completed listings after the event; keep them out of future-event views.
-- A date, venue, price, or booking URL may not be inferred from an idea, enquiry, draft, or tentative hold.
+- A date, venue, price, or booking URL may not be inferred from an idea, inquiry, draft, or tentative hold.
 
 The blank [record template](RECORD-TEMPLATE.md) defines the fields to collect. Do not commit completed drafts, negotiation details, personal information, or unapproved venue/client names to this public repository.
 

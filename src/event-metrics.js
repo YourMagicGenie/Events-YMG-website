@@ -2,13 +2,13 @@ const EVENTS = new Set([
   "page_view",
   "section_view",
   "concept_interest",
-  "enquiry_attempt",
-  "enquiry_failure",
+  "inquiry_attempt",
+  "inquiry_failure",
   "relay_accepted",
   "relay_failure",
 ]);
 const LOCALES = new Set(["en", "it"]);
-const SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "enquire"]);
+const SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "inquire"]);
 const INTENTS = new Set(["venue_partnership", "corporate_event", "private_celebration"]);
 const FORMATS = new Set([
   "Let’s explore a partnership",
@@ -50,8 +50,8 @@ function normalizeMetric(event, dimensions = {}) {
 
   if (event === "section_view" && !SECTIONS.has(section)) return null;
   if (event === "concept_interest" && (!INTENTS.has(intent) || !FORMATS.has(format))) return null;
-  if (["enquiry_attempt", "relay_accepted"].includes(event) && !INTENTS.has(intent)) return null;
-  if (["enquiry_failure", "relay_failure"].includes(event) &&
+  if (["inquiry_attempt", "relay_accepted"].includes(event) && !INTENTS.has(intent)) return null;
+  if (["inquiry_failure", "relay_failure"].includes(event) &&
       (!INTENTS.has(intent) || !FAILURE_CATEGORIES.has(category))) return null;
 
   return { locale, section, intent, format, category };
@@ -70,7 +70,7 @@ export function recordEventsMetric(env, event, dimensions = {}) {
     });
     return true;
   } catch {
-    // Metrics are best-effort and never change the visitor's enquiry outcome.
+    // Metrics are best-effort and never change the visitor's inquiry outcome.
     return false;
   }
 }

@@ -13,13 +13,13 @@ export async function scienceConfiguration(request, env) {
 }
 
 export async function submitThroughScience(request, env, fields) {
-  if (new URL(request.url).origin !== EVENTS_ORIGIN) throw new Error('Unsupported enquiry host');
+  if (new URL(request.url).origin !== EVENTS_ORIGIN) throw new Error('Unsupported inquiry host');
   const body = new URLSearchParams({
     project: 'Live Events', name: fields.name, email: fields.email,
     company: fields.business, timeline: fields.timing,
-    problem: fields.idea || 'Event enquiry — no additional message supplied.',
+    problem: fields.idea || 'Event inquiry — no additional message supplied.',
     'existing-data': [
-      `Enquiry type: ${fields.intent}`, `Enquiry source: ${fields.source}`,
+      `Inquiry type: ${fields.intent}`, `Inquiry source: ${fields.source}`,
       `Event format: ${fields.format}`, `Guest count: ${fields.guests}`,
       `Indicative budget: ${fields.budget || '(not provided)'}`, `Language: ${fields.locale}`,
     ].join('\n'),

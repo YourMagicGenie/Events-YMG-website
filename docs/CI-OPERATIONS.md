@@ -4,7 +4,7 @@ The `Events checks` workflow verifies pull requests and can be dispatched manual
 
 ## Browser coverage selection
 
-- Routine code or test changes run the focused browser smoke at **320px, 768px and 1440px**, in addition to the scripted keyboard, reduced-motion, enquiry, privacy and 404 checks at their relevant fixed sizes.
+- Routine code or test changes run the focused browser smoke at **320px, 768px and 1440px**, in addition to the scripted keyboard, reduced-motion, inquiry, privacy and 404 checks at their relevant fixed sizes.
 - Pull requests changing `dist/**`, `src/worker.js`, `src/security-headers.js` or `test/browser-smoke.mjs` run the full **13-width** responsive matrix. The HTML pages contain the site's CSS, so any page/layout change is included.
 - A manual run can choose `full` under the `visual_matrix` input before a production release. The default is `quick`.
 - The workflow is not also triggered on pushes to `main`; a successful required PR check covers the merge and avoids rerunning the same suite after squash merge. The repository owner must configure the `test` job as a required check for this to block unready merges.

@@ -31,7 +31,7 @@ for (let i = 0; i < routes.length; i += 4) {
 const config = await read('/api/events/config');
 const body = await config.json();
 assert.ok((config.status === 503 && body.ready === false) || (config.status === 200 && body.ready === true), 'configuration responds honestly');
-console.log(`Enquiry configured: ${body.ready}; this does not test mailbox delivery.`);
+console.log(`Inquiry configured: ${body.ready}; this does not test mailbox delivery.`);
 const head = await read('/', { method: 'HEAD' });
 assert.equal(head.status, 200);
 assert.equal((await head.text()).length, 0);

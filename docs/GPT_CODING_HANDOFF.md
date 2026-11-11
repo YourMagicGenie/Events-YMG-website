@@ -38,10 +38,10 @@ The originally selected Sites project is appgprj_6af1846f038c8191a5028170979bd4b
 **Critical queue (first):**
 
 1. **[#3 — trustworthy source, build, preview, deploy and rollback](https://github.com/YourMagicGenie/Events-YMG-website/issues/3).** Establish a reproducible static-asset Worker build, isolated preview host, source parity, runtime secret-name documentation, live Worker version capture and rollback. Verify GET/HEAD, redirects, 404/405, assets, privacy, sitemap, robots, cache and safety headers. Do not move/reclaim the Events custom domain from another Worker or silently wire pushes to production.
-2. **[#10 — actual in-page enquiry delivery](https://github.com/YourMagicGenie/Events-YMG-website/issues/10).** Connect UI to a secure same-origin Events handler based on staged code; add required reply email, sanitize and validate, configure Turnstile for the Events hostname/action and reuse the existing trusted Google Apps Script relay where compatible. The exact owner-requested button text is **“Send my inquiry email.”** It must not open a mail app. A relay-accepted response alone is not proof that a message reached the owner's mailbox.
+2. **[#10 — actual in-page inquiry delivery](https://github.com/YourMagicGenie/Events-YMG-website/issues/10).** Connect UI to a secure same-origin Events handler based on staged code; add required reply email, sanitize and validate, configure Turnstile for the Events hostname/action and reuse the existing trusted Google Apps Script relay where compatible. The exact owner-requested button text is **“Send my inquiry email.”** It must not open a mail app. A relay-accepted response alone is not proof that a message reached the owner's mailbox.
 3. **[#13 — accessible mobile navigation](https://github.com/YourMagicGenie/Events-YMG-website/issues/13).** Restore discoverable section navigation at narrow widths without header collisions, keyboard traps or mobile overflow. It may be implemented in a separate PR from #3/#10, but production promotion still depends on #3.
 
-**Release dependency:** [#9 Events privacy](https://github.com/YourMagicGenie/Events-YMG-website/issues/9) must match the *actual deployed* enquiry stack before publishing direct-send. [#11 form affordance](https://github.com/YourMagicGenie/Events-YMG-website/issues/11) and [#16 legibility](https://github.com/YourMagicGenie/Events-YMG-website/issues/16) should be coordinated with the form UI. If Cloudflare, Turnstile, Google relay or mailbox verification is inaccessible, stop at a tested PR and report precisely which production checks remain blocked—never claim delivery works.
+**Release dependency:** [#9 Events privacy](https://github.com/YourMagicGenie/Events-YMG-website/issues/9) must match the *actual deployed* inquiry stack before publishing direct-send. [#11 form affordance](https://github.com/YourMagicGenie/Events-YMG-website/issues/11) and [#16 legibility](https://github.com/YourMagicGenie/Events-YMG-website/issues/16) should be coordinated with the form UI. If Cloudflare, Turnstile, Google relay or mailbox verification is inaccessible, stop at a tested PR and report precisely which production checks remain blocked—never claim delivery works.
 
 **High-priority experience pass:** Implement [#2 carousel](https://github.com/YourMagicGenie/Events-YMG-website/issues/2), [#4 hero](https://github.com/YourMagicGenie/Events-YMG-website/issues/4), [#5 positioning](https://github.com/YourMagicGenie/Events-YMG-website/issues/5), [#6 prototype-language removal](https://github.com/YourMagicGenie/Events-YMG-website/issues/6), [#12 real portrait](https://github.com/YourMagicGenie/Events-YMG-website/issues/12), plus approved localization, intent pathways, genuine proof, imagery, accessibility and technical SEO issues. Follow their actual acceptance criteria; group tightly related changes in one reviewed PR only if issue links and tests remain clear.
 
@@ -54,7 +54,7 @@ The originally selected Sites project is appgprj_6af1846f038c8191a5028170979bd4b
 - **Tone:** Speak as a service available to collaborate with venues, not as a startup “exploring higher-end evenings for a more mature audience.” Describe concrete value and a commercially honest process. Do not invent signed venues, executed premium events, clients, testimonials, attendance, ticket sales or revenue claims.
 - **Hero:** Remove the “Discover the atmosphere” secondary CTA. Replace obviously synthetic-looking imagery with owner-approved authentic/licensed media; maintain crop, text overlay and strong primary CTA.
 - **Examples:** Change wording exactly to **“SEVERAL WAYS THE NIGHT COULD UNFOLD”**. Show at least six differentiated formats in a horizontal/swipeable, keyboard-accessible deck. Remove concept category filters and all visible “Concept imagery,” “Proposed event formats,” “A YMG Event Concept” mockup labels. These remain examples of services, not fabricated case studies.
-- **Partnership story:** Reduce repetitive lower sections and empty desktop middle gutter. Make owner benefits, organizer responsibilities, sound planning and direct enquiry easy to understand without a very long pitch.
+- **Partnership story:** Reduce repetitive lower sections and empty desktop middle gutter. Make owner benefits, organizer responsibilities, sound planning and direct inquiry easy to understand without a very long pitch.
 - **Founder:** Show a genuine owner-approved photo. Name: **Dante David / Your Magic Genie**. Location: **Genova, Italy**, never “Geneva” from voice-transcription errors. Use verifiable real event/community experience only.
 - **Lead capture:** Preserve style but make fields obviously editable; real inline pending/error/success states, no second Send click, correct mail subject including Events and sender, validated Reply-To, data-loss prevention and transport fallback.
 - **Localization:** Provide reviewed Italian and English experiences under [#17](https://github.com/YourMagicGenie/Events-YMG-website/issues/17), with consistent privacy/form text and real metadata/hreflang.
@@ -62,8 +62,8 @@ The originally selected Sites project is appgprj_6af1846f038c8191a5028170979bd4b
 
 ## 4. Existing backend: reuse, do not reinvent
 
-- [Staged Events handler](../src/form-handler.js) exports handleEventsApi and eventsNotificationSubject. Intended Events routes are **GET /api/events/config** and **POST /api/events/enquiry**.
-- Intended Turnstile action is **events_enquiry**; host must be **events.ymgconsultingservices.com**. Check Turnstile hostname/action/secret on the backend; use honeypot, origin/content-type/size validation, bounded fields and rate controls.
+- [Staged Events handler](../src/form-handler.js) exports handleEventsApi and eventsNotificationSubject. Intended Events routes are **GET /api/events/config** and **POST /api/events/inquiry**.
+- Intended Turnstile action is **events_inquiry**; host must be **events.ymgconsultingservices.com**. Check Turnstile hostname/action/secret on the backend; use honeypot, origin/content-type/size validation, bounded fields and rate controls.
 - The staged module expects named configuration such as TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, GOOGLE_RELAY_URL, GOOGLE_RELAY_SECRET; these are **names only**. Never copy actual values into this repo, CI logs or documentation.
 - Proven main-site references are in [reference/README.md](../reference/README.md), including private main repo files v2/src/worker.js, v2/integrations/google-apps-script/Code.gs and v2/scripts/test-assessment-worker.mjs. Reuse the existing Google relay where compatible instead of deploying another provider/relay by default.
 - Required final evidence: browser sends without mailto; mock success/error/rate/duplicate paths; non-sensitive real message arrives in hello@ymgconsultingservices.com; complete form body survives; sender is the Reply-To; business, format, guests, timing and budget are intact. Confirm the main Atlas/Science mail forms still work. The actual mailbox owner must verify receipt.
@@ -89,7 +89,7 @@ The originally selected Sites project is appgprj_6af1846f038c8191a5028170979bd4b
 - [#15 — Build a real-device responsive QA matrix and correct breakpoint failures](https://github.com/YourMagicGenie/Events-YMG-website/issues/15)
 - [#16 — Improve sitewide text legibility, contrast, and touch target sizes](https://github.com/YourMagicGenie/Events-YMG-website/issues/16)
 - [#17 — Provide a professional Italian/English content experience for Genova venues](https://github.com/YourMagicGenie/Events-YMG-website/issues/17)
-- [#18 — Create context-aware enquiry pathways for venues, businesses, and private hosts](https://github.com/YourMagicGenie/Events-YMG-website/issues/18)
+- [#18 — Create context-aware inquiry pathways for venues, businesses, and private hosts](https://github.com/YourMagicGenie/Events-YMG-website/issues/18)
 - [#19 — Explain the concrete venue-partnership offer and commercial FAQ](https://github.com/YourMagicGenie/Events-YMG-website/issues/19)
 - [#20 — Establish trustworthy founder experience without fabricated luxury-event proof](https://github.com/YourMagicGenie/Events-YMG-website/issues/20)
 - [#21 — Unify event-card imagery, provenance, cropping, and accessible descriptions](https://github.com/YourMagicGenie/Events-YMG-website/issues/21)
@@ -104,11 +104,11 @@ The originally selected Sites project is appgprj_6af1846f038c8191a5028170979bd4b
 
 - [#1 — Separate header wordmark and Your Magic Genie subtitle](https://github.com/YourMagicGenie/Events-YMG-website/issues/1)
 - [#7 — Rebalance desktop partnership columns and reduce empty center gutter](https://github.com/YourMagicGenie/Events-YMG-website/issues/7)
-- [#8 — Consolidate repeated collaboration, founder and enquiry section storytelling](https://github.com/YourMagicGenie/Events-YMG-website/issues/8)
-- [#23 — Make the selected event format explicit in the enquiry flow](https://github.com/YourMagicGenie/Events-YMG-website/issues/23)
+- [#8 — Consolidate repeated collaboration, founder and inquiry section storytelling](https://github.com/YourMagicGenie/Events-YMG-website/issues/8)
+- [#23 — Make the selected event format explicit in the inquiry flow](https://github.com/YourMagicGenie/Events-YMG-website/issues/23)
 - [#24 — Create a branded accessible 404 and recovery experience](https://github.com/YourMagicGenie/Events-YMG-website/issues/24)
 - [#29 — Offer a factual one-page venue partnership PDF for outreach](https://github.com/YourMagicGenie/Events-YMG-website/issues/29)
-- [#30 — Measure privacy-preserving lead conversions and monitor enquiry failures](https://github.com/YourMagicGenie/Events-YMG-website/issues/30)
+- [#30 — Measure privacy-preserving lead conversions and monitor inquiry failures](https://github.com/YourMagicGenie/Events-YMG-website/issues/30)
 
 **Low (2)**
 
@@ -134,4 +134,4 @@ The selected optional scope is **O03 #29** (one-page venue partnership PDF), **O
 4. Any blockers, missing photos/approval, runtime secret *names*, required Cloudflare/Google setup or unverifiable inbox requirements (never disclose secret values).
 5. Next recommended action, especially any release or rollback dependency; write important state deltas to Project Keeper without changing portfolio now/next/later.
 
-**Success condition:** The owner can hand this repo to a capable GPT agent, get safe issue-prioritized PRs with transparent evidence, and eventually publish an attractive, truthful, fast, accessible Events site whose enquiries actually arrive—without breaking the rest of the YMG ecosystem.
+**Success condition:** The owner can hand this repo to a capable GPT agent, get safe issue-prioritized PRs with transparent evidence, and eventually publish an attractive, truthful, fast, accessible Events site whose inquiries actually arrive—without breaking the rest of the YMG ecosystem.

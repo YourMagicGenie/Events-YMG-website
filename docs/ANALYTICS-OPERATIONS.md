@@ -1,4 +1,4 @@
-# Events aggregate measurement and enquiry monitoring
+# Events aggregate measurement and inquiry monitoring
 
 ## Current state
 
@@ -11,7 +11,7 @@ has a qualified privacy review and the notice is updated to match the actual
 Worker setup.
 
 The site checks the Worker's same-origin `/api/events/metrics/config` endpoint.
-When it is disabled, the browser sends no page, section, concept or enquiry
+When it is disabled, the browser sends no page, section, concept or inquiry
 analytics events. When enabled, Cloudflare Workers Analytics Engine receives
 one unlinked aggregate point per event. No cookie, browser storage, session ID,
 visitor ID, fingerprint, IP address, user agent, referrer, URL, name, email,
@@ -26,9 +26,9 @@ by the Cloudflare rate-limiter and is not included in the analytics point.
 | --- | --- | --- |
 | `page_view` | A page loaded | locale |
 | `section_view` | A named main section reached at least 25% visibility, once per page load | locale, fixed section ID |
-| `concept_interest` | A visitor selected an event concept | locale, fixed enquiry intent, fixed event format |
-| `enquiry_attempt` | A valid, non-honeypot form payload reached the Worker | locale, fixed enquiry intent and format |
-| `enquiry_failure` | A valid enquiry could not proceed | locale, intent, format, fixed failure category |
+| `concept_interest` | A visitor selected an event concept | locale, fixed inquiry intent, fixed event format |
+| `inquiry_attempt` | A valid, non-honeypot form payload reached the Worker | locale, fixed inquiry intent and format |
+| `inquiry_failure` | A valid inquiry could not proceed | locale, intent, format, fixed failure category |
 | `relay_accepted` | Google Apps Script returned an affirmative acceptance response | locale, intent, format |
 | `relay_failure` | The relay did not return an affirmative acceptance response | locale, intent, format, `relay_failure` category |
 
@@ -77,7 +77,7 @@ Complete these steps only after #9 privacy review:
    and account permissions.
 5. Verify the monitor with a controlled relay-failure test, ensure its email
    destination is restricted to the owner, and record the real alert result on
-   issue #30. Do not put customer data or enquiry content in alert names,
+   issue #30. Do not put customer data or inquiry content in alert names,
    labels, or notes.
 
 ## Operational limits
@@ -88,7 +88,7 @@ Complete these steps only after #9 privacy review:
 - The fixed 30/minute metrics limiter is separate from the form submission
   limiter. Repeated refreshes or concept clicks can be sampled out by the
   limiter; these metrics are directional counts, not billing records.
-- Analytics writes are best-effort and never block or change an enquiry
+- Analytics writes are best-effort and never block or change an inquiry
   response. Use Cloudflare Worker error/status metrics as a separate check for
   runtime and HTTP failures.
 - No alert or metric is configured on the live Worker by this source change.

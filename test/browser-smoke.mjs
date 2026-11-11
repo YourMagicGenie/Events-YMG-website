@@ -126,11 +126,11 @@ try {
       return {
         allResolve: links.every(href => href === "#" || document.querySelector(href)),
         partners: Boolean(document.querySelector("#partners")),
-        enquire: Boolean(document.querySelector("#enquire")),
+        inquire: Boolean(document.querySelector("#inquire")),
       };
     });
     assert.ok(inPageLinks.allResolve, `${width}px in-page links resolve to their destinations`);
-    assert.ok(inPageLinks.partners && inPageLinks.enquire, `${width}px retains the partnership and enquiry anchors`);
+    assert.ok(inPageLinks.partners && inPageLinks.inquire, `${width}px retains the partnership and inquiry anchors`);
     const responseHeaders = await pageResponse.allHeaders();
     assert.ok(responseHeaders["content-security-policy"], `${width}px HTML response has a CSP`);
     assert.equal(responseHeaders["x-frame-options"], "DENY", `${width}px response cannot be framed`);
@@ -172,7 +172,7 @@ try {
       };
     });
     assert.ok(metrics.documentWidth <= metrics.viewportWidth, `${width}px has no horizontal document overflow: ${JSON.stringify(metrics)}`);
-    assert.ok(metrics.logoRight <= metrics.actionsLeft + 0.5, `${width}px logo and enquiry controls do not collide: ${JSON.stringify(metrics)}`);
+    assert.ok(metrics.logoRight <= metrics.actionsLeft + 0.5, `${width}px logo and inquiry controls do not collide: ${JSON.stringify(metrics)}`);
     assert.ok(metrics.subtitleTop >= metrics.wordmarkBottom - 1, `${width}px brand subtitle remains legible below the wordmark: ${JSON.stringify(metrics)}`);
     assert.equal(metrics.offerCards, 6, `${width}px shows the full venue offer`);
     assert.equal(metrics.faqQuestions, 7, `${width}px shows all venue FAQs`);
@@ -232,7 +232,7 @@ try {
       const image = document.querySelector(".hero-atmosphere img");
       const hero = document.querySelector(".hero");
       const imageRect = image.getBoundingClientRect();
-      const heroRect = (innerWidth <= 850 ? document.querySelector(".hero-atmosphere") : hero).getBoundingClientRect();
+      const heroRect = hero.getBoundingClientRect();
       const overlay = getComputedStyle(document.querySelector(".hero-atmosphere"), "::after").backgroundImage;
       return {
         photoBelowCopy: imageRect.top >= document.querySelector(".hero-copy").getBoundingClientRect().bottom - 1,
@@ -251,7 +251,7 @@ try {
         secondaryPresent: [...document.querySelectorAll(".hero-actions a")].some(link => /discover the atmosphere/i.test(link.textContent)),
       };
     });
-    assert.equal(heroVisual.alt, "Guests sharing an aperitivo on a harbor terrace at dusk; illustrative scene.", "hero image has meaningful scenic alt text");
+    assert.equal(heroVisual.alt, "Illustrative event scene with dancing, live violin and dinner on a Genova harbor terrace.", "hero image has meaningful scenic alt text");
     assert.match(heroVisual.src, /\/assets\/event-hero-1440\.webp$/, "hero uses local event illustration");
     assert.match(heroVisual.srcset, /480w.*960w.*1440w/, "hero offers responsive desktop image sizes");
     assert.match(heroVisual.mobileSource, /480w.*780w/, "hero offers a separate mobile crop");
@@ -259,13 +259,8 @@ try {
     assert.equal(heroVisual.sizes, "100vw", "hero image size matches the full-width composition");
     assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
     assert.ok(heroVisual.coversHero, "hero image covers its background region");
-    if (width > 850) assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "desktop overlay preserves text contrast");
-    else {
-      assert.ok(heroVisual.photoBelowCopy && heroVisual.photoHeight >= 230, "mobile photo is visible below the copy");
-      assert.equal(heroVisual.filter, "none");
-      assert.deepEqual(heroVisual.overlayAlpha, []);
-    }
-    assert.equal(heroVisual.primaryHref, "#enquire", "primary hero CTA keeps its destination");
+    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "original overlay preserves text contrast");
+    assert.equal(heroVisual.primaryHref, "#inquire", "primary hero CTA keeps its destination");
     assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
 
     const carousel = await page.evaluate(() => {
@@ -341,7 +336,7 @@ try {
       const body = style("body");
       const hero = style(".hero");
       const partnerships = style(".partnerships");
-      const enquiry = style(".enquiry");
+      const inquiry = style(".inquiry");
       const feedback = document.querySelector("#form-feedback");
       const originalFeedback = { text: feedback.textContent, state: feedback.dataset.state || "" };
       feedback.dataset.state = "error";
@@ -352,9 +347,9 @@ try {
       const successBackground = getComputedStyle(feedback).backgroundColor;
       const statusHeights = [];
       for (const [state, text] of [
-        ["", "Connecting to the secure enquiry service…"],
-        ["error", "Online enquiries are temporarily unavailable. Please email us directly using the address shown here."],
-        ["success", "Your enquiry has been accepted for processing. We’ll follow up at the email address you provided."],
+        ["", "Connecting to the secure inquiry service…"],
+        ["error", "Online inquiries are temporarily unavailable. Please email us directly using the address shown here."],
+        ["success", "Your inquiry has been accepted for processing. We’ll follow up at the email address you provided."],
       ]) {
         if (state) feedback.dataset.state = state;
         else delete feedback.dataset.state;
@@ -392,8 +387,8 @@ try {
         ["main copy", body.color, body.backgroundColor],
         ["muted copy on paper", style(".intro p:not(.lead)").color, body.backgroundColor],
         ["muted copy on warm ivory", style(".about p").color, style(".about").backgroundColor],
-        ["muted copy on enquiry surface", style(".enquiry .description").color, enquiry.backgroundColor],
-        ["conditional enquiry guidance", style(".field-help").color, enquiry.backgroundColor],
+        ["muted copy on inquiry surface", style(".inquiry .description").color, inquiry.backgroundColor],
+        ["conditional inquiry guidance", style(".field-help").color, inquiry.backgroundColor],
         ["red section accent", style(".intro h2 em").color, body.backgroundColor],
         ["red section accent on warm ivory", style(".about h2 em").color, style(".about").backgroundColor],
         ["hero supporting copy", style(".hero p").color, hero.backgroundColor],
@@ -402,21 +397,21 @@ try {
         ["partnership supporting copy", style(".partnerships p").color, partnerships.backgroundColor],
         ["partnership heading accent", style(".partnerships h2 em").color, partnerships.backgroundColor],
         ["header navigation", style("header nav a").color, style("header").backgroundColor],
-        ["header enquiry link", style(".header-cta").color, style("header").backgroundColor],
-        ["enquiry field labels", style("label").color, enquiry.backgroundColor],
-        ["primary enquiry button", style(".hero .btn.primary").color, style(".hero .btn.primary").backgroundColor],
+        ["header inquiry link", style(".header-cta").color, style("header").backgroundColor],
+        ["inquiry field labels", style("label").color, inquiry.backgroundColor],
+        ["primary inquiry button", style(".hero .btn.primary").color, style(".hero .btn.primary").backgroundColor],
         ["band accent", style(".band span").color, style(".band").backgroundColor],
         ["enabled carousel arrow", style('.deck-arrow:not([aria-disabled="true"])').color, style('.deck-arrow:not([aria-disabled="true"])').backgroundColor],
         ["preview notice", style(".site-note").color, style(".site-note").backgroundColor],
-        ["enquiry error message", errorColor, errorBackground],
-        ["enquiry success message", successColor, successBackground],
+        ["inquiry error message", errorColor, errorBackground],
+        ["inquiry success message", successColor, successBackground],
         ["footer supporting text", style("footer p").color, style("footer").backgroundColor],
       ].map(([name, foreground, background]) => ({ name, ratio: contrast(foreground, background) }));
       const selectors = [
         ".menu-toggle", ".header-cta", "header .logo", ".primary-nav > a:not(.btn)",
         ".deck-arrow", ".concept button", ".partnerships .btn",
         "#brief input:not([type=hidden]):not(#bot-field)", "#brief select", "#brief textarea",
-        "#submit-enquiry", ".caption a", "footer a", ".site-note a", ".enquiry .small a",
+        "#submit-inquiry", ".caption a", "footer a", ".site-note a", ".inquiry .small a",
       ];
       const targets = selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(element => {
         const rect = element.getBoundingClientRect();
@@ -452,7 +447,7 @@ try {
       assert.ok(await toggle.isVisible(), `${width}px exposes the menu control`);
       const toggleBox = await toggle.boundingBox();
       assert.ok(toggleBox.width >= 44 && toggleBox.height >= 44, `${width}px menu control meets the 44px touch target: ${JSON.stringify(toggleBox)}`);
-      assert.ok(await page.getByRole("link", { name: "Let’s make a plan" }).isVisible(), `${width}px keeps the enquiry CTA visible`);
+      assert.ok(await page.getByRole("link", { name: "Let’s make a plan" }).isVisible(), `${width}px keeps the inquiry CTA visible`);
       assert.equal(await nav.isVisible(), false, `${width}px starts with the navigation disclosure closed`);
     } else {
       assert.ok(await nav.isVisible(), `${width}px keeps the desktop navigation visible`);
@@ -506,7 +501,7 @@ try {
   ];
   const conceptCards = mobile.locator("#concept-deck .concept");
   assert.equal(await conceptCards.count(), expectedFormats.length, "each event format has an individual card");
-  assert.equal(await mobile.locator("#business").isDisabled(), true, "the context field waits until an enquiry path is selected");
+  assert.equal(await mobile.locator("#business").isDisabled(), true, "the context field waits until an inquiry path is selected");
   for (const [index, route] of expectedFormats.entries()) {
     const card = conceptCards.nth(index);
     const action = card.locator("button[data-concept]");
@@ -516,7 +511,7 @@ try {
     assert.ok(await artImage.evaluate(image => image.naturalWidth === 1200 && image.naturalHeight === 960), `slide ${index + 1} loads its full-resolution local illustration`);
     await action.click();
     assert.equal(await mobile.locator("#format").inputValue(), route.format, `slide ${index + 1} preselects ${route.format}`);
-    assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `slide ${index + 1} chooses the matching enquiry path`);
+    assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `slide ${index + 1} chooses the matching inquiry path`);
     assert.equal(await mobile.locator("#format-context").isVisible(), true, `slide ${index + 1} shows its selected event format beside the form`);
     assert.equal(await mobile.locator("#format-context-status").textContent(), `Selected event format: ${route.format}`, `slide ${index + 1} names the chosen format for assistive technology`);
     assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), route.format, `slide ${index + 1} puts its selected format in the direct-send form payload`);
@@ -526,11 +521,11 @@ try {
     if (route.intent === "private_celebration") {
       assert.match(await mobile.locator("#business-label").textContent(), /Preferred venue or location \(optional\)/, "private hosts see an optional location field, not an ownership claim");
       assert.match(await mobile.locator("#business-help").textContent(), /do not need to have chosen a venue/);
-      await mobile.screenshot({ path: resolve(screenshotRoot, "private-enquiry-390px.png"), fullPage: true });
+      await mobile.screenshot({ path: resolve(screenshotRoot, "private-inquiry-390px.png"), fullPage: true });
     }
     if (route.intent === "corporate_event") {
       assert.equal(await mobile.locator("#business-label").textContent(), "Company or team *", "corporate hosts see a company/team field");
-      await mobile.screenshot({ path: resolve(screenshotRoot, "corporate-enquiry-390px.png"), fullPage: true });
+      await mobile.screenshot({ path: resolve(screenshotRoot, "corporate-inquiry-390px.png"), fullPage: true });
     }
     if (index === 0) {
       await mobile.keyboard.press("Tab");
@@ -540,9 +535,9 @@ try {
     } else {
       await mobile.locator("#clear-format").click();
     }
-    assert.equal(await mobile.locator("#format").inputValue(), "", `slide ${index + 1} can be cleared for a generic enquiry`);
+    assert.equal(await mobile.locator("#format").inputValue(), "", `slide ${index + 1} can be cleared for a generic inquiry`);
     assert.equal(await mobile.locator("#format-context").isVisible(), false, `slide ${index + 1} no longer claims a selected concept after clearing`);
-    assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `clearing slide ${index + 1} preserves the enquiry path`);
+    assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `clearing slide ${index + 1} preserves the inquiry path`);
     assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), "", `clearing slide ${index + 1} sends an empty format for path-aware generic fallback`);
   }
   await mobile.locator("#format").selectOption("Jazz & Cocktails");
@@ -554,10 +549,10 @@ try {
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the venue partnership CTA preselects the venue pathway");
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue operators are asked for their venue name");
   const contactInvitation = mobile.getByRole("link", { name: "Contact us to discuss availability and a tailored proposal." });
-  assert.equal(await contactInvitation.getAttribute("href"), "#enquire", "the concept invitation leads directly to the enquiry form");
+  assert.equal(await contactInvitation.getAttribute("href"), "#inquire", "the concept invitation leads directly to the inquiry form");
   await contactInvitation.scrollIntoViewIfNeeded();
   await contactInvitation.click();
-  assert.equal(new URL(mobile.url()).hash, "#enquire", "the contact invitation navigates to the enquiry form");
+  assert.equal(new URL(mobile.url()).hash, "#inquire", "the contact invitation navigates to the inquiry form");
   const portoApertoReference = mobile.getByRole("link", { name: "See Porto Aperto | Genova on Instagram (opens in a new tab)" });
   await portoApertoReference.scrollIntoViewIfNeeded();
   assert.equal(await portoApertoReference.getAttribute("target"), "_blank", "the community reference opens separately from the Events site");
@@ -616,7 +611,7 @@ try {
   });
   assert.ok(italianFieldGeometry.documentWidth <= italianFieldGeometry.viewportWidth, `Italian long field labels keep the mobile form within the viewport: ${JSON.stringify(italianFieldGeometry)}`);
   assert.ok(italianFieldGeometry.labelBottom <= italianFieldGeometry.fieldTop + 1, `Italian long field label stays above its control: ${JSON.stringify(italianFieldGeometry)}`);
-  assert.equal(await mobile.locator("#brief").evaluate(form => form.checkValidity()), false, "native constraint validation rejects an incomplete enquiry without submitting it");
+  assert.equal(await mobile.locator("#brief").evaluate(form => form.checkValidity()), false, "native constraint validation rejects an incomplete inquiry without submitting it");
   assert.deepEqual(await mobile.locator("#brief [aria-invalid='true']").evaluateAll(fields => fields.map(field => field.id)), ["name", "email", "business"], "all invalid required controls receive visible error state");
   assert.equal(await mobile.locator("#form-feedback").textContent(), "Controlla i campi evidenziati e correggi gli eventuali errori.", "Italian validation feedback is announced in the live status");
   assert.ok((await mobile.locator("#name").getAttribute("aria-describedby")).includes("form-required-note"), "the name field explains the required marker to assistive technology");
@@ -630,7 +625,7 @@ try {
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), false, "private path makes the business field optional");
   assert.equal(await mobile.locator("#business").getAttribute("aria-invalid"), null, "making the business field optional clears its stale error state");
   assert.ok((await mobile.locator("#form-feedback").textContent()).includes("L’invio online non è momentaneamente disponibile"), "resolving field errors restores the service status that preceded validation");
-  assert.equal(await mobile.locator("#submit-enquiry").isDisabled(), true, "validation checks do not send or enable the enquiry");
+  assert.equal(await mobile.locator("#submit-inquiry").isDisabled(), true, "validation checks do not send or enable the inquiry");
 
   const ItalianRooftopButton = mobile.getByRole("button", { name: "Esplora una serata in terrazza" });
   await ItalianRooftopButton.scrollIntoViewIfNeeded();
@@ -642,7 +637,7 @@ try {
   assert.equal(await mobile.locator("#clear-format").textContent(), "Rimuovi il formato selezionato", "the Italian clear action is localized");
   await mobile.locator("#clear-format").click();
   assert.equal(await mobile.locator("#format").inputValue(), "", "Italian users can remove a selected format");
-  assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "clearing an Italian format preserves the venue enquiry path");
+  assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "clearing an Italian format preserves the venue inquiry path");
   assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
   const ItalianPortoApertoReference = mobile.getByRole("link", { name: "Scopri Porto Aperto | Genova su Instagram (si apre in una nuova scheda)" });
   await ItalianPortoApertoReference.scrollIntoViewIfNeeded();
@@ -673,7 +668,7 @@ try {
   }));
   assert.ok(ItalianTabletDesktopMetrics.documentWidth <= 851, `851px Italian page has no horizontal overflow: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
   assert.ok(ItalianTabletDesktopMetrics.logoRight <= ItalianTabletDesktopMetrics.navLeft + 0.5, `851px Italian wordmark and navigation do not collide: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
-  assert.ok(ItalianTabletDesktopMetrics.navRight <= ItalianTabletDesktopMetrics.actionsLeft + 0.5, `851px Italian navigation and enquiry controls do not collide: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
+  assert.ok(ItalianTabletDesktopMetrics.navRight <= ItalianTabletDesktopMetrics.actionsLeft + 0.5, `851px Italian navigation and inquiry controls do not collide: ${JSON.stringify(ItalianTabletDesktopMetrics)}`);
   assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible at the desktop breakpoint");
   await mobile.screenshot({ path: resolve(screenshotRoot, "italian-851px.png"), fullPage: true });
   await mobile.setViewportSize({ width: 1440, height: 900 });
@@ -825,7 +820,7 @@ try {
     await desktopKeyboard.keyboard.press("Tab");
     emailReached = await desktopKeyboard.evaluate(() => document.activeElement.id === "email");
   }
-  assert.ok(emailReached, "keyboard navigation reaches the enquiry email field without a trap");
+  assert.ok(emailReached, "keyboard navigation reaches the inquiry email field without a trap");
   const emailFocus = await desktopKeyboard.evaluate(() => {
     const style = getComputedStyle(document.activeElement);
     return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
@@ -833,7 +828,7 @@ try {
   assert.ok(emailFocus.style !== "none" && emailFocus.width >= 3, `form focus remains visible: ${JSON.stringify(emailFocus)}`);
   assert.ok(await desktopKeyboard.getByLabel("Your name *").count(), "the name field has an accessible label");
   assert.ok(await desktopKeyboard.getByLabel("Email address *").count(), "the email field has an accessible label");
-  assert.ok(await desktopKeyboard.getByLabel("What are you enquiring about? *").count(), "the enquiry type control has an accessible label");
+  assert.ok(await desktopKeyboard.getByLabel("What are you inquiring about? *").count(), "the inquiry type control has an accessible label");
   assert.equal(await desktopKeyboard.locator("#form-feedback").getAttribute("aria-live"), "polite", "form feedback is announced politely");
   await desktopKeyboard.close();
 
@@ -920,7 +915,7 @@ try {
   assert.equal(await privacy.getByRole("heading", { level: 1 }).textContent(), "We couldn’t find that page.");
   assert.equal(await privacy.getByRole("link", { name: "Back to YMG Events home" }).getAttribute("href"), "/");
   assert.equal(await privacy.getByRole("link", { name: "Explore event formats" }).getAttribute("href"), "/#concepts");
-  assert.equal(await privacy.getByRole("link", { name: "Contact YMG Events" }).getAttribute("href"), "/#enquire");
+  assert.equal(await privacy.getByRole("link", { name: "Contact YMG Events" }).getAttribute("href"), "/#inquire");
   await privacy.setViewportSize({ width: 390, height: 844 });
   const english404Layout = await privacy.evaluate(() => ({
     viewportWidth: window.innerWidth,

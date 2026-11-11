@@ -32,7 +32,7 @@ test("Worker routes inline submissions through Turnstile and the shared relay", 
   const worker = createEventsWorker(async (url, options) => {
     calls.push({ url, options });
     if (url.includes("turnstile")) {
-      return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_enquiry" });
+      return Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" });
     }
     return Response.json({ ok: true });
   });
@@ -49,7 +49,7 @@ test("Worker routes inline submissions through Turnstile and the shared relay", 
     idea: "A dinner with live music",
     "cf-turnstile-response": "verified-token",
   });
-  const response = await worker.fetch(new Request(origin + "/api/events/enquiry", {
+  const response = await worker.fetch(new Request(origin + "/api/events/inquiry", {
     method: "POST",
     headers: { origin, "content-type": "application/x-www-form-urlencoded", "cf-connecting-ip": "198.51.100.24" },
     body: body.toString(),
@@ -60,7 +60,7 @@ test("Worker routes inline submissions through Turnstile and the shared relay", 
   assert.equal(calls.length, 2);
   const message = JSON.parse(calls[1].options.body);
   assert.equal(message.replyTo, "jane@example.org");
-  assert.equal(message.subject, "New YMG Events enquiry — Venue partnership — Supper Club — Jane Doe");
+  assert.equal(message.subject, "New YMG Events inquiry — Venue partnership — Supper Club — Jane Doe");
   assert.match(message.text, /Supper Club/);
   assert.match(message.text, /A dinner with live music/);
 });

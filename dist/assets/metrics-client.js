@@ -1,4 +1,4 @@
-const ALLOWED_SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "enquire"]);
+const ALLOWED_SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "inquire"]);
 const ALLOWED_INTENTS = new Set(["venue_partnership", "corporate_event", "private_celebration"]);
 const ALLOWED_FORMATS = new Set([
   "Let’s explore a partnership",
@@ -47,7 +47,7 @@ export async function startEventsMetrics({
         body,
       }).catch(() => {});
     } catch {
-      // A measurement failure must never interfere with site navigation or enquiries.
+      // A measurement failure must never interfere with site navigation or inquiries.
     }
   };
 

@@ -4,7 +4,7 @@ Updated 11 November 2026. The owner directs a self-managed, best-effort policy u
 
 ## Release boundary
 
-Production now serves the checked repository source through automatic Workers Builds (first release 11 November 2026). Both languages and notices are live. The form remains unavailable until runtime settings are configured, so it does not submit and the direct-email fallback is visible. Its config response is 503 / ready:false. Fonts, hero, portrait and brochure are first-party assets; no Unsplash/Google Fonts URL remains in the released HTML. The notice describes online delivery only when available and accurately covers the email fallback. Actual mailbox delivery is still unverified; no test enquiry was sent.
+Production now serves the checked repository source through automatic Workers Builds (first release 11 November 2026). Both languages and notices are live. The form remains unavailable until runtime settings are configured, so it does not submit and the direct-email fallback is visible. Its config response is 503 / ready:false. Fonts, hero, portrait and brochure are first-party assets; no Unsplash/Google Fonts URL remains in the released HTML. The notice describes online delivery only when available and accurately covers the email fallback. Actual mailbox delivery is still unverified; no test inquiry was sent.
 
 
 ## Identity
@@ -16,7 +16,7 @@ Frederic David, Genova, P.IVA 03044510992: visually verified from the VAT assign
 | Processing | Data and purpose | Basis / controls |
 | --- | --- | --- |
 | Page hosting | Cloudflare receives connection/URL/browser data to serve and secure requests | Legitimate interest, Art. 6(1)(f); source does not intentionally log briefs |
-| Online enquiry, when configured | Name, email, intent, organization when relevant, selected format, optional guests/timing/budget/message | Art. 6(1)(b) for requested pre-contract steps; 6(1)(f) for general/business-representative correspondence |
+| Online inquiry, when configured | Name, email, intent, organization when relevant, selected format, optional guests/timing/budget/message | Art. 6(1)(b) for requested pre-contract steps; 6(1)(f) for general/business-representative correspondence |
 | Abuse checks | Turnstile technical signals/token and server IP-based rate limit | Security/abuse prevention; server verifies action/host; fails closed without config |
 | Delivery | Authenticated Worker → Google Apps Script relay → fixed Workspace recipient, visitor Reply-To | No separate submissions database; acceptance is not proof of inbox delivery |
 | Email fallback | Visitor's provider → Google Workspace | Visitor chooses whether to send |
@@ -47,5 +47,5 @@ Provider terms describe standard safeguards; they do not establish a personally 
 ## Remaining factual checks
 
 1. Verify the actual released host's resource requests/cookies, same-origin form behavior, secrets and non-sensitive mailbox/Reply-To delivery. Keep metrics off.
-2. Confirm applicable provider agreements/account retention settings and enact closed-enquiry review. No professional appointment is required by this workflow.
+2. Confirm applicable provider agreements/account retention settings and enact closed-inquiry review. No professional appointment is required by this workflow.
 3. Resolve current business classification/activity-code and any required public contracting address before making unsupported registrations or transactional-sales claims.
