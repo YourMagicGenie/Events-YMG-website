@@ -427,7 +427,7 @@ test("event card illustrations are local, format-specific, responsive and docume
     { file: "private-occasion.svg", en: "Stylized illustration of a celebration table with flowers, cake and candles.", it: "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele." },
     { file: "supper-club.svg", en: "Stylized illustration of a plated meal on a dining table with candles and foliage.", it: "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame." },
     { file: "jazz-cocktails.svg", en: "Stylized illustration of a golden saxophone beside a cocktail on a dark stage.", it: "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro." },
-    { file: "corporate-social.svg", en: "Stylized illustration of a modern city-view lounge with a high table and glasses.", it: "Illustrazione stilizzata di un lounge moderno con vista sulla città, un tavolo alto e bicchieri." },
+    { file: "corporate-social.svg", en: "Stylized illustration of a modern city-view lounge with a high table and glasses.", it: "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri." },
   ];
   for (const [pageName, page, localizedAlt] of [["English", html, "en"], ["Italian", italianHtml, "it"]]) {
     const cards = [...page.matchAll(/<article class="concept" role="group"[\s\S]*?<div class="art">([\s\S]*?)<\/div>/g)];
@@ -663,7 +663,7 @@ test("venue offer and commercial FAQ are clear, localized and carefully qualifie
   for (const phrase of ["Creative concept", "Entertainment coordination", "Ticket proposition", "Promotion plan", "Practical production"]) {
     assert.ok(html.includes(phrase), `English offer covers ${phrase}`);
   }
-  for (const phrase of ["Concept e percorso degli ospiti", "Coordinamento dell’intrattenimento", "Proposta di biglietteria", "Piano di promozione", "Produzione operativa"]) {
+  for (const phrase of ["Ideazione ed esperienza degli ospiti", "Coordinamento dell’intrattenimento", "Proposta di biglietteria", "Piano di promozione", "Produzione operativa"]) {
     assert.ok(italian.includes(phrase), `Italian offer covers ${phrase}`);
   }
 
@@ -698,9 +698,11 @@ test("format cards are visibly ideas, while scheduled-event content remains abse
 });
 
 
-test("venue outreach one-pager is small, factual and withheld from the live download path pending approval", () => {
+test("approved venue outreach one-pager is small, factual and available through a discreet localized link", () => {
   const pdf = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.pdf", import.meta.url));
   const source = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.md", import.meta.url), "utf8");
+  const served = readFileSync(new URL("../dist/downloads/ymg-events-collaborazioni-location-it.pdf", import.meta.url));
+  assert.ok(served.equals(pdf), "published copy is identical to the approved master");
   const pdfText = pdf.toString("latin1");
 
   assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")), "one-pager is a PDF");
@@ -711,6 +713,6 @@ test("venue outreach one-pager is small, factual and withheld from the live down
     assert.ok(source.includes(claim), `source copy preserves factual offer and commercial limits: ${claim}`);
   }
   for (const page of [html, italianHtml]) {
-    assert.doesNotMatch(page, /venue-partnership-one-pager-it\.pdf/, "website download link waits for owner approval");
+    assert.match(page, /class="partnership-download" href="\/downloads\/ymg-events-collaborazioni-location-it\.pdf" download=/);
   }
 });

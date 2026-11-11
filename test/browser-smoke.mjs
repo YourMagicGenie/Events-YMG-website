@@ -20,6 +20,8 @@ const mimeTypes = {
   ".woff2": "font/woff2",
   ".txt": "text/plain; charset=utf-8",
   ".xml": "application/xml; charset=utf-8",
+  ".pdf": "application/pdf",
+  ".webp": "image/webp",
 };
 
 const server = createServer(async (request, response) => {
@@ -82,6 +84,7 @@ try {
     ? [320, 360, 390, 430, 540, 541, 768, 850, 851, 1024, 1280, 1440, 1920]
     : [320, 768, 1440];
   const assetChecks = [
+    ["/downloads/ymg-events-collaborazioni-location-it.pdf", "application/pdf"],
     ["/assets/favicon.svg", "image/svg+xml"],
     ["/assets/favicon-16.png", "image/png"],
     ["/assets/favicon-32.png", "image/png"],
@@ -203,6 +206,10 @@ try {
     await portrait.scrollIntoViewIfNeeded();
     await portrait.evaluate(image => image.decode());
     assert.ok(await portrait.evaluate(image => image.naturalWidth > 0 && image.getBoundingClientRect().width <= innerWidth), `${width}px authentic founder portrait loads without overflow`);
+
+    const download = page.locator(".partnership-download");
+    assert.equal(await download.getAttribute("hreflang"), "it");
+    assert.ok(await download.evaluate(link => link.getBoundingClientRect().height >= 44), `${width}px PDF link has a comfortable target`);
 
     const typeScale = await page.evaluate(() => {
       const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
@@ -579,7 +586,7 @@ try {
     "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele.",
     "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame.",
     "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro.",
-    "Illustrazione stilizzata di un lounge moderno con vista sulla città, un tavolo alto e bicchieri.",
+    "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri.",
   ];
   assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific illustration descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
