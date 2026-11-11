@@ -4,7 +4,7 @@ Updated 11 November 2026. The owner directs a self-managed, best-effort policy u
 
 ## Release boundary
 
-Production now serves the checked repository source through automatic Workers Builds (first release 11 November 2026). Both languages and notices are live. The form remains unavailable until runtime settings are configured, so it does not submit and the direct-email fallback is visible. Its config response is 503 / ready:false. Fonts, hero, portrait and brochure are first-party assets; no Unsplash/Google Fonts URL remains in the released HTML. The notice describes online delivery only when available and accurately covers the email fallback. Actual mailbox delivery is still unverified; no test inquiry was sent.
+Production now serves the checked repository source through Workers Builds. The inquiry form is now configured through a private service binding to Science's existing Turnstile/Google Apps Script/Workspace intake; the owner confirms real inbox receipt. All event fields remain validated, including Reply-To. API errors and source tests distinguish acceptance from receipt; the owner report supplies actual receipt evidence. Fonts, original illustrative hero, portrait and brochure are first-party assets. No new provider or submission database was introduced. Events-specific Cloudflare configuration disables automatic RUM injection from the parent zone; optional aggregate conversion metrics remain disabled. The live browser audit checks actual requests, cookies/storage and CSP on all four public routes.
 
 
 ## Identity
@@ -49,3 +49,6 @@ Provider terms describe standard safeguards; they do not establish a personally 
 1. Verify the actual released host's resource requests/cookies, same-origin form behavior, secrets and non-sensitive mailbox/Reply-To delivery. Keep metrics off.
 2. Confirm applicable provider agreements/account retention settings and enact closed-inquiry review. No professional appointment is required by this workflow.
 3. Resolve current business classification/activity-code and any required public contracting address before making unsupported registrations or transactional-sales claims.
+
+## Account boundary
+Provider account agreement acceptance, provider-managed security retention and manual closed-inquiry review are operational facts that cannot be inferred from public terms or a successful source deployment. No account agreement, deletion rule, mailbox data or legal classification was changed in this audit.

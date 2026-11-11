@@ -110,9 +110,12 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
       - name: Install Playwright Chromium
         run: npx playwright install chromium
+      - name: Audit live security and privacy behavior
+        run: node test/live-browser-audit.mjs
       - name: Compare base and candidate performance
         env:
           PERFORMANCE_BASE_DIR: ${{ github.workspace }}/baseline
+          PERFORMANCE_LIVE_ORIGIN: https://events.ymgconsultingservices.com
         run: npm run audit:performance
       - name: Upload Lighthouse comparison
         if: always()

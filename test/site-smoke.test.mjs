@@ -716,3 +716,10 @@ test("approved venue outreach one-pager is small, factual and available through 
     assert.match(page, /class="partnership-download" href="\/downloads\/ymg-events-collaborazioni-location-it\.pdf" download=/);
   }
 });
+
+// Owner language requirement applies to every public route and feedback dictionary.
+test("public English consistently uses American inquiry spelling", () => {
+  for (const file of ["index.html", "it/index.html", "privacy.html", "it/privacy.html", "404.html", "it/404.html", "assets/i18n.js", "assets/site-interactions.js", "assets/inquiry-client.js"]) {
+    assert.doesNotMatch(readFileSync(new URL(`../dist/${file}`, import.meta.url), "utf8"), /enquir/i, file);
+  }
+});

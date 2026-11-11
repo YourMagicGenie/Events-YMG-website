@@ -3,11 +3,10 @@
 ## Current state
 
 The feature is **off by default**. The isolated preview config sets
-`EVENTS_METRICS_ENABLED` to `false`; production is not deployed or configured by
-this repository. The public English and Italian privacy notices therefore
+`EVENTS_METRICS_ENABLED` to `false`; production is deployed automatically from checked main merges. The public English and Italian privacy notices therefore
 continue to describe the current no-analytics behavior. Do not turn this on
 until issue [#9](https://github.com/YourMagicGenie/Events-YMG-website/issues/9)
-has a qualified privacy review and the notice is updated to match the actual
+has a self-managed processing review and owner retention/activation decision and the notice is updated to match the actual
 Worker setup.
 
 The site checks the Worker's same-origin `/api/events/metrics/config` endpoint.
@@ -100,3 +99,6 @@ Complete these steps only after #9 privacy review:
 - [Wrangler Analytics Engine bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#analytics-engine-datasets)
 - [Cloudflare Monitors](https://developers.cloudflare.com/notifications/monitors/)
 - [Analytics Engine SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)
+
+## Current activation boundary — 11 November
+Optional metrics remain disabled. Owner did not approve the fixed Analytics Engine three-month retention or activation; do not infer that decision from permission to complete independent technical work. The actual parent-zone automatic RUM injection is now disabled for Events only through configuration rule 99bc03ac741e44ccab032c4d13e9b655. This is separate from the dormant conversion-metrics implementation.
