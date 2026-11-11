@@ -4,7 +4,8 @@ Updated 11 November 2026. The owner directs a self-managed, best-effort policy u
 
 ## Release boundary
 
-Production remains on the earlier standalone Worker and mail-app draft flow. Source now contains the direct-send-capable UI, self-hosted fonts, founder portrait, and bilingual notice intended to ship with that source. The notice describes online delivery only **when available**, and the direct-email alternative when it is not. Do not deploy just this notice onto the old Google-Fonts page: publish source and notice together, then audit actual requests/cookies. GitHub merges do not themselves deploy Events.
+Production now serves the checked repository source through automatic Workers Builds (first release 11 November 2026). Both languages and notices are live. The form remains unavailable until runtime settings are configured, so it does not submit and the direct-email fallback is visible. Its config response is 503 / ready:false. Fonts, hero, portrait and brochure are first-party assets; no Unsplash/Google Fonts URL remains in the released HTML. The notice describes online delivery only when available and accurately covers the email fallback. Actual mailbox delivery is still unverified; no test enquiry was sent.
+
 
 ## Identity
 

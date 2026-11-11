@@ -1,86 +1,43 @@
-# Deployment and recovery boundary
+# Deployment and recovery
 
-**Live custom domain:** https://events.ymgconsultingservices.com/
+**Production:** https://events.ymgconsultingservices.com/ — Worker `ymg-events-website`.
 
-**Production Cloudflare Worker:** `ymg-events-website`
+## Current publishing path
 
-The site was launched 2026-11-09 from Sites-managed project
-`appgprj_6af1846f038c8191a5028170979bd4b3` at source commit
-`76dd4f9580e546dac33e6605534414ad77408f10`.
+Cloudflare Workers Builds watches `main` in `YourMagicGenie/Events-YMG-website`, root `/`, runs `npm run build`, then `npm run deploy:auto`. The latter uses the pinned Wrangler and explicit `wrangler.production.json`. GitHub PR unit/site/browser checks must pass before merges. Builds repeats unit/site checks before upload; it does not independently wait for GitHub checks on arbitrary direct pushes.
 
-`dist/` here is the editable static source from that launch. The launch
-baseline used a visitor-reviewed `mailto:` form; the current GitHub source has
-an inline form, but it cannot send until the staged Worker path is configured
-and released. The original live bundle is a generated standalone
-`deploy/cloudflare-worker.mjs` in the Sites-managed source: it embeds HTML,
-privacy and JPEG assets for direct Worker upload. The giant generated bundle
-is deliberately **not** copied as a second editable source of truth.
+The current GitHub source has an inline form. It is deliberately unavailable without its Turnstile and relay runtime configuration, and offers direct email. A successful deployment is not a mailbox-delivery test. See #10 and docs/PRIVACY-DATA-FLOW.md.
 
-## Reproduce and preview the source
+The original live bundle is a generated standalone `deploy/cloudflare-worker.mjs` in the Sites-managed source. It is **not** copied as a second editable source of truth. That launch history no longer describes the active deployment path. Current releases package `src/worker.js` and editable `dist/` assets.
 
-The site is buildless. To preview the public static page without credentials or
-network calls:
+## Local and staged checks
 
-```bash
-python3 -m http.server 4173 --directory dist
+- `npm ci && npm test`
+- `npx playwright install chromium && npm run test:e2e:full`
+- `npx wrangler deploy --config wrangler.production.json --dry-run`
+- `npm run test:live -- --origin https://<approved-version-host>` before promotion, and the same read-only check against the public domain afterwards.
+
+`wrangler.json` remains an isolated `ymg-events-preview` configuration; no production domain is attached to it. `npm run deploy:preview` selects that file. Production version URLs use their version's actual resources, not an isolated database/environment. No submission data store exists here. Never assume that a preview label isolates resources.
+
+The first staged build was tested at the version URL for `6f991d2a-a714-4587-ba38-86bb32edfb62`: bilingual home/privacy pages, fonts/hero/portrait, robots/sitemap, 404/405, GET/HEAD and the expected unavailable config response passed. Then the owner-approved production path was activated.
+
+## First automatic production release — 11 November 2026
+
+- Checked PR #72 merged commit `ce7c690b3224998a170beac60b7120b3438f3c69`.
+- Cloudflare push-event build `8ce03184-0c66-4d90-895c-da49c668d0eb` succeeded automatically.
+- Active version `7ac94e2c-a6c7-43a0-8310-93625da9529a`, deployment `d5ba90c7-2392-4ad8-928a-f77b52433bf8`, 100% traffic at 07:24 UTC.
+- Public smoke passed; served PDF SHA-256 equals the approved master. Enquiry config returns 503 / `ready:false`, accurately reflecting missing runtime settings. No test enquiry was sent. Metrics remain disabled.
+
+## Recovery
+
+Known previous production version: `ce4f6609-d90c-410e-8ee7-9c20d7f289d7` (original launch bundle). Its prior deployment remains listed. A recovery changes live traffic; pause automatic builds before recovery so a subsequent merge does not immediately redeploy the candidate.
+
+With an authenticated authorized CLI:
+
+```sh
+npx wrangler rollback ce4f6609-d90c-410e-8ee7-9c20d7f289d7 --config wrangler.production.json
 ```
 
-Open `http://localhost:4173/`. For a local run of the Worker and static-assets
-binding, install Wrangler locally and run:
+Command syntax was verified using pinned Wrangler help; **rollback has not been exercised against production**. It restores the old UI/mail-app flow, not external resource state. Record the incident, verify the public site and release a checked corrective commit before resuming automatic publishing. Do not change unrelated YMG Workers, routes or mail DNS.
 
-```bash
-npx wrangler dev --local --config wrangler.json
-```
-
-The checked-in Wrangler config is deliberately named `ymg-events-preview` and
-contains no routes or custom domains. It binds this repository's `dist/` assets
-to `src/worker.js`; it cannot silently attach this source to the production
-hostname. Without runtime variables, `/api/events/config` correctly reports
-that direct submission is unavailable. The form's email fallback remains
-available, while mocked success and failure paths are covered by `npm test`.
-
-The config also defines the non-secret `EVENTS_SUBMISSION_LIMITER` binding at
-five requests per minute per source IP. Cloudflare's Worker Rate Limiting API
-is approximate and each Cloudflare location maintains its own count; it is an
-abuse-control layer, not a strict global quota. The binding uses account-local
-namespace ID `2026111010`; confirm that number is unused in the target account
-before deployment and change it if it is already assigned. Use Wrangler
-4.36.0 or newer for this binding. See [Cloudflare's Rate Limiting API
-documentation](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
-
-The same config can be used for an isolated `workers.dev` preview once a
-scoped Cloudflare credential is available. Do not change the config name or
-attach a custom domain as part of a preview. Verify anonymous access, `/`,
-`/privacy.html`, `/robots.txt`, `/sitemap.xml`, all local images/scripts,
-GET/HEAD behavior, form error states and 404/405 responses on that preview.
-Record the preview URL and evidence in the release notes. This repository does
-not define an automatic production deployment.
-
-**Do not deploy the new GitHub repository by assumption.** No GitHub Actions
-deployment controller or automatic custom-domain release is configured. Before
-integrating this source with production:
-
-1. Deploy and test the isolated `ymg-events-preview` Worker described above,
-   preserving public GET/HEAD, redirects, 404/405 responses and cache/security
-   headers.
-2. Capture the current production Worker version, bindings and known-good
-   recovery target without exposing account IDs, tokens or secret values in Git.
-3. Check preview rendering, responsive layout, anonymous access, forms,
-   privacy/canonical/robots/sitemap/assets and any linked main-site host checks.
-4. Require an explicit, reviewed production promotion with a rollback plan and
-   verify the final custom domain. A saved Sites preview is not a live release.
-
-The main site's [issue #63](https://github.com/YourMagicGenie/ymg-scientific-website/issues/63)
-tracks old placeholder declarations and must not be allowed to reclaim Events.
-Do not change mail DNS or other YMG Workers under this project.
-
-See [Events source migration issue #3](https://github.com/YourMagicGenie/Events-YMG-website/issues/3).
-
-## Prepared Git integration (11 November 2026)
-
-The source now includes a separate `wrangler.production.json` and pinned local
-Wrangler. `npm run deploy:auto` explicitly targets that file; the default
-`wrangler.json` remains the isolated preview. No trigger has been activated.
-See [the verified DnD comparison and exact Events Builds settings](../docs/CLOUDFLARE-AUTO-PUBLISH.md).
-Connecting the existing production Worker to `main` will make merges deploy;
-complete the release/runtime verification before activating that connection.
+See [configuration and DnD comparison](../docs/CLOUDFLARE-AUTO-PUBLISH.md).

@@ -16,8 +16,8 @@ Persist meaningful decisions, validated findings, blockers and next-action
 changes there, without changing human-assigned portfolio focus.
 
 The original selected design lives in a Sites-managed source repository; this
-repository received a non-secret baseline on 2026-11-09. **A GitHub push does
-not deploy the live custom domain.** The production Worker is
+repository received a non-secret baseline on 2026-11-09. **Checked merges to `main` now trigger Cloudflare Workers Builds and deploy
+the live custom domain.** Run the required PR checks before merging. The production Worker is
 `ymg-events-website`. Capture current version and verify rollback before any
 future release; do not overwrite the production binding or reattach it to the
 main site's old construction placeholder.
