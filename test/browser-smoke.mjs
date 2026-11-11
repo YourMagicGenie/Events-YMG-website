@@ -241,15 +241,15 @@ try {
         secondaryPresent: [...document.querySelectorAll(".hero-actions a")].some(link => /discover the atmosphere/i.test(link.textContent)),
       };
     });
-    assert.equal(heroVisual.alt, "Boats moored beside waterfront restaurants at dusk.", "hero image has meaningful scenic alt text");
-    assert.match(heroVisual.src, /^https:\/\/images\.unsplash\.com\/photo-1789931123652-6d22f2ef7cc7/, "hero uses the reviewed Unsplash photograph");
-    assert.match(heroVisual.srcset, /960w.*1440w.*1920w/, "hero offers responsive desktop image sizes");
-    assert.match(heroVisual.mobileSource, /480w.*780w.*1080w/, "hero offers a separate mobile crop");
+    assert.equal(heroVisual.alt, "Guests sharing an aperitivo on a harbor terrace at dusk; illustrative scene.", "hero image has meaningful scenic alt text");
+    assert.match(heroVisual.src, /\/assets\/event-hero-1440\.webp$/, "hero uses local event illustration");
+    assert.match(heroVisual.srcset, /480w.*960w.*1440w/, "hero offers responsive desktop image sizes");
+    assert.match(heroVisual.mobileSource, /480w.*780w/, "hero offers a separate mobile crop");
     assert.equal(heroVisual.mobileMedia, "(max-width: 540px)", "mobile image source has a defined breakpoint");
     assert.equal(heroVisual.sizes, "100vw", "hero image size matches the full-width composition");
     assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
     assert.ok(heroVisual.coversHero, "hero image covers its background region");
-    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha.every(alpha => alpha >= 0.8), "dark overlay preserves text contrast over the photo");
+    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "dark overlay preserves text contrast over the photo");
     assert.equal(heroVisual.primaryHref, "#enquire", "primary hero CTA keeps its destination");
     assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
 

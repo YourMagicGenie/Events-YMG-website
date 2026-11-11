@@ -1,9 +1,11 @@
-# Hero image provenance
+# Event hero provenance
 
-- **Photographer:** Arlind Photography (@arlindphotography)
-- **Photo:** “Boats moored in a harbor with waterfront restaurants glowing under a soft evening sky.”
-- **Source page:** https://unsplash.com/photos/boats-in-harbor-with-waterfront-restaurants-lqSuHDM9g6g
-- **License:** Unsplash License, checked 10 November 2026: https://unsplash.com/license. Unsplash permits free commercial and non-commercial use; attribution is appreciated but not required. This project records the photographer and source here.
-- **Use in the Events site:** Aspirational setting photography only. The image does not document an event produced by YMG Events. The alt text describes the visible harbor scene.
-- **Delivery:** The image is served through Unsplash’s image CDN with responsive landscape and mobile crops, width descriptors, automatic modern formats and quality compression. The markup suppresses the referring page URL. Visitors still make a direct request to Unsplash when the image loads; the Events privacy notice describes this third-party resource.
-- **Production boundary:** This change updates repository source only. The owner must review the crop at desktop and phone sizes in an isolated preview before any production deployment. GitHub merges do not deploy the production Worker.
+Updated 11 November 2026 under issue #4. The owner prefers the original event-led terrace scene over the replacement harbor-only photograph and requested a more photographic treatment.
+
+The original launch hero from commit a4833fe was edited with the built-in image-generation tool. The result retains the Genova-style harbor terrace, evening aperitivo, guests and table, with less orange grading, more natural expressions and photographic texture. This remains **AI-generated illustrative marketing imagery**, not documentary evidence of an event delivered by YMG. Public alt text identifies it as illustrative; no past booking/client claim is introduced.
+
+Delivery: local responsive WebP assets, 480/960/1440 landscape and 480/780 mobile. Source dimensions are explicit; eager/high priority is retained. No Unsplash request is necessary. The former Unsplash harbor photo is no longer referenced; its photographer/license do not apply to this replacement.
+
+Editing brief: preserve original event composition and upscale Genova terrace atmosphere, improve natural faces/skin/fabric/hand/glass geometry, reduce orange grading and staged smiles, balance practical lights with dusk, keep space left for headline, no text or logos. Built-in image tool used; no portrait identity generation.
+
+The genuine founder portrait is a separate owner-supplied photo, approved on 11 November. Its responsive exports are resized/compressed and stripped of source metadata; the face/scene are unchanged.

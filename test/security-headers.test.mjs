@@ -23,7 +23,7 @@ test("HTML responses receive a restrictive policy for the site and Turnstile", a
   assert.match(EVENTS_CONTENT_SECURITY_POLICY, /frame-src https:\/\/challenges\.cloudflare\.com/);
   assert.match(EVENTS_CONTENT_SECURITY_POLICY, /script-src 'self' https:\/\/challenges\.cloudflare\.com/);
   assert.doesNotMatch(EVENTS_CONTENT_SECURITY_POLICY, /script-src[^;]*unsafe-inline/);
-  assert.match(EVENTS_CONTENT_SECURITY_POLICY, /img-src 'self' https:\/\/images\.unsplash\.com/);
+  assert.match(EVENTS_CONTENT_SECURITY_POLICY, /img-src 'self';/);
   assert.match(EVENTS_CONTENT_SECURITY_POLICY, /font-src 'self'/);
   assert.match(EVENTS_CONTENT_SECURITY_POLICY, /connect-src 'self' https:\/\/challenges\.cloudflare\.com/);
   assert.equal(response.headers.get("cache-control"), "public, max-age=60");

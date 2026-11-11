@@ -1,0 +1,23 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const read = path => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
+test('production and isolated preview have explicit separate deployment targets', () => {
+  const production = read('wrangler.production.json');
+  const preview = read('wrangler.json');
+  const pkg = read('package.json');
+  assert.equal(production.name, 'ymg-events-website');
+  assert.equal(preview.name, 'ymg-events-preview');
+  assert.deepEqual(production.routes, [{ pattern: 'events.ymgconsultingservices.com', custom_domain: true }]);
+  assert.equal(preview.routes, undefined);
+  assert.equal(production.assets.directory, './dist');
+  assert.equal(production.main, 'src/worker.js');
+  assert.equal(production.vars.EVENTS_METRICS_ENABLED, 'false');
+  assert.equal(production.analytics_engine_datasets, undefined);
+  assert.equal(production.observability.enabled, false);
+  assert.ok(production.ratelimits.every(binding => !preview.ratelimits.some(other => other.namespace_id === binding.namespace_id)));
+  assert.equal(pkg.scripts['deploy:auto'], 'wrangler deploy --config wrangler.production.json');
+  assert.equal(pkg.scripts['deploy:preview'], 'wrangler deploy --config wrangler.json');
+  assert.equal(pkg.scripts.build, 'npm test');
+  assert.match(pkg.devDependencies.wrangler, /^\d+\.\d+\.\d+$/);
+});

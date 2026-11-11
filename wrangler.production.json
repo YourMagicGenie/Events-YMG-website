@@ -1,0 +1,34 @@
+{
+  "name": "ymg-events-website",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-10",
+  "workers_dev": true,
+  "vars": {
+    "EVENTS_METRICS_ENABLED": "false"
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "404-page"
+  },
+  "ratelimits": [
+    {
+      "name": "EVENTS_SUBMISSION_LIMITER",
+      "namespace_id": "2026111110",
+      "simple": {
+        "limit": 5,
+        "period": 60
+      }
+    }
+  ],
+  "observability": {
+    "enabled": false
+  },
+  "routes": [
+    {
+      "pattern": "events.ymgconsultingservices.com",
+      "custom_domain": true
+    }
+  ]
+}

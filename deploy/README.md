@@ -75,3 +75,12 @@ tracks old placeholder declarations and must not be allowed to reclaim Events.
 Do not change mail DNS or other YMG Workers under this project.
 
 See [Events source migration issue #3](https://github.com/YourMagicGenie/Events-YMG-website/issues/3).
+
+## Prepared Git integration (11 November 2026)
+
+The source now includes a separate `wrangler.production.json` and pinned local
+Wrangler. `npm run deploy:auto` explicitly targets that file; the default
+`wrangler.json` remains the isolated preview. No trigger has been activated.
+See [the verified DnD comparison and exact Events Builds settings](../docs/CLOUDFLARE-AUTO-PUBLISH.md).
+Connecting the existing production Worker to `main` will make merges deploy;
+complete the release/runtime verification before activating that connection.

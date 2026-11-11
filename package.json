@@ -7,10 +7,14 @@
     "test:site": "node --test test/site-smoke.test.mjs",
     "test:e2e": "node test/browser-smoke.mjs",
     "test:e2e:full": "node test/browser-smoke.mjs --full-matrix",
-    "audit:performance": "node test/performance-audit.mjs"
+    "audit:performance": "node test/performance-audit.mjs",
+    "build": "npm test",
+    "deploy:auto": "wrangler deploy --config wrangler.production.json",
+    "deploy:preview": "wrangler deploy --config wrangler.json"
   },
   "devDependencies": {
     "lighthouse": "13.3.0",
-    "playwright": "1.62.1"
+    "playwright": "1.62.1",
+    "wrangler": "4.160.0"
   }
 }
