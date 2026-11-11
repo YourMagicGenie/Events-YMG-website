@@ -1,0 +1,21 @@
+.partnership-download {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 44px;
+  margin-top: 20px;
+  padding: 9px 0;
+  border-bottom: 1px solid #b6a98f;
+  color: #172a28;
+  font-size: 14px;
+  text-decoration: none;
+}
+.partnership-download small {
+  flex-basis: 100%;
+  color: #575c54;
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+.partnership-download:hover { border-bottom-color: #172a28; }
+.partnership-download:focus-visible { outline: 3px solid #815342; outline-offset: 5px; }
