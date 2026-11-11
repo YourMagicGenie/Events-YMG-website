@@ -1,10 +1,11 @@
 import { messages } from "./i18n.js";
 
-export async function sendEventsEnquiry(formData, turnstileToken, fetcher = fetch) {
+export async function sendEventsEnquiry(formData, turnstileToken, fetcher = fetch, timeoutMs = 30000) {
   if (!turnstileToken) throw new Error(messages.spamRequired);
   const body = new URLSearchParams(formData);
   body.set("cf-turnstile-response", turnstileToken);
   const response = await fetcher("/api/events/enquiry", {
+    signal: AbortSignal.timeout(timeoutMs),
     method: "POST",
     credentials: "same-origin",
     cache: "no-store",
