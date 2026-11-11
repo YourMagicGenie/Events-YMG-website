@@ -51,3 +51,33 @@ test("client reports backend rejection without claiming success", async () => {
     /did not accept this request/,
   );
 });
+
+
+test("client aborts a stalled connection instead of leaving the form pending", async () => {
+  // A live handle models a socket while AbortSignal.timeout uses an unref'ed timer.
+  const socket = setInterval(() => {}, 1000);
+  try {
+    await assert.rejects(sendEventsEnquiry(values, "verified-token", async (_, options) => {
+      assert.ok(options.signal instanceof AbortSignal);
+      return new Promise((resolve, reject) => {
+        options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true });
+      });
+    }, 10), { name: "TimeoutError" });
+  } finally {
+    clearInterval(socket);
+  }
+});
+
+test("client also bounds a stalled response body", async () => {
+  const socket = setInterval(() => {}, 1000);
+  try {
+    await assert.rejects(sendEventsEnquiry(values, "verified-token", async (_, options) => ({
+      ok: true,
+      json: () => new Promise((resolve, reject) => {
+        options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true });
+      }),
+    }), 10), /did not accept this request/);
+  } finally {
+    clearInterval(socket);
+  }
+});
