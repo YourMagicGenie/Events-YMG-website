@@ -586,7 +586,7 @@ try {
     "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele.",
     "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame.",
     "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro.",
-    "Illustrazione stilizzata di un lounge moderno con vista sulla città, un tavolo alto e bicchieri.",
+    "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri.",
   ];
   assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific illustration descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
