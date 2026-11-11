@@ -199,6 +199,11 @@ try {
         `${width}px neighboring sections keep intentional, bounded gutters: ${JSON.stringify(desktopGutters)}`);
     }
 
+    const portrait = page.locator(".founder-portrait");
+    await portrait.scrollIntoViewIfNeeded();
+    await portrait.evaluate(image => image.decode());
+    assert.ok(await portrait.evaluate(image => image.naturalWidth > 0 && image.getBoundingClientRect().width <= innerWidth), `${width}px authentic founder portrait loads without overflow`);
+
     const typeScale = await page.evaluate(() => {
       const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
       return [
