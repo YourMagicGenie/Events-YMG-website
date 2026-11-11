@@ -295,7 +295,7 @@ if (form) {
       setFeedback(messages.turnstileCheck);
       widgetId = turnstile.render("#turnstile-widget", {
         sitekey: config.siteKey,
-        action: "events_enquiry",
+        action: config.action === "assessment" ? "assessment" : "events_enquiry",
         language: messages.turnstileLanguage,
         callback: token => {
           turnstileToken = token;

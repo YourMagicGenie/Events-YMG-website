@@ -14,3 +14,6 @@
 | `social-card-it.svg` / `social-card-it.png` | Italian share preview, 1200 × 630 | Localized vector layout and PNG export |
 
 The HTML metadata uses the canonical production host `https://events.ymgconsultingservices.com/`. This PR changes repository source only. Actual host responses and representative WhatsApp/share previews still require the guarded Events preview or deployment; GitHub merges do not deploy the production Worker.
+
+## 11 November owner direction
+Social artwork now uses bold sans-serif YMG EVENTS lettering, cobalt, coral and lime, suitable for a broad events offer. All key lettering fits the central 630px square of the 1200 × 630 canvas. Versioned `social-card-v2.png` and `social-card-it-v2.png` URLs refresh image caches; the renderer also maintains original filenames. Preview copy no longer positions the business exclusively around luxury nightlife. Existing favicon remains unchanged. Actual WhatsApp metadata caching may outlive deployment; a fresh WhatsApp rendering remains an external check. Cloudflare Builds now automatically deploys passing main changes.

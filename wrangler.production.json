@@ -30,5 +30,11 @@
       "pattern": "events.ymgconsultingservices.com",
       "custom_domain": true
     }
+  ],
+  "services": [
+    {
+      "binding": "SCIENCE_INTAKE",
+      "service": "ymg-science-website"
+    }
   ]
 }

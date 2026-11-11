@@ -1,6 +1,7 @@
 // Adapted from the validated YMG Consulting Services intake Worker.
-// This source path is not deployed to the live Events Worker until its release gates pass.
+// Production can reuse Science through a private service binding; no secret copies.
 import { recordEventsMetric } from "./event-metrics.js";
+import { hasScienceIntake, scienceConfiguration, submitThroughScience } from "./science-intake.js";
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const MAX_BODY_BYTES = 48_000;
 const FORMAT_CHOICES = new Set([
@@ -95,7 +96,7 @@ function relayReady(env) {
 }
 
 function configured(env) {
-  return Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY && relayReady(env) &&
+  return Boolean((hasScienceIntake(env) || (env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY && relayReady(env))) &&
     typeof env.EVENTS_SUBMISSION_LIMITER?.limit === "function");
 }
 
@@ -103,6 +104,13 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   const url = new URL(request.url);
   if (url.pathname === "/api/events/config") {
     if (request.method !== "GET") return json(405, { ready: false });
+    if (hasScienceIntake(env)) {
+      if (!configured(env)) return json(503, { ready: false });
+      try {
+        const config = await scienceConfiguration(request, env);
+        return config ? json(200, config) : json(503, { ready: false });
+      } catch { return json(503, { ready: false }); }
+    }
     return configured(env)
       ? json(200, { ready: true, siteKey: env.TURNSTILE_SITE_KEY })
       : json(503, { ready: false });
@@ -176,6 +184,25 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     // Fail closed if abuse protection is unavailable; do not log client data.
     recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
     return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
+  }
+
+  if (hasScienceIntake(env)) {
+    try {
+      const result = await submitThroughScience(request, env, {
+        name, email, intent: ENQUIRY_TYPES.get(intent), source: ENQUIRY_SOURCES.get(source),
+        business, format, guests, timing, budget, idea, token, locale: metricDimensions.locale,
+      });
+      if (result.accepted) {
+        recordEventsMetric(env, "relay_accepted", metricDimensions);
+        return json(202, { ok: true });
+      }
+      const status = result.status === 403 ? 403 : result.status === 400 ? 400 : 503;
+      recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: status === 403 ? "turnstile_rejected" : "relay_failure" });
+      return json(status, { ok: false, error: status === 403 ? "Spam protection could not verify this request." : "We could not confirm delivery. Please try again or email us directly." });
+    } catch {
+      recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+      return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
+    }
   }
 
   const verifyParams = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token });
