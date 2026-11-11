@@ -26,7 +26,10 @@ try {
   assert.equal(state.local,0);assert.equal(state.session,0);
   assert.ok(state.images.every(i=>i.loaded),route+' image failures');
   const external=[...new Set(requests.filter(u=>new URL(u).origin!==origin).map(u=>new URL(u).origin))];
-  assert.ok(external.every(o=>o==='https://challenges.cloudflare.com'),route+' unexpected external origins: '+external);
+  // Provider documents verification probes on challenge/DNS-test subdomains.
+  // https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/
+  const securityOrigin=o=>{const u=new URL(o);return u.protocol==='https:' && ['challenges.cloudflare.com','dnstest.dev'].some(h=>u.hostname===h||u.hostname.endsWith('.'+h));};
+  assert.ok(external.every(securityOrigin),route+' unexpected external origins: '+external);
   assert.ok(!requests.some(u=>/cloudflareinsights|\/cdn-cgi\/rum/.test(u)),route+' RUM injection');
   const cookies=await context.cookies();
   assert.ok(cookies.every(c=>['cf_clearance','__cf_bm','_cfuvid'].includes(c.name)),'Unexpected cookie');
