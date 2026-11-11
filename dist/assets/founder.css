@@ -1,0 +1,12 @@
+.about { align-items: center; }
+.founder-portrait {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin-top: 28px;
+  border-radius: 72px 4px 4px 4px;
+}
+@media (max-width: 850px) {
+  .founder-portrait { max-width: 480px; margin-top: 24px; }
+}

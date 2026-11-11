@@ -515,8 +515,8 @@ test("founder credibility uses first-party community experience and keeps the br
   assert.match(italian, /non costituiscono un portfolio di eventi già realizzati da YMG/);
   assert.ok(italian.includes(profile), "Italian page links to the same community account safely");
   assert.match(sources, /delivered Halloween/);
-  assert.match(sources, /No portrait or event photo was added/);
-  assert.match(sources, /remain in issue #12/);
+  assert.match(sources, /genuine portrait supplied and approved/);
+  assert.match(sources, /included under issue #12/);
   assert.match(styles, /\.about p\.founder-reference a[\s\S]*?min-height: 44px/);
 });
 

@@ -21,8 +21,11 @@ Events issue #20. It contains no private event transcript or personal media.
 
 ## Excluded material
 
-- No portrait or event photo was added. A genuine owner-approved portrait and
-  its layout remain in issue #12.
+- The genuine portrait supplied and approved by the owner on 11 November 2026 is
+  included under issue #12. Only responsive resizing/compression and metadata
+  removal were performed; the face and photograph were not generated or retouched.
+  The original upload is not duplicated in this public repository.
+- No event documentary photograph was added.
 - No venue, sponsor, participant or client names; third-party logos or photos;
   testimonials; attendance counts; ticket sales; revenue; or premium event
   results are used.
