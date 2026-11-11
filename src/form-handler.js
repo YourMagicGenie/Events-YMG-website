@@ -15,12 +15,12 @@ const FORMAT_CHOICES = new Set([
   "Corporate Social",
 ]);
 const GUEST_CHOICES = new Set(["Still exploring", "Under 30", "30–60", "60–100", "100+"]);
-const ENQUIRY_TYPES = new Map([
+const INQUIRY_TYPES = new Map([
   ["venue_partnership", "Venue partnership"],
   ["corporate_event", "Corporate event"],
   ["private_celebration", "Private celebration"],
 ]);
-const ENQUIRY_SOURCES = new Map([["events_website_form", "Events website"]]);
+const INQUIRY_SOURCES = new Map([["events_website_form", "Events website"]]);
 const DEFAULT_FORMATS = new Map([
   ["venue_partnership", "Let’s explore a partnership"],
   ["corporate_event", "Corporate Social"],
@@ -80,8 +80,8 @@ function subjectName(value) {
 }
 
 export function eventsNotificationSubject(name, intent = "venue_partnership", format = "Let’s explore a partnership") {
-  const type = ENQUIRY_TYPES.get(intent) || "Events enquiry";
-  return `New YMG Events enquiry — ${type} — ${subjectName(format)} — ${subjectName(name)}`;
+  const type = INQUIRY_TYPES.get(intent) || "Events inquiry";
+  return `New YMG Events inquiry — ${type} — ${subjectName(format)} — ${subjectName(name)}`;
 }
 
 function relayReady(env) {
@@ -115,7 +115,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
       ? json(200, { ready: true, siteKey: env.TURNSTILE_SITE_KEY })
       : json(503, { ready: false });
   }
-  if (url.pathname !== "/api/events/enquiry") return json(404, { ok: false });
+  if (!["/api/events/inquiry", "/api/events/enquiry"].includes(url.pathname)) return json(404, { ok: false });
   if (request.method !== "POST") return json(405, { ok: false, error: "Method not allowed." });
   if (request.headers.get("origin") !== url.origin) {
     return json(403, { ok: false, error: "Request origin was not accepted." });
@@ -151,7 +151,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
   const token = field(params, "cf-turnstile-response", 2048, true);
   const businessRequired = intent !== "private_celebration";
   if ([name, email, intent, source, business, rawFormat, rawGuests, timing, budget, idea, token].includes(null) ||
-      !validEmail(email || "") || !ENQUIRY_TYPES.has(intent || "") || !ENQUIRY_SOURCES.has(source || "") ||
+      !validEmail(email || "") || !INQUIRY_TYPES.has(intent || "") || !INQUIRY_SOURCES.has(source || "") ||
       (businessRequired && !business) || !FORMAT_CHOICES.has(format) || !GUEST_CHOICES.has(guests)) {
     return json(400, { ok: false, error: "Please check the required fields and try again." });
   }
@@ -160,36 +160,36 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     intent,
     format,
   };
-  recordEventsMetric(env, "enquiry_attempt", metricDimensions);
+  recordEventsMetric(env, "inquiry_attempt", metricDimensions);
 
   if (!configured(env)) {
-    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
     return json(503, { ok: false, error: "Online submission is unavailable." });
   }
 
   const remoteIp = request.headers.get("cf-connecting-ip");
   if (!remoteIp) {
-    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
     return json(503, { ok: false, error: "Online submission is unavailable." });
   }
   try {
     const rateLimit = await env.EVENTS_SUBMISSION_LIMITER.limit({ key: remoteIp });
     if (!rateLimit?.success) {
-      recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "rate_limited" });
-      return json(429, { ok: false, error: "Please wait a little before sending another enquiry, or contact us directly." }, {
+      recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "rate_limited" });
+      return json(429, { ok: false, error: "Please wait a little before sending another inquiry, or contact us directly." }, {
         "retry-after": "60",
       });
     }
   } catch {
     // Fail closed if abuse protection is unavailable; do not log client data.
-    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
     return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
   }
 
   if (hasScienceIntake(env)) {
     try {
       const result = await submitThroughScience(request, env, {
-        name, email, intent: ENQUIRY_TYPES.get(intent), source: ENQUIRY_SOURCES.get(source),
+        name, email, intent: INQUIRY_TYPES.get(intent), source: INQUIRY_SOURCES.get(source),
         business, format, guests, timing, budget, idea, token, locale: metricDimensions.locale,
       });
       if (result.accepted) {
@@ -197,10 +197,10 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
         return json(202, { ok: true });
       }
       const status = result.status === 403 ? 403 : result.status === 400 ? 400 : 503;
-      recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: status === 403 ? "turnstile_rejected" : "relay_failure" });
+      recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: status === 403 ? "turnstile_rejected" : "relay_failure" });
       return json(status, { ok: false, error: status === 403 ? "Spam protection could not verify this request." : "We could not confirm delivery. Please try again or email us directly." });
     } catch {
-      recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+      recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
       return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
     }
   }
@@ -218,11 +218,11 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     if (!response.ok) throw new Error("Turnstile unreachable");
     challenge = await response.json();
   } catch {
-    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "turnstile_unavailable" });
+    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "turnstile_unavailable" });
     return json(503, { ok: false, error: "Spam protection is temporarily unavailable." });
   }
-  if (!challenge.success || challenge.hostname !== url.hostname || challenge.action !== "events_enquiry") {
-    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "turnstile_rejected" });
+  if (!challenge.success || challenge.hostname !== url.hostname || challenge.action !== "events_inquiry") {
+    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "turnstile_rejected" });
     return json(403, { ok: false, error: "Spam protection could not verify this request." });
   }
 
@@ -231,9 +231,9 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     ? "Venue or hospitality business"
     : intent === "corporate_event" ? "Company or team" : "Preferred venue or location";
   const text = [
-    "New YMG Events enquiry", "",
-    `Enquiry type: ${ENQUIRY_TYPES.get(intent)}`,
-    `Enquiry source: ${ENQUIRY_SOURCES.get(source)}`,
+    "New YMG Events inquiry", "",
+    `Inquiry type: ${INQUIRY_TYPES.get(intent)}`,
+    `Inquiry source: ${INQUIRY_SOURCES.get(source)}`,
     `Name: ${name}`, `Reply email: ${email}`, `${businessLabel}: ${show(business)}`,
     `Event format: ${format}`, `Guest count: ${guests}`, `Timing: ${show(timing)}`,
     `Indicative budget: ${show(budget)}`, "", "Venue or occasion details:", show(idea),
@@ -252,12 +252,12 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
       signal: AbortSignal.timeout(20000),
     });
     const result = response.ok ? await response.json() : null;
-    if (!result || result.ok !== true) throw new Error("Relay rejected enquiry");
+    if (!result || result.ok !== true) throw new Error("Relay rejected inquiry");
   } catch {
-    // Do not log enquiry content, email addresses, or relay credentials.
-    recordEventsMetric(env, "enquiry_failure", { ...metricDimensions, category: "relay_failure" });
+    // Do not log inquiry content, email addresses, or relay credentials.
+    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "relay_failure" });
     recordEventsMetric(env, "relay_failure", { ...metricDimensions, category: "relay_failure" });
-    return json(503, { ok: false, error: "We could not send your enquiry. Please try again or email us directly." });
+    return json(503, { ok: false, error: "We could not send your inquiry. Please try again or email us directly." });
   }
   // This confirms relay acceptance only; it is not a mailbox delivery receipt.
   recordEventsMetric(env, "relay_accepted", metricDimensions);

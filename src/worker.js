@@ -2,7 +2,7 @@ import { handleEventsApi } from "./form-handler.js";
 import { handleEventsMetricsApi } from "./event-metrics.js";
 import { withEventsSecurityHeaders } from "./security-headers.js";
 
-const eventsRoutes = new Set(["/api/events/config", "/api/events/enquiry"]);
+const eventsRoutes = new Set(["/api/events/config", "/api/events/inquiry", "/api/events/enquiry"]);
 const metricsRoutes = new Set(["/api/events/metrics/config", "/api/events/metrics"]);
 
 export function createEventsWorker(fetcher = fetch) {

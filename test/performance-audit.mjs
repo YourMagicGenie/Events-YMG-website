@@ -36,6 +36,7 @@ const contentTypes = {
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".webp": "image/webp",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".woff2": "font/woff2",
@@ -88,7 +89,7 @@ function summarize(lhr, inpMeasurement) {
   const network = requests(lhr);
   const transfer = (item) => Number(item.transferSize ?? 0);
   const fonts = network.filter((item) => /fonts\.googleapis\.com|fonts\.gstatic\.com|\/assets\/fonts\//.test(item.url ?? ""));
-  const hero = network.filter((item) => /images\.unsplash\.com\/photo-1789931123652-6d22f2ef7cc7/.test(item.url ?? ""));
+  const hero = network.filter((item) => /(?:images\.unsplash\.com\/photo-1789931123652-6d22f2ef7cc7|\/assets\/event-hero[^/]*\.webp)/.test(item.url ?? ""));
   return {
     performanceScore: lhr.categories?.performance?.score ?? null,
     lcpMs: metric(lhr, "largest-contentful-paint"),

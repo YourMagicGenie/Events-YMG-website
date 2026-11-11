@@ -17,3 +17,6 @@ The HTML metadata uses the canonical production host `https://events.ymgconsulti
 
 ## 11 November owner direction
 Social artwork now uses bold sans-serif YMG EVENTS lettering, cobalt, coral and lime, suitable for a broad events offer. All key lettering fits the central 630px square of the 1200 × 630 canvas. Versioned `social-card-v2.png` and `social-card-it-v2.png` URLs refresh image caches; the renderer also maintains original filenames. Preview copy no longer positions the business exclusively around luxury nightlife. Existing favicon remains unchanged. Actual WhatsApp metadata caching may outlive deployment; a fresh WhatsApp rendering remains an external check. Cloudflare Builds now automatically deploys passing main changes.
+
+## Owner theme correction — 11 November
+The owner accepts improved preview legibility but rejects cobalt/coral/lime as off-theme. The current cards use website deep green #112421, gold #d5b47e and ivory #f1eadf, large centered sans-serif lettering, fine borders and restrained rings. Versioned v3 PNGs refresh image caches. Critical content fits the central 630px square.

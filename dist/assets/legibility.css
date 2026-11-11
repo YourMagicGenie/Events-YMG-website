@@ -28,7 +28,7 @@ header .logo { display: block; min-height: 44px; padding-block: 4px; }
 .caption a { display: inline-flex; align-items: center; min-height: 44px; }
 .partnership > span { font-size: 12px; }
 .step > span { color: var(--red); }
-.enquiry .small { font-size: 13px; }
+.inquiry .small { font-size: 13px; }
 label { font-size: 13px; }
 #brief input:not([type="hidden"]),
 #brief select { min-height: 44px; }
@@ -46,7 +46,7 @@ footer .textlink { padding-block: 10px; }
 .primary-nav > a:not(.btn) { display: flex; align-items: center; min-height: 44px; }
 .deck-arrow { min-width: 44px; min-height: 44px; }
 .site-note a { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 8px; }
-.enquiry .small a { display: inline-flex; align-items: center; min-height: 44px; }
+.inquiry .small a { display: inline-flex; align-items: center; min-height: 44px; }
 
 @media (max-width: 850px) {
   .band { font-size: 10px; }
