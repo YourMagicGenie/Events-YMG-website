@@ -278,18 +278,18 @@ test("brand icons and bilingual social previews use documented local assets", ()
     {
       name: "English",
       page: html,
-      image: "social-card.png",
-      title: "YMG Events — Elegance, after hours.",
-      description: "YMG Events works with Genova venues and hosts to shape distinctive evenings with music, hospitality and a memorable guest experience.",
-      alt: "YMG Events — Elegance has an after-hours side. Genova, Italy.",
+      image: "social-card-v2.png",
+      title: "YMG Events — Events in Genova",
+      description: "Events, activities and celebrations in Genova. Tell us what you have in mind.",
+      alt: "YMG Events — Events in Genova.",
     },
     {
       name: "Italian",
       page: italianHtml,
-      image: "social-card-it.png",
-      title: "YMG Events — Eleganza, dopo il tramonto.",
-      description: "YMG Events collabora con location e organizzatori di Genova per creare serate distintive, con musica, ospitalità e un’esperienza memorabile per gli ospiti.",
-      alt: "YMG Events — L’eleganza ha un lato notturno. Genova, Italia.",
+      image: "social-card-it-v2.png",
+      title: "YMG Events — Eventi a Genova",
+      description: "Attività, feste ed eventi a Genova. Raccontaci cosa hai in mente.",
+      alt: "YMG Events — Eventi a Genova.",
     },
   ];
   for (const variant of variants) {
@@ -467,8 +467,8 @@ test("hero restores the owner-selected event atmosphere with local illustrative 
 });
 
 test("public positioning is venue-facing, factual, and consistent with metadata", () => {
-  assert.match(html, /name="description" content="YMG Events plans distinctive evenings with Genova venues and hosts, bringing together music, hospitality and a memorable guest experience\."/);
-  assert.match(html, /property="og:description" content="YMG Events works with Genova venues and hosts to shape distinctive evenings with music, hospitality and a memorable guest experience\."/);
+  assert.match(html, /name="description" content="Events, activities and celebrations in Genova\. Tell us what you have in mind\."/);
+  assert.match(html, /property="og:description" content="Events, activities and celebrations in Genova\. Tell us what you have in mind\."/);
   for (const detail of [
     "We work with Genova venues and hosts to shape evenings with character",
     "thoughtful hospitality, distinctive music",

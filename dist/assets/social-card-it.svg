@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
-<rect width="1200" height="630" fill="#142724"/>
-<g stroke="#d5b47e" stroke-opacity=".38" fill="none"><circle cx="1042" cy="310" r="248"/><circle cx="1042" cy="310" r="172"/><circle cx="1042" cy="310" r="98"/><circle cx="1042" cy="310" r="33"/></g>
-<text x="95" y="91" fill="#d5b47e" font-family="Arial,sans-serif" font-size="21" font-weight="700" letter-spacing="2">YMG EVENTS · GENOVA</text>
-<path d="M95 125h120" stroke="#d5b47e" stroke-width="2"/>
-<text x="95" y="244" fill="#f1eadf" font-family="Georgia,'Times New Roman',serif" font-size="78">L’eleganza ha un</text>
-<text x="95" y="324" fill="#f1eadf" font-family="Georgia,'Times New Roman',serif" font-size="78">lato notturno.</text>
-<text x="97" y="409" fill="#d6cbb7" font-family="Arial,sans-serif" font-size="24">Serate pensate per location e ospiti.</text>
-<path d="M95 500h1010" stroke="#d5b47e" stroke-opacity=".45"/>
-<text x="98" y="543" fill="#d6cbb7" font-family="Arial,sans-serif" font-size="17" letter-spacing="1.5">YOUR MAGIC GENIE</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#2448ca"/><circle cx="90" cy="110" r="170" fill="#ff806b"/><circle cx="1135" cy="590" r="210" fill="#dbef83"/><path d="M1050 80v100m-50-50h100M120 440l60 70-90 30" fill="none" stroke="#fff6e8" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><g fill="#fff6e8" text-anchor="middle" font-family="DejaVu Sans,sans-serif" font-weight="bold"><text x="600" y="235" font-size="100" letter-spacing="8">YMG</text><text x="600" y="370" font-size="118" letter-spacing="-4">EVENTS</text><text x="600" y="465" font-size="32" letter-spacing="10">GENOVA</text></g></svg>

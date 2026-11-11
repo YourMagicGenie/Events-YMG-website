@@ -232,9 +232,12 @@ try {
       const image = document.querySelector(".hero-atmosphere img");
       const hero = document.querySelector(".hero");
       const imageRect = image.getBoundingClientRect();
-      const heroRect = hero.getBoundingClientRect();
+      const heroRect = (innerWidth <= 850 ? document.querySelector(".hero-atmosphere") : hero).getBoundingClientRect();
       const overlay = getComputedStyle(document.querySelector(".hero-atmosphere"), "::after").backgroundImage;
       return {
+        photoBelowCopy: imageRect.top >= document.querySelector(".hero-copy").getBoundingClientRect().bottom - 1,
+        photoHeight: imageRect.height,
+        filter: getComputedStyle(image).filter,
         alt: image.alt,
         src: image.getAttribute("src"),
         srcset: image.srcset,
@@ -256,7 +259,12 @@ try {
     assert.equal(heroVisual.sizes, "100vw", "hero image size matches the full-width composition");
     assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
     assert.ok(heroVisual.coversHero, "hero image covers its background region");
-    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "dark overlay preserves text contrast over the photo");
+    if (width > 850) assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "desktop overlay preserves text contrast");
+    else {
+      assert.ok(heroVisual.photoBelowCopy && heroVisual.photoHeight >= 230, "mobile photo is visible below the copy");
+      assert.equal(heroVisual.filter, "none");
+      assert.deepEqual(heroVisual.overlayAlpha, []);
+    }
     assert.equal(heroVisual.primaryHref, "#enquire", "primary hero CTA keeps its destination");
     assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
 

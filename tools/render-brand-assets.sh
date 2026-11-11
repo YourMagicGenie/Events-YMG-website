@@ -20,4 +20,5 @@ for language in en it; do
   rendered="$tmp_dir/social-card-$language.png"
   inkscape "$source" --export-type=png --export-width=1200 --export-height=630 --export-filename="$rendered" >/dev/null 2>&1
   magick "$rendered" -background '#142724' -alpha remove -alpha off -strip -colors 256 -define png:compression-level=9 PNG8:"$output"
+  cp "$output" "${output%.png}-v2.png"
 done
