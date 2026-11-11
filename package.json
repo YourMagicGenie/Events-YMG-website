@@ -10,7 +10,8 @@
     "audit:performance": "node test/performance-audit.mjs",
     "build": "npm test",
     "deploy:auto": "wrangler deploy --config wrangler.production.json",
-    "deploy:preview": "wrangler deploy --config wrangler.json"
+    "deploy:preview": "wrangler deploy --config wrangler.json",
+    "test:live": "node test/live-smoke.mjs"
   },
   "devDependencies": {
     "lighthouse": "13.3.0",
