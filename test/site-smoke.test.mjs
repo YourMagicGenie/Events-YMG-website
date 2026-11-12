@@ -113,14 +113,14 @@ test("owner-approved layout rhythm loads on both languages without dropping inqu
   const it = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
   const css = readFileSync(new URL("../dist/assets/layout-rhythm.css", import.meta.url), "utf8");
   for (const page of [en, it]) {
-    assert.match(page, /href="\\/assets\\/layout-rhythm\\.css"/);
+    assert.ok(page.includes('href="/assets/layout-rhythm.css"'), "both locales load compact layout CSS");
     for (const id of ["intent", "name", "email", "business", "format", "guests", "timing", "budget", "idea", "turnstile-widget", "submit-inquiry"]) {
       assert.ok(page.includes(`id="${id}"`), `${id} is preserved in both locale forms`);
     }
   }
-  assert.match(css, /\\.inquiry\\s*\\{/);
-  assert.match(css, /#brief \\.form-grid/);
-  assert.match(css, /@media \\(max-width: 540px\\)/);
+  assert.ok(css.includes(".inquiry {"));
+  assert.ok(css.includes("#brief .form-grid"));
+  assert.ok(css.includes("@media (max-width: 540px)"));
 });
 
 test("hero photos use responsive compressed sources and explicit priority", () => {
