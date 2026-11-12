@@ -30,6 +30,9 @@
   .concepts { padding: 44px 6% 52px; }
   .heading-row { margin: 15px 0 23px; }
   .concept-deck { gap: 10px; }
+  /* The crossed-out desktop swipe hint is redundant beside labeled arrows. */
+  .deck-hint { display: none; }
+  .deck-toolbar { justify-content: flex-end; }
   .partnerships { padding-top: var(--events-section-space); padding-bottom: var(--events-section-space); }
   .about {
     align-items: start;
