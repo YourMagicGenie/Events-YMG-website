@@ -30,4 +30,8 @@ offerings truthful: do not invent delivered event history or clients.
 
 ## Owner language and design decisions
 
-Use American **inquiry / inquiries / inquiring** in all visitor-facing English copy, accessible labels, feedback and errors. Keep the current share artwork readable within square crops and match the website green/gold/ivory palette. The owner explicitly restored the original launch rooftop hero on 11 November 2026; do not replace it with another realism edit or split mobile image layout. Broad editorial rewrite #74 is deferred until the owner supplies its specifics.
+Use American **inquiry / inquiries / inquiring** in all visitor-facing English copy, accessible labels, feedback and errors. Keep the current share artwork readable within square crops and match the website green/gold/ivory palette. The owner explicitly restored the original launch rooftop hero on 11 November 2026; do not replace it with another realism edit or split mobile image layout. The owner supplied #74 specifics in the 12 November 2026 copy worksheet; follow that worksheet for homepage, privacy and footer copy.
+
+## Pull requests and merging (owner standing rule, 12 November 2026)
+
+For every code-related issue or change, always open a pull request against `main` and squash-merge it as soon as all required checks are green, without waiting for further approval. Merging publishes production automatically through Cloudflare Workers Builds (same pattern as the DnD site), so never merge on red or skipped required checks, and verify the Cloudflare build after merge.

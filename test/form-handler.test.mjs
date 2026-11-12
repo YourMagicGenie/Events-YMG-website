@@ -63,7 +63,7 @@ test("direct-send path checks origin, fields, honeypot and Turnstile before rela
 
 test("each inquiry pathway carries its type and source, with venue details required only for organizations", async () => {
   const cases = [
-    { intent: "venue_partnership", business: "Harbor Restaurant", type: "Venue partnership", format: "Jazz & Cocktails", field: "Venue or hospitality business" },
+    { intent: "venue_partnership", business: "Harbor Restaurant", type: "Venue partnership", format: "Wine pairing", field: "Venue or hospitality business" },
     { intent: "corporate_event", business: "North Star Studio", type: "Corporate event", format: "Corporate Social", field: "Company or team" },
     { intent: "private_celebration", business: "", type: "Private celebration", format: "Private celebrations", field: "Preferred venue or location" },
   ];

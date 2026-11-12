@@ -12,74 +12,56 @@ test("partnership section uses the tighter desktop gutter in both locales", () =
   }
 });
 
-test("lower-page story progresses from process to founder to inquiry in both locales", () => {
+test("lower-page story moves from partnerships to founder to inquiry without repeated sections", () => {
   const cases = [
     {
       page: html,
-      stages: ["From idea to a clear plan", "Your local point of contact", "Start a conversation"],
-      founder: "The formats shown here are ideas to develop with venue partners, not a record of previous YMG bookings.",
-      inquiry: "Whether it’s a venue partnership, a company event or a private occasion",
-      stale: /A thoughtful collaboration|A beautiful concept needs a practical plan|The right setting\./,
+      stages: ["For rooftops, venues & hospitality partners", "Your local point of contact", "Start a conversation"],
+      founder: "I’m Dante David, a Genova-based event organizer from the USA. Through Porto Aperto | Genova, a local international community for social and nightlife events",
+      removed: /From idea to a clear plan|A clear venue partnership|Questions venue owners often ask|not a record of previous YMG bookings|Whether it’s a venue partnership|Prefer a direct conversation\?|Read how we handle your information/,
     },
     {
       page: italianHtml,
-      stages: ["Dall’idea a un piano chiaro", "Il tuo referente a Genova", "Iniziamo una conversazione"],
-      founder: "I format presentati qui sono idee da sviluppare con le location, non costituiscono un portfolio di eventi già realizzati da YMG.",
-      inquiry: "Che si tratti di una collaborazione con una location, di un evento aziendale o di un’occasione privata",
-      stale: /Una collaborazione concreta|Dietro a una bella idea serve un progetto pratico|La location giusta\./,
+      stages: ["Per terrazze, locali e realtà dell’ospitalità", "Il tuo referente a Genova", "Iniziamo una conversazione"],
+      founder: "Sono Dante David, organizzatore di eventi a Genova, originario degli Stati Uniti. Con Porto Aperto | Genova, una community locale internazionale",
+      removed: /Dall’idea a un piano chiaro|Una collaborazione chiara|Domande pratiche per i gestori|non costituiscono un portfolio|Che si tratti di una collaborazione|Preferisci parlarne direttamente\?|Scopri come trattiamo i tuoi dati/,
     },
   ];
 
-  for (const { page, stages, founder, inquiry, stale } of cases) {
+  for (const { page, stages, founder, removed } of cases) {
     const positions = stages.map(stage => page.indexOf(stage));
     assert.ok(positions.every(position => position >= 0));
-    assert.ok(positions[0] < positions[1] && positions[1] < positions[2], "process, founder and inquiry appear in order");
-    assert.match(page, /<div class="steps"><div class="step">[\s\S]*?<\/div><div class="step">[\s\S]*?<\/div><div class="step">/);
-    assert.ok(page.includes(founder), "the factual founder and non-portfolio clarification remain");
-    assert.ok(page.includes(inquiry), "the inquiry invitation names the intended audiences");
-    assert.match(page, /id="partners"[\s\S]*?id="inquire"/);
+    assert.ok(positions[0] < positions[1] && positions[1] < positions[2], "partnerships, founder and inquiry appear in order");
+    assert.doesNotMatch(page, /<section class="process"|<section class="offer-faq"|class="faq-item"|class="offer-item"/, "process, offer grid and FAQ sections are removed");
+    assert.ok(page.includes(founder), "the owner-approved founder introduction is published");
+    assert.doesNotMatch(page, removed, "owner-removed repeated copy stays out");
+    assert.equal((page.match(/<div class="partnership">/g) ?? []).length, 3, "the partnership list keeps three points");
+    assert.match(page, /id="partners"[\s\S]*?<section class="about">[\s\S]*?id="inquire"/);
     assert.match(page, /href="#partners"/);
     assert.match(page, /href="#inquire"/);
-    assert.doesNotMatch(page, stale, "repeated generic introductions have been removed");
   }
 });
 
-
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [
-    {
-      page: html,
-      privacy: 'href="/privacy.html"',
-      privacyLabel: "Privacy notice",
-      ariaLabel: 'aria-label="Related websites"',
-      atlasLabel: "Your Magic Genie · Atlas home",
-      tagline: "Venue partnerships",
-    },
-    {
-      page: italianHtml,
-      privacy: 'href="/it/privacy.html"',
-      privacyLabel: "Informativa privacy",
-      ariaLabel: 'aria-label="Siti collegati"',
-      atlasLabel: "Your Magic Genie · sito principale Atlas",
-      tagline: "Collaborazioni con location",
-    },
+    { page: html, privacy: '<a href="/privacy.html">Privacy notice</a>', location: "YMG Events · Genova, Italy · P.IVA 03044510992", tagline: "Venue partnerships" },
+    { page: italianHtml, privacy: '<a href="/it/privacy.html">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location" },
   ];
 
-  for (const { page, privacy, privacyLabel, ariaLabel, atlasLabel, tagline } of footerCases) {
+  for (const { page, privacy, location, tagline } of footerCases) {
     const footer = page.match(/<footer class="site-footer">[\s\S]*?<\/footer>/)?.[0];
-    assert.ok(footer, "footer exists in both languages");
+    const note = page.match(/<div class="site-note">[\s\S]*?<\/div>/)?.[0];
+    assert.ok(footer && note, "footer and bottom line exist in both languages");
     assert.match(page, /href="\/assets\/footer\.css"/);
-    assert.match(footer, /YMG Events/);
+    assert.match(footer, /<a class="logo" href="\/"><i>\.<\/i>ymg events<\/a>/);
     assert.ok(footer.includes(tagline), "footer states the Events service and location");
     assert.match(footer, /href="mailto:hello@ymgconsultingservices\.com"/);
-    assert.ok(footer.includes(privacy));
-    assert.ok(footer.includes(privacyLabel));
-    assert.ok(footer.includes(ariaLabel));
-    assert.ok(footer.includes(atlasLabel));
-    assert.match(footer, /href="https:\/\/ymgconsultingservices\.com\//);
     assert.match(footer, /href="#inquire"/);
-    assert.match(footer, /Frederic David · P.IVA 03044510992/);
-    assert.doesNotMatch(footer, /REA|sede legale|Via Val Trebbia/i, "no unverified registry claim or private street address");
+    assert.doesNotMatch(footer, /Frederic David|Privacy notice|Informativa privacy|A Your Magic Genie project|Un progetto Your Magic Genie/);
+    assert.ok(note.includes(location), "bottom line carries the VAT number");
+    assert.ok(note.includes(privacy), "privacy notice stays reachable from every homepage");
+    assert.ok(note.includes('<a href="https://ymgconsultingservices.com/">Your Magic Genie · Atlas ↗</a>'));
+    assert.doesNotMatch(footer + note, /\bREA\b|sede legale|Via Val Trebbia/i, "no unverified registry claim or private street address");
   }
 });
 
@@ -115,10 +97,10 @@ test("local assets and public crawl files are present", () => {
   }
   const privacy = readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8");
   assert.match(privacy, /class="skip-link" href="#main-content"/);
-  for (const subject of ["Frederic David", "03044510992", "Cloudflare Turnstile", "Google Apps Script", "Google Workspace", "European Economic Area", "standard contractual clauses", "How long information is kept", "Your rights"]) assert.ok(privacy.includes(subject));
+  for (const subject of ["Frederic Dante David", "Your Magic Genie Group", "03044510992", "Cloudflare Turnstile", "Google Apps Script", "Google Workspace", "European Economic Area", "standard contractual clauses", "How long information is kept", "Your rights"]) assert.ok(privacy.includes(subject));
   assert.match(privacy, /When online sending is available/);
   assert.match(privacy, /Optional conversion measurement is disabled/);
-  assert.match(privacy, /If online sending is unavailable/);
+  assert.doesNotMatch(privacy, /If online sending is unavailable|Scope and changes|Unsplash/);
   assert.doesNotMatch(privacy, /this repository|draft must|qualified adviser|being confirmed/);
   const dataFlow = readFileSync(new URL("../docs/PRIVACY-DATA-FLOW.md", import.meta.url), "utf8");
   assert.match(dataFlow, /Production now serves the checked repository source/);
@@ -237,7 +219,7 @@ test("self-hosted fonts are licensed, preloaded, and disclosed accurately", () =
     assert.match(page, /font-display:swap/);
   }
   const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
-  assert.match(italianPrivacy, /I caratteri e il ritratto del fondatore sono ospitati insieme al sito/);
+  assert.doesNotMatch(italianPrivacy, /Se l’invio online non è disponibile|Ambito e aggiornamenti|Unsplash/);
   assert.match(italianPrivacy, /Quando l’invio online è disponibile/);
   assert.match(italianPrivacy, /href="https:\/\/www\.garanteprivacy\.it\/diritti\/come-agire-per-tutelare-i-tuoi-dati-personali\/reclamo"/);
   const provenance = readFileSync(new URL("../docs/FONT-ASSET-PROVENANCE.md", import.meta.url), "utf8");
@@ -388,10 +370,10 @@ test("event formats form a six-card carousel without filters or mockup disclaime
   assert.doesNotMatch(html, /THREE WAYS THE NIGHT COULD UNFOLD/);
   const expected = [
     "The Rooftop Social",
-    "Strings After Dark",
-    "The Private Occasion",
+    "Live at Night",
+    "A Private Occasion",
     "The Supper Club",
-    "Jazz &amp; Cocktails",
+    "The Tasting Table",
     "The Corporate Social",
   ];
   const cards = [...html.matchAll(/<article class="concept" role="group" aria-roledescription="slide" aria-label="([^"]+)">([\s\S]*?)<\/article>/g)];
@@ -406,9 +388,11 @@ test("event formats form a six-card carousel without filters or mockup disclaime
   assert.match(html, /id="deck-previous"/);
   assert.match(html, /id="deck-next"/);
   assert.doesNotMatch(html, /data-filter|All concepts|Concept imagery|Proposed event formats|A YMG Event Concept/i);
-  assert.match(html, /<p class="caption"><a class="textlink" href="#inquire">Contact us to discuss availability and a tailored proposal\.<\/a><\/p>/);
+  assert.doesNotMatch(html, /Contact us to discuss availability|class="caption"/);
+  assert.match(html, /<p class="deck-hint">Swipe or use the arrows to explore several formats\.<\/p>/);
+  assert.match(html, /<p class="deck-status visually-hidden" id="deck-status" role="status"/, "the position counter is announced but not shown");
   assert.doesNotMatch(html, /concept imagery|proposed event formats|a ymg event concept|prototype|mockup|demo (?:site|event)|sample concept|preview[- ]only/i);
-  const formats = ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Jazz &amp; Cocktails", "Corporate Social"];
+  const formats = ["Rooftop evenings", "Live music &amp; DJs", "Private celebrations", "Supper Club", "Wine pairing", "Corporate Social"];
   for (const format of formats) {
     assert.ok(html.includes(`data-concept="${format}"`), `${format} has a form preselection`);
     assert.ok(html.includes(`<option>${format}</option>`), `${format} is available in the form`);
@@ -426,7 +410,7 @@ test("event card illustrations are local, format-specific, responsive and docume
     { file: "strings-after-dark.svg", en: "Stylized illustration of a violin under warm stage lights with musical notes nearby.", it: "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo." },
     { file: "private-occasion.svg", en: "Stylized illustration of a celebration table with flowers, cake and candles.", it: "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele." },
     { file: "supper-club.svg", en: "Stylized illustration of a plated meal on a dining table with candles and foliage.", it: "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame." },
-    { file: "jazz-cocktails.svg", en: "Stylized illustration of a golden saxophone beside a cocktail on a dark stage.", it: "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro." },
+    { file: "wine-pairing.svg", en: "Stylized illustration of a wine bottle and two glasses beside a tasting board of small plates and grapes.", it: "Illustrazione stilizzata di una bottiglia e due calici di vino accanto a un tagliere con piccoli assaggi e uva." },
     { file: "corporate-social.svg", en: "Stylized illustration of a modern city-view lounge with a high table and glasses.", it: "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri." },
   ];
   for (const [pageName, page, localizedAlt] of [["English", html, "en"], ["Italian", italianHtml, "it"]]) {
@@ -471,13 +455,13 @@ test("public positioning is venue-facing, factual, and consistent with metadata"
   assert.match(html, /property="og:description" content="Events, activities and celebrations in Genova\. Tell us what you have in mind\."/);
   for (const detail of [
     "We work with Genova venues and hosts to shape evenings with character",
-    "thoughtful hospitality, distinctive music",
-    "coordinate entertainment",
-    "practical delivery and commercial terms together",
-    "a clear reason to choose your venue",
-    "Discuss ticketing, hospitality costs, entertainment, promotion",
+    "thoughtful hospitality, distinctive music, and an experience planned around the space.",
+    "YMG Events specializes in event management and execution",
+    "We can shape the format to your vision.",
+    "tailored to your target demographic",
+    "Discuss ticketing, hospitality costs, entertainment, promotion and each partner’s responsibilities.",
     "Dante David, a Genova-based event organizer",
-    "venue partnerships and private occasions",
+    "For venues, businesses, and private events.",
   ]) {
     assert.ok(html.includes(detail), `public copy retains the owner-directed offer: ${detail}`);
   }
@@ -490,19 +474,17 @@ test("public positioning is venue-facing, factual, and consistent with metadata"
 test("founder credibility uses first-party community experience and keeps the brands distinct", () => {
   const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
   const sources = readFileSync(new URL("../docs/FOUNDER-CREDIBILITY.md", import.meta.url), "utf8");
-  const styles = readFileSync(new URL("../dist/assets/legibility.css", import.meta.url), "utf8");
-  const profile = 'href="https://www.instagram.com/portoaperto_genova/" target="_blank" rel="noopener noreferrer"';
 
-  assert.match(html, /Through Porto Aperto, a separate local community/);
-  assert.match(html, /not a record of previous YMG bookings/);
-  assert.ok(html.includes(profile), "English page links to the owner-controlled community account safely");
-  assert.match(italian, /Con Porto Aperto, una community locale distinta da YMG Events/);
-  assert.match(italian, /non costituiscono un portfolio di eventi già realizzati da YMG/);
-  assert.ok(italian.includes(profile), "Italian page links to the same community account safely");
+  assert.match(html, /Through Porto Aperto \| Genova, a local international community for social and nightlife events/);
+  assert.match(html, /A lifetime of event coordination in the USA and Italy has created YMG Events\. We intend to serve you well\./);
+  assert.match(italian, /Con Porto Aperto \| Genova, una community locale internazionale dedicata alla socialità e alla vita notturna/);
+  for (const page of [html, italian]) {
+    assert.doesNotMatch(page, /instagram\.com|founder-reference/, "the owner removed the social profile link");
+    assert.match(page, /<div class="signature">Dante David <span[^>]*>Your Magic Genie<\/span><\/div>/);
+  }
   assert.match(sources, /delivered Halloween/);
   assert.match(sources, /genuine portrait supplied and approved/);
   assert.match(sources, /included under issue #12/);
-  assert.match(styles, /\.about p\.founder-reference a[\s\S]*?min-height: 44px/);
 });
 
 test("inquiry form collects reply email and submits inline through the Worker", () => {
@@ -530,7 +512,8 @@ test("inquiry controls expose bilingual required guidance and accessible states"
   assert.match(html, /id="form-required-note" class="form-required-note">Fields marked \* are required\./);
   assert.match(italian, /id="form-required-note" class="form-required-note">I campi contrassegnati con \* sono obbligatori\./);
   for (const page of [html, italian]) {
-    assert.match(page, /id="intent" name="intent" required aria-describedby="intent-help form-required-note"/);
+    assert.match(page, /id="intent" name="intent" required aria-describedby="form-required-note"/);
+    assert.doesNotMatch(page, /id="intent-help"/);
     assert.match(page, /id="name" name="name" autocomplete="name" maxlength="120" placeholder="[^"]+" aria-describedby="form-required-note"/);
     assert.match(page, /id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="[^"]+" aria-describedby="form-required-note"/);
     assert.match(page, /id="business" name="business"[^>]*aria-describedby="business-help form-required-note"/);
@@ -573,7 +556,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   for (const route of ["/it/", "/it/privacy.html"]) {
     assert.ok(sitemap.includes(`https://events.ymgconsultingservices.com${route}`), `${route} is in the sitemap`);
   }
-  assert.match(italian, /L’eleganza ha un/);
+  assert.match(italian, /Dove la buona compagnia<br><em>incontra il buon gusto\.<\/em>/);
   assert.match(italian, /aria-label="Apri il menu di navigazione"/);
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
   assert.match(italian, /alt="Scena illustrativa di un evento con balli, violino e cena su una terrazza sul porto di Genova\."/);
@@ -581,7 +564,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /placeholder="Come possiamo chiamarti\?"/);
   assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);
   assert.match(italian, /<button[^>]*data-concept="Rooftop evenings"/);
-  assert.match(italian, /href="\/it\/privacy.html"[^>]*>Scopri come trattiamo i tuoi dati/);
+  assert.match(italian, /<a href="\/it\/privacy\.html">Informativa privacy<\/a>/);
   assert.match(italianPrivacy, /Informativa privacy/);
   assert.match(italianPrivacy, /Navigazione e sicurezza/);
   assert.match(italianPrivacy, /Contatti e richieste di eventi/);
@@ -650,41 +633,25 @@ test("event format context is bilingual, explicit, clearable and sent through th
   assert.match(handler, /subjectName\(format\)/);
 });
 
-test("venue offer and commercial FAQ are clear, localized and carefully qualified", () => {
+test("partnership pitch is concise, localized and avoids unsupported commitments", () => {
   const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
-
+  assert.match(html, /<h2>Your venue\.<br><em class="single-line">Tailored to your night\.<\/em><\/h2>/);
+  assert.match(italian, /<h2>La tua location\.<br><em class="single-line">Su misura per la tua serata\.<\/em><\/h2>/);
+  assert.match(html, /Decide who you want to welcome and design an experience that will bring them through your doors\./);
+  assert.match(html, /Every venue requires a unique touch to set it apart\./);
+  assert.match(italian, /Ogni location ha bisogno di un tocco unico che la distingua\./);
   for (const page of [html, italian]) {
-    assert.match(page, /<section class="offer-faq" id="venue-offer"/);
-    assert.equal((page.match(/class="offer-item"/g) ?? []).length, 6, "the partnership offer covers six practical work areas");
-    assert.equal((page.match(/class="faq-item"/g) ?? []).length, 7, "the FAQ addresses common venue questions");
-    assert.match(page, /<details class="faq-item"><summary>/, "answers use native keyboard-accessible disclosure controls");
+    assert.doesNotMatch(page, /A setting that earns its place|Una location protagonista|before committing|Prima di impegnarci/);
+    assert.doesNotMatch(page, /guaranteed (?:sales|attendance)|vendite garantite/i);
   }
-
-  for (const phrase of ["Creative concept", "Entertainment coordination", "Ticket proposition", "Promotion plan", "Practical production"]) {
-    assert.ok(html.includes(phrase), `English offer covers ${phrase}`);
-  }
-  for (const phrase of ["Ideazione ed esperienza degli ospiti", "Coordinamento dell’intrattenimento", "Proposta di biglietteria", "Piano di promozione", "Produzione operativa"]) {
-    assert.ok(italian.includes(phrase), `Italian offer covers ${phrase}`);
-  }
-
-  assert.match(html, /There is no standard revenue split/);
-  assert.match(html, /Ticket sales and attendance are not guaranteed/);
-  assert.match(italian, /Non c’è una ripartizione standard dei ricavi/);
-  assert.match(italian, /Non si garantiscono vendite o affluenza/);
 });
 
-test("format cards are visibly ideas, while scheduled-event content remains absent until verified", () => {
+test("format cards present formats, while scheduled-event content remains absent until verified", () => {
   const model = readFileSync(new URL("../docs/editorial/CONTENT-MODEL.md", import.meta.url), "utf8");
   const template = readFileSync(new URL("../docs/editorial/RECORD-TEMPLATE.md", import.meta.url), "utf8");
-  const conceptIntros = [
-    [html, "These are not scheduled events or ticket listings."],
-    [italianHtml, "Non sono eventi già programmati né biglietti in vendita."],
-  ];
-
-  for (const [page, distinction] of conceptIntros) {
+  for (const page of [html, italianHtml]) {
     const section = page.match(/<section class="concepts" id="concepts"[\s\S]*?<\/section>/)?.[0];
     assert.ok(section, "the localized format section exists");
-    assert.ok(section.includes(distinction), "the format cards are identified as ideas, not scheduled listings");
     assert.doesNotMatch(section, /<time\b|countdown|buy tickets|acquista i biglietti/i);
     assert.doesNotMatch(page, /id="upcoming-events"|class="[^"]*upcoming-events[^"]*"/i);
   }
@@ -698,26 +665,26 @@ test("format cards are visibly ideas, while scheduled-event content remains abse
 });
 
 
-test("approved venue outreach one-pager is small, factual and available through a discreet localized link", () => {
-  const pdf = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.pdf", import.meta.url));
-  const source = readFileSync(new URL("../docs/collateral/venue-partnership-one-pager-it.md", import.meta.url), "utf8");
-  const served = readFileSync(new URL("../dist/downloads/ymg-events-collaborazioni-location-it.pdf", import.meta.url));
-  assert.ok(served.equals(pdf), "published copy is identical to the approved master");
-  const pdfText = pdf.toString("latin1");
-
-  assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")), "one-pager is a PDF");
-  assert.ok(pdf.length < 250_000, "PDF remains small for email and WhatsApp");
-  assert.ok(pdfText.includes("mailto:hello@ymgconsultingservices.com"), "email contact is embedded as a clickable link");
-  assert.ok(pdfText.includes("subject=Collaborazione%20con%20YMG%20Events"), "QR email subject is prefilled with the event collaboration");
-  for (const claim of ["ospitalità", "responsabilità", "vendite e affluenza non sono garantite", "Non esiste una ripartizione standard"]) {
-    assert.ok(source.includes(claim), `source copy preserves factual offer and commercial limits: ${claim}`);
-  }
-  for (const page of [html, italianHtml]) {
-    assert.match(page, /class="partnership-download" href="\/downloads\/ymg-events-collaborazioni-location-it\.pdf" download=/);
+test("venue outreach one-pagers are small, factual and linked in the visitor's language", () => {
+  const variants = [
+    { page: html, master: "venue-partnership-one-pager-en", served: "ymg-events-venue-partnerships-en.pdf", subject: "subject=Venue%20partnership%20with%20YMG%20Events", claims: ["hospitality", "responsibilities", "sales and attendance are not guaranteed", "There is no standard revenue split"], hreflang: "en" },
+    { page: italianHtml, master: "venue-partnership-one-pager-it", served: "ymg-events-collaborazioni-location-it.pdf", subject: "subject=Collaborazione%20con%20YMG%20Events", claims: ["ospitalità", "responsabilità", "vendite e affluenza non sono garantite", "Non esiste una ripartizione standard"], hreflang: "it" },
+  ];
+  for (const { page, master, served, subject, claims, hreflang } of variants) {
+    const pdf = readFileSync(new URL(`../docs/collateral/${master}.pdf`, import.meta.url));
+    const source = readFileSync(new URL(`../docs/collateral/${master}.md`, import.meta.url), "utf8");
+    const published = readFileSync(new URL(`../dist/downloads/${served}`, import.meta.url));
+    assert.ok(published.equals(pdf), `${served} is identical to the approved master`);
+    const pdfText = pdf.toString("latin1");
+    assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")), "one-pager is a PDF");
+    assert.ok(pdf.length < 250_000, "PDF remains small for email and WhatsApp");
+    assert.ok(pdfText.includes("mailto:hello@ymgconsultingservices.com"), "email contact is embedded as a clickable link");
+    assert.ok(pdfText.includes(subject), "QR email subject is prefilled with the event collaboration");
+    for (const claim of claims) assert.ok(source.includes(claim), `source copy preserves factual offer and commercial limits: ${claim}`);
+    assert.match(page, new RegExp(`<div class="partnership-actions"><a class="btn partnership-download" href="/downloads/${served.replace(/\./g, "\\.")}" download="[^"]+" type="application/pdf" hreflang="${hreflang}">`), "the brochure sits beside the partnership CTA in the page language");
   }
 });
 
-// Owner language requirement applies to every public route and feedback dictionary.
 test("public English consistently uses American inquiry spelling", () => {
   for (const file of ["index.html", "it/index.html", "privacy.html", "it/privacy.html", "404.html", "it/404.html", "assets/i18n.js", "assets/site-interactions.js", "assets/inquiry-client.js"]) {
     assert.doesNotMatch(readFileSync(new URL(`../dist/${file}`, import.meta.url), "utf8"), /enquir/i, file);

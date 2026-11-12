@@ -158,7 +158,6 @@ try {
       wordmarkRange.setStart(logo.firstChild, 0);
       wordmarkRange.setEnd(finalWordmarkNode, finalWordmarkNode.textContent.length);
       const wordmark = wordmarkRange.getBoundingClientRect();
-      const faqSummary = document.querySelector(".faq-item summary");
       return {
         viewportWidth: window.innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -166,17 +165,18 @@ try {
         actionsLeft: document.querySelector(".header-actions").getBoundingClientRect().left,
         subtitleTop: subtitle.getBoundingClientRect().top,
         wordmarkBottom: wordmark.bottom,
-        offerCards: document.querySelectorAll(".offer-item").length,
-        faqQuestions: document.querySelectorAll(".faq-item").length,
-        faqSummaryHeight: faqSummary.getBoundingClientRect().height,
+        removedSections: document.querySelectorAll(".process, .offer-faq, .faq-item, .offer-item").length,
+        partnershipTitleLines: (() => {
+          const line = document.querySelector(".partnerships h2 em");
+          return Math.round(line.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(line).lineHeight));
+        })(),
       };
     });
     assert.ok(metrics.documentWidth <= metrics.viewportWidth, `${width}px has no horizontal document overflow: ${JSON.stringify(metrics)}`);
     assert.ok(metrics.logoRight <= metrics.actionsLeft + 0.5, `${width}px logo and inquiry controls do not collide: ${JSON.stringify(metrics)}`);
     assert.ok(metrics.subtitleTop >= metrics.wordmarkBottom - 1, `${width}px brand subtitle remains legible below the wordmark: ${JSON.stringify(metrics)}`);
-    assert.equal(metrics.offerCards, 6, `${width}px shows the full venue offer`);
-    assert.equal(metrics.faqQuestions, 7, `${width}px shows all venue FAQs`);
-    assert.ok(metrics.faqSummaryHeight >= 44, `${width}px FAQ controls remain easy to tap: ${JSON.stringify(metrics)}`);
+    assert.equal(metrics.removedSections, 0, `${width}px no longer repeats the process, offer grid or FAQ`);
+    if (width > 400) assert.equal(metrics.partnershipTitleLines, 1, `${width}px keeps “Tailored to your night.” on one line: ${JSON.stringify(metrics)}`);
 
     if (width === 1280 || width === 1440) {
       const desktopGutters = await page.evaluate(() => {
@@ -208,20 +208,28 @@ try {
     assert.ok(await portrait.evaluate(image => image.naturalWidth > 0 && image.getBoundingClientRect().width <= innerWidth), `${width}px authentic founder portrait loads without overflow`);
 
     const download = page.locator(".partnership-download");
-    assert.equal(await download.getAttribute("hreflang"), "it");
-    assert.ok(await download.evaluate(link => link.getBoundingClientRect().height >= 44), `${width}px PDF link has a comfortable target`);
+    assert.equal(await download.getAttribute("hreflang"), "en");
+    assert.equal(await download.getAttribute("href"), "/downloads/ymg-events-venue-partnerships-en.pdf");
+    const downloadLayout = await page.evaluate(() => {
+      const pdf = document.querySelector(".partnership-download").getBoundingClientRect();
+      const cta = document.querySelector('.partnership-actions [data-inquiry-intent="venue_partnership"]').getBoundingClientRect();
+      return { pdfHeight: pdf.height, sameRow: Math.abs(pdf.top - cta.top) < 2, pdfFirst: pdf.right <= cta.left + 0.5, stacked: pdf.bottom <= cta.top + 0.5 };
+    });
+    assert.ok(downloadLayout.pdfHeight >= 44, `${width}px PDF link has a comfortable target`);
+    assert.ok((downloadLayout.sameRow && downloadLayout.pdfFirst) || downloadLayout.stacked, `${width}px places the PDF before the partnership CTA: ${JSON.stringify(downloadLayout)}`);
 
     const typeScale = await page.evaluate(() => {
       const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
       return [
         ["body copy", size("body"), 15],
-        ["supporting copy", size(".intro p:not(.lead)"), 14],
+        ["supporting copy", size(".intro p"), 14],
         ["concept description", size(".concept p"), 14],
         ["concept number", size(".concept small"), 11],
         ["form label", size("label"), 13],
         ["eyebrow", size(".eyebrow"), 11],
         ["brand subtitle", size(".logo small"), 10],
         ["footer copy", size("footer p"), 12],
+        ["bottom line copy", size(".site-note p"), 12],
       ];
     });
     for (const [name, actual, minimum] of typeScale) {
@@ -300,13 +308,13 @@ try {
     assert.equal(carousel.slides.length, 6, `${width}px exposes all six slides in the carousel`);
     assert.equal(carousel.previousDisabled, "true", `${width}px identifies the starting position: ${JSON.stringify({ scrollLeft: carousel.scrollLeft, clientWidth: carousel.clientWidth, scrollWidth: carousel.scrollWidth, previousDisabled: carousel.previousDisabled })}`);
     assert.equal(carousel.nextDisabled, "false", `${width}px identifies that more slides are available`);
-    const expectedTitles = ["The Rooftop Social", "Strings After Dark", "The Private Occasion", "The Supper Club", "Jazz & Cocktails", "The Corporate Social"];
+    const expectedTitles = ["The Rooftop Social", "Live at Night", "A Private Occasion", "The Supper Club", "The Tasting Table", "The Corporate Social"];
     const expectedArtAlts = [
       "Stylized illustration of a candlelit rooftop table beside a coastal skyline at dusk.",
       "Stylized illustration of a violin under warm stage lights with musical notes nearby.",
       "Stylized illustration of a celebration table with flowers, cake and candles.",
       "Stylized illustration of a plated meal on a dining table with candles and foliage.",
-      "Stylized illustration of a golden saxophone beside a cocktail on a dark stage.",
+      "Stylized illustration of a wine bottle and two glasses beside a tasting board of small plates and grapes.",
       "Stylized illustration of a modern city-view lounge with a high table and glasses.",
     ];
     for (const slide of carousel.slides) {
@@ -316,7 +324,7 @@ try {
       assert.ok(slide.badge.startsWith(`${number} /`), `${width}px keeps slide ${number}'s number with its category`);
       assert.ok(slide.badgeBounds.bottom <= slide.titleBounds.top + 1, `${width}px slide ${number}'s number does not overlap its title`);
       assert.equal(slide.image.alt, expectedArtAlts[slide.number - 1], `${width}px slide ${number} exposes its format-specific illustration description`);
-      assert.equal(slide.image.src, `/assets/event-art/${["rooftop-social.svg", "strings-after-dark.svg", "private-occasion.svg", "supper-club.svg", "jazz-cocktails.svg", "corporate-social.svg"][slide.number - 1]}`, `${width}px slide ${number} uses a local art asset`);
+      assert.equal(slide.image.src, `/assets/event-art/${["rooftop-social.svg", "strings-after-dark.svg", "private-occasion.svg", "supper-club.svg", "wine-pairing.svg", "corporate-social.svg"][slide.number - 1]}`, `${width}px slide ${number} uses a local art asset`);
       assert.equal(slide.image.objectFit, "cover", `${width}px slide ${number} crops consistently without distortion`);
       assert.ok(Math.abs(slide.art.width / slide.art.height - 1.25) < 0.01, `${width}px slide ${number} keeps the shared 5:4 art frame`);
       assert.equal(slide.artworkText, "", `${width}px slide ${number} avoids duplicated text in the illustration`);
@@ -385,9 +393,8 @@ try {
       });
       const readings = [
         ["main copy", body.color, body.backgroundColor],
-        ["muted copy on paper", style(".intro p:not(.lead)").color, body.backgroundColor],
+        ["muted copy on paper", style(".intro p").color, body.backgroundColor],
         ["muted copy on warm ivory", style(".about p").color, style(".about").backgroundColor],
-        ["muted copy on inquiry surface", style(".inquiry .description").color, inquiry.backgroundColor],
         ["conditional inquiry guidance", style(".field-help").color, inquiry.backgroundColor],
         ["red section accent", style(".intro h2 em").color, body.backgroundColor],
         ["red section accent on warm ivory", style(".about h2 em").color, style(".about").backgroundColor],
@@ -396,6 +403,7 @@ try {
         ["hero heading accent", style(".hero h1 em").color, hero.backgroundColor],
         ["partnership supporting copy", style(".partnerships p").color, partnerships.backgroundColor],
         ["partnership heading accent", style(".partnerships h2 em").color, partnerships.backgroundColor],
+        ["partnership PDF link", style(".partnership-download").color, partnerships.backgroundColor],
         ["header navigation", style("header nav a").color, style("header").backgroundColor],
         ["header inquiry link", style(".header-cta").color, style("header").backgroundColor],
         ["inquiry field labels", style("label").color, inquiry.backgroundColor],
@@ -411,7 +419,7 @@ try {
         ".menu-toggle", ".header-cta", "header .logo", ".primary-nav > a:not(.btn)",
         ".deck-arrow", ".concept button", ".partnerships .btn",
         "#brief input:not([type=hidden]):not(#bot-field)", "#brief select", "#brief textarea",
-        "#submit-inquiry", ".caption a", "footer a", ".site-note a", ".inquiry .small a",
+        "#submit-inquiry", ".partnership-download", "footer a", ".site-note a",
       ];
       const targets = selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(element => {
         const rect = element.getBoundingClientRect();
@@ -447,10 +455,11 @@ try {
       assert.ok(await toggle.isVisible(), `${width}px exposes the menu control`);
       const toggleBox = await toggle.boundingBox();
       assert.ok(toggleBox.width >= 44 && toggleBox.height >= 44, `${width}px menu control meets the 44px touch target: ${JSON.stringify(toggleBox)}`);
-      assert.ok(await page.getByRole("link", { name: "Let’s make a plan" }).isVisible(), `${width}px keeps the inquiry CTA visible`);
+      assert.ok(await page.locator(".header-cta").isVisible(), `${width}px keeps the inquiry CTA visible`);
       assert.equal(await nav.isVisible(), false, `${width}px starts with the navigation disclosure closed`);
     } else {
       assert.ok(await nav.isVisible(), `${width}px keeps the desktop navigation visible`);
+      assert.ok(await page.getByRole("link", { name: "Inquire" }).isVisible(), `${width}px shows the short inquiry CTA`);
       assert.equal(await toggle.isVisible(), false, `${width}px hides the mobile menu control`);
       for (const name of ["Our approach", "Event concepts", "For your business"]) {
         assert.ok(await page.getByRole("link", { name }).isVisible(), `${width}px shows ${name}`);
@@ -496,7 +505,7 @@ try {
     { format: "Live music & DJs", intent: "venue_partnership", required: true },
     { format: "Private celebrations", intent: "private_celebration", required: false },
     { format: "Supper Club", intent: "venue_partnership", required: true },
-    { format: "Jazz & Cocktails", intent: "venue_partnership", required: true },
+    { format: "Wine pairing", intent: "venue_partnership", required: true },
     { format: "Corporate Social", intent: "corporate_event", required: true },
   ];
   const conceptCards = mobile.locator("#concept-deck .concept");
@@ -540,34 +549,18 @@ try {
     assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `clearing slide ${index + 1} preserves the inquiry path`);
     assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), "", `clearing slide ${index + 1} sends an empty format for path-aware generic fallback`);
   }
-  await mobile.locator("#format").selectOption("Jazz & Cocktails");
+  await mobile.locator("#format").selectOption("Wine pairing");
   assert.equal(await mobile.locator("#format-context").isVisible(), true, "a manually changed event format remains explicit");
-  assert.match(await mobile.locator("#format-context-status").textContent(), /Jazz & Cocktails/);
+  assert.match(await mobile.locator("#format-context-status").textContent(), /Wine pairing/);
   await mobile.locator("#clear-format").click();
   assert.equal(await mobile.locator("#format").inputValue(), "", "a manually selected event format can also be cleared");
   await mobile.getByRole("link", { name: "Explore a partnership" }).click();
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the venue partnership CTA preselects the venue pathway");
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue operators are asked for their venue name");
-  const contactInvitation = mobile.getByRole("link", { name: "Contact us to discuss availability and a tailored proposal." });
-  assert.equal(await contactInvitation.getAttribute("href"), "#inquire", "the concept invitation leads directly to the inquiry form");
-  await contactInvitation.scrollIntoViewIfNeeded();
-  await contactInvitation.click();
-  assert.equal(new URL(mobile.url()).hash, "#inquire", "the contact invitation navigates to the inquiry form");
-  const portoApertoReference = mobile.getByRole("link", { name: "See Porto Aperto | Genova on Instagram (opens in a new tab)" });
-  await portoApertoReference.scrollIntoViewIfNeeded();
-  assert.equal(await portoApertoReference.getAttribute("target"), "_blank", "the community reference opens separately from the Events site");
-  assert.equal(await portoApertoReference.getAttribute("rel"), "noopener noreferrer", "the external community link is isolated safely");
-  assert.ok((await portoApertoReference.boundingBox()).height >= 44, "the founder's community reference has a comfortable mobile target");
-  await mobile.locator("#venue-offer").scrollIntoViewIfNeeded();
-  assert.equal(await mobile.locator(".offer-item").count(), 6, "the venue offer is available on mobile");
-  const firstFaq = mobile.locator(".faq-item").first();
-  const firstFaqSummary = firstFaq.locator("summary");
-  await firstFaqSummary.focus();
-  await mobile.keyboard.press("Space");
-  assert.equal(await firstFaq.evaluate(details => details.open), true, "venue FAQ disclosures open from the keyboard");
-  await mobile.screenshot({ path: resolve(screenshotRoot, "venue-offer-faq-open-390px.png"), fullPage: true });
-  await mobile.keyboard.press("Space");
-  assert.equal(await firstFaq.evaluate(details => details.open), false, "venue FAQ disclosures close from the keyboard");
+  assert.equal(await mobile.getByRole("link", { name: "Contact us to discuss availability and a tailored proposal." }).count(), 0, "the below-carousel contact line is removed");
+  assert.equal(await mobile.locator('a[href*="instagram.com"]').count(), 0, "the founder section no longer links to Instagram");
+  await mobile.locator(".about").scrollIntoViewIfNeeded();
+  await mobile.screenshot({ path: resolve(screenshotRoot, "founder-390px.png"), fullPage: true });
   await menu.click();
   const englishLanguageSwitch = mobile.getByRole("link", { name: "Read this site in Italian" });
   assert.ok(await englishLanguageSwitch.isVisible(), "the Italian language switch is available in the mobile navigation");
@@ -582,13 +575,13 @@ try {
   });
   assert.ok(italianFontStatuses.length >= 2 && italianFontStatuses.every(status => status === "loaded"), "the Italian page loads local fonts for accented text");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
-  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "L’eleganza ha unlato notturno.");
+  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Dove la buona compagniaincontra il buon gusto.");
   const expectedItalianArtAlts = [
     "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto.",
     "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo.",
     "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele.",
     "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame.",
-    "Illustrazione stilizzata di un sassofono dorato accanto a un cocktail su uno sfondo scuro.",
+    "Illustrazione stilizzata di una bottiglia e due calici di vino accanto a un tagliere con piccoli assaggi e uva.",
     "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri.",
   ];
   assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific illustration descriptions");
@@ -639,18 +632,11 @@ try {
   assert.equal(await mobile.locator("#format").inputValue(), "", "Italian users can remove a selected format");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "clearing an Italian format preserves the venue inquiry path");
   assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
-  const ItalianPortoApertoReference = mobile.getByRole("link", { name: "Scopri Porto Aperto | Genova su Instagram (si apre in una nuova scheda)" });
-  await ItalianPortoApertoReference.scrollIntoViewIfNeeded();
-  assert.equal(await ItalianPortoApertoReference.getAttribute("target"), "_blank", "the Italian community reference opens separately from the Events site");
-  assert.ok((await ItalianPortoApertoReference.boundingBox()).height >= 44, "the Italian external link has a comfortable mobile target");
-  assert.equal(await mobile.locator(".offer-item").count(), 6, "the Italian page provides the same six partnership work areas");
-  assert.equal(await mobile.locator(".faq-item").count(), 7, "the Italian page answers all seven venue questions");
-  const italianFaq = mobile.locator(".faq-item").first();
-  assert.equal(await italianFaq.locator("summary").textContent(), "Come funziona il primo confronto?");
-  await italianFaq.locator("summary").focus();
-  await mobile.keyboard.press("Space");
-  assert.equal(await italianFaq.evaluate(details => details.open), true, "Italian FAQ disclosures open from the keyboard");
-  await mobile.keyboard.press("Space");
+  assert.equal(await mobile.locator('a[href*="instagram.com"]').count(), 0, "the Italian founder section no longer links to Instagram");
+  assert.equal(await mobile.locator(".offer-item, .faq-item, .process").count(), 0, "the Italian page drops the same repeated sections");
+  const italianDownload = mobile.locator(".partnership-download");
+  assert.equal(await italianDownload.getAttribute("href"), "/downloads/ymg-events-collaborazioni-location-it.pdf", "the Italian page offers the Italian PDF");
+  assert.ok((await italianDownload.boundingBox()).height >= 44, "the Italian PDF link has a comfortable mobile target");
   const ItalianMobileMetrics = await mobile.evaluate(() => ({
     width: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
@@ -680,7 +666,7 @@ try {
   assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible on desktop");
   await mobile.screenshot({ path: resolve(screenshotRoot, "italian-1440px.png"), fullPage: true });
   await mobile.setViewportSize({ width: 390, height: 844 });
-  const ItalianPrivacyLink = mobile.locator('footer .footer-links a[href="/it/privacy.html"]');
+  const ItalianPrivacyLink = mobile.locator('.site-note a[href="/it/privacy.html"]');
   await ItalianPrivacyLink.scrollIntoViewIfNeeded();
   await ItalianPrivacyLink.click();
   assert.equal(new URL(mobile.url()).pathname, "/it/privacy.html", "Italian privacy link preserves the selected language");

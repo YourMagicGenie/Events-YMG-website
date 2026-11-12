@@ -1,6 +1,6 @@
 # Events privacy data-flow and research record
 
-Updated 11 November 2026. The owner directs a self-managed, best-effort policy using current comparable businesses and authoritative sources. Professional sign-off is no longer an imposed release gate; technical/factual verification remains necessary.
+Updated 12 November 2026. The owner directs a self-managed, best-effort policy using current comparable businesses and authoritative sources. Professional sign-off is no longer an imposed release gate; technical/factual verification remains necessary.
 
 ## Release boundary
 
@@ -10,6 +10,8 @@ Production now serves the checked repository source through Workers Builds. The 
 ## Identity
 
 Frederic David, Genova, P.IVA 03044510992: visually verified from the VAT assignment certificate in the owner's Gmail. Public disclosure limited to those facts. No private certificate, home address or personal tax code is included. See BUSINESS-DISCLOSURE-REVIEW.md for the activity-code uncertainty.
+
+**12 November 2026 (issue #74 worksheet):** at the owner's direction the published notices name the controller as **Frederic Dante David**, operating under the **Your Magic Genie Group** brand. The VAT certificate inspected on 11 November shows "Frederic David"; confirm the owner's full legal name matches before relying on the longer form in contracts or registrations. The homepage footer no longer shows the operator's name; it carries the P.IVA in the bottom line beside the privacy link. The owner also removed the notices' local-assets paragraph, the email-fallback sentence and the "Scope and changes" section, and removed the short privacy disclosure next to the inquiry form. The full notice stays one click away from every homepage's bottom line.
 
 ## Source flow
 

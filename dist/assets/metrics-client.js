@@ -7,7 +7,7 @@ const ALLOWED_FORMATS = new Set([
   "Private celebrations",
   "A recurring nightlife series",
   "Supper Club",
-  "Jazz & Cocktails",
+  "Wine pairing",
   "Corporate Social",
 ]);
 
