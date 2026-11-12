@@ -356,7 +356,7 @@ try {
       assert.ok(Math.abs(slide.art.width / slide.art.height - 1.25) < 0.01, `${width}px slide ${number} keeps the shared 5:4 art frame`);
       assert.equal(slide.artworkText, "", `${width}px slide ${number} avoids duplicated text in the illustration`);
     }
-    assert.ok(await page.locator(".deck-hint").isVisible(), `${width}px tells visitors they can swipe or use the arrows`);
+    assert.equal(await page.locator(".deck-hint").isVisible(), width <= 850, `${width}px keeps swipe guidance on smaller screens and removes redundant desktop wording`);
 
     const audit = await page.evaluate(() => {
       const rgb = color => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
@@ -691,6 +691,13 @@ try {
   }));
   assert.ok(ItalianDesktopMetrics.documentWidth <= ItalianDesktopMetrics.width, `1440px Italian page has no horizontal overflow: ${JSON.stringify(ItalianDesktopMetrics)}`);
   assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible on desktop");
+  for (const imageSelector of [".hero-atmosphere img", ".founder-portrait"]) {
+    const loaded = await mobile.locator(imageSelector).evaluate(async image => {
+      await image.decode();
+      return image.naturalWidth > 0;
+    });
+    assert.equal(loaded, true, `Italian ${imageSelector} loads as a real image before screenshot`);
+  }
   await mobile.screenshot({ path: resolve(screenshotRoot, "italian-1440px.png"), fullPage: true });
   await mobile.setViewportSize({ width: 390, height: 844 });
   const ItalianPrivacyLink = mobile.locator('.site-note a[href="/it/privacy.html"]');
