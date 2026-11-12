@@ -8,7 +8,7 @@ const values = new URLSearchParams({
   intent: "venue_partnership",
   source: "events_website_form",
   business: "Terrace Genova",
-  format: "Jazz & Cocktails",
+  format: "Wine pairing",
   guests: "30–60",
   timing: "June evening",
   budget: "€2000",
@@ -30,7 +30,7 @@ test("inline client posts the complete brief and Turnstile token to the same-ori
   assert.equal(request[1].headers["Content-Type"], "application/x-www-form-urlencoded;charset=UTF-8");
   const body = new URLSearchParams(request[1].body);
   assert.equal(body.get("email"), "jane@example.org");
-  assert.equal(body.get("format"), "Jazz & Cocktails");
+  assert.equal(body.get("format"), "Wine pairing");
   assert.equal(body.get("idea"), "A sunset event with live music");
   assert.equal(body.get("cf-turnstile-response"), "verified-token");
 });

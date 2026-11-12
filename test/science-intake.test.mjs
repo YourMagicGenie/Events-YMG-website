@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handleEventsApi } from '../src/form-handler.js';
 const origin = 'https://events.ymgconsultingservices.com';
-const fields = { name: 'Jane Doe', email: 'jane@example.org', intent: 'venue_partnership', source: 'events_website_form', business: 'Test Venue', format: 'Jazz & Cocktails', guests: '30–60', timing: 'Next June', budget: '2000 EUR', idea: 'Outdoor team event', locale: 'it', 'cf-turnstile-response': 'test-token' };
+const fields = { name: 'Jane Doe', email: 'jane@example.org', intent: 'venue_partnership', source: 'events_website_form', business: 'Test Venue', format: 'Wine pairing', guests: '30–60', timing: 'Next June', budget: '2000 EUR', idea: 'Outdoor team event', locale: 'it', 'cf-turnstile-response': 'test-token' };
 const request = (values = fields, headers = {}) => new Request(origin + '/api/events/inquiry', { method: 'POST', headers: { origin, 'content-type': 'application/x-www-form-urlencoded', 'cf-connecting-ip': '198.51.100.24', ...headers }, body: new URLSearchParams(values) });
 const envFor = fetch => ({ SCIENCE_INTAKE: { fetch }, EVENTS_SUBMISSION_LIMITER: { limit: async () => ({ success: true }) } });
 test('shared Science configuration returns only public sitekey and the existing assessment action', async () => {

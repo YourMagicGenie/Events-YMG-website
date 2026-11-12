@@ -11,7 +11,7 @@ const FORMAT_CHOICES = new Set([
   "Private celebrations",
   "A recurring nightlife series",
   "Supper Club",
-  "Jazz & Cocktails",
+  "Wine pairing",
   "Corporate Social",
 ]);
 const GUEST_CHOICES = new Set(["Still exploring", "Under 30", "30–60", "60–100", "100+"]);

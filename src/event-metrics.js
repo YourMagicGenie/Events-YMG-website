@@ -17,7 +17,7 @@ const FORMATS = new Set([
   "Private celebrations",
   "A recurring nightlife series",
   "Supper Club",
-  "Jazz & Cocktails",
+  "Wine pairing",
   "Corporate Social",
 ]);
 const FAILURE_CATEGORIES = new Set([

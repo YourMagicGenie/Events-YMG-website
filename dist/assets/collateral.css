@@ -1,21 +1,33 @@
-.partnership-download {
-  display: inline-flex;
+.partnership-actions {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 12px;
-  min-height: 44px;
-  margin-top: 20px;
-  padding: 9px 0;
-  border-bottom: 1px solid #b6a98f;
-  color: #172a28;
-  font-size: 14px;
+  gap: 12px 14px;
+  margin-top: 30px;
+}
+.partnerships .partnership-actions .btn { margin-top: 0; }
+.partnerships .partnership-download {
+  gap: 14px;
+  border-color: #9c8b69;
+  background: transparent;
+  color: #e9d8bb;
   text-decoration: none;
 }
-.partnership-download small {
-  flex-basis: 100%;
-  color: #575c54;
-  font-size: 11px;
-  letter-spacing: .04em;
+.partnerships .partnership-download:hover { background: #d5b47e; border-color: #d5b47e; color: #111e1e; }
+.partnerships .partnership-download:focus-visible { outline: 3px solid #f0d28f; outline-offset: 4px; }
+.partnerships h2 em.single-line { white-space: nowrap; }
+@media (max-width: 400px) {
+  .partnerships h2 em.single-line { white-space: normal; }
 }
-.partnership-download:hover { border-bottom-color: #172a28; }
-.partnership-download:focus-visible { outline: 3px solid #815342; outline-offset: 5px; }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
