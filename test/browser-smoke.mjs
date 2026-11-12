@@ -202,6 +202,33 @@ try {
         `${width}px neighboring sections keep intentional, bounded gutters: ${JSON.stringify(desktopGutters)}`);
     }
 
+    const layoutRhythm = await page.evaluate(() => {
+      const inquiry = document.querySelector(".inquiry");
+      const title = inquiry.querySelector("h2").getBoundingClientRect();
+      const form = document.querySelector("#brief").getBoundingClientRect();
+      const layout = getComputedStyle(inquiry);
+      return {
+        formLeft: form.left,
+        formWidth: form.width,
+        sectionInnerWidth: inquiry.clientWidth - parseFloat(layout.paddingLeft) - parseFloat(layout.paddingRight),
+        titleLeft: title.left,
+        columns: getComputedStyle(document.querySelector(".form-grid")).gridTemplateColumns.split(" ").length,
+        topSpace: parseFloat(layout.paddingTop),
+        bottomSpace: parseFloat(layout.paddingBottom),
+      };
+    });
+    if (width > 850) {
+      assert.ok(Math.abs(layoutRhythm.formLeft - layoutRhythm.titleLeft) <= 1,
+        `${width}px inquiry content starts at the same horizontal gutter: ${JSON.stringify(layoutRhythm)}`);
+      assert.ok(layoutRhythm.formWidth >= layoutRhythm.sectionInnerWidth - 3,
+        `${width}px form uses the former empty desktop column: ${JSON.stringify(layoutRhythm)}`);
+      assert.equal(layoutRhythm.columns, width > 1250 ? 4 : 2,
+        `${width}px field grid balances desktop space: ${JSON.stringify(layoutRhythm)}`);
+      assert.ok(Math.abs(layoutRhythm.topSpace - layoutRhythm.bottomSpace) <= 2,
+        `${width}px inquiry section has balanced vertical padding: ${JSON.stringify(layoutRhythm)}`);
+    }
+    if (width <= 540) assert.equal(layoutRhythm.columns, 1, `${width}px retains single-column form controls`);
+
     const portrait = page.locator(".founder-portrait");
     await portrait.scrollIntoViewIfNeeded();
     await portrait.evaluate(image => image.decode());
@@ -329,7 +356,7 @@ try {
       assert.ok(Math.abs(slide.art.width / slide.art.height - 1.25) < 0.01, `${width}px slide ${number} keeps the shared 5:4 art frame`);
       assert.equal(slide.artworkText, "", `${width}px slide ${number} avoids duplicated text in the illustration`);
     }
-    assert.ok(await page.locator(".deck-hint").isVisible(), `${width}px tells visitors they can swipe or use the arrows`);
+    assert.equal(await page.locator(".deck-hint").isVisible(), width <= 850, `${width}px keeps swipe guidance on smaller screens and removes redundant desktop wording`);
 
     const audit = await page.evaluate(() => {
       const rgb = color => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
@@ -575,7 +602,7 @@ try {
   });
   assert.ok(italianFontStatuses.length >= 2 && italianFontStatuses.every(status => status === "loaded"), "the Italian page loads local fonts for accented text");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
-  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Le serate migliorinon nascono quasi mai per caso.");
+  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Le grandi serateraramente nascono per caso.");
   const expectedItalianArtAlts = [
     "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto.",
     "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo.",
@@ -664,6 +691,13 @@ try {
   }));
   assert.ok(ItalianDesktopMetrics.documentWidth <= ItalianDesktopMetrics.width, `1440px Italian page has no horizontal overflow: ${JSON.stringify(ItalianDesktopMetrics)}`);
   assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible on desktop");
+  for (const imageSelector of [".hero-atmosphere img", ".founder-portrait"]) {
+    const loaded = await mobile.locator(imageSelector).evaluate(async image => {
+      await image.decode();
+      return image.naturalWidth > 0;
+    });
+    assert.equal(loaded, true, `Italian ${imageSelector} loads as a real image before screenshot`);
+  }
   await mobile.screenshot({ path: resolve(screenshotRoot, "italian-1440px.png"), fullPage: true });
   await mobile.setViewportSize({ width: 390, height: 844 });
   const ItalianPrivacyLink = mobile.locator('.site-note a[href="/it/privacy.html"]');

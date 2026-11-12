@@ -108,6 +108,21 @@ test("local assets and public crawl files are present", () => {
 
 });
 
+test("owner-approved layout rhythm loads on both languages without dropping inquiry fields", () => {
+  const en = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+  const it = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../dist/assets/layout-rhythm.css", import.meta.url), "utf8");
+  for (const page of [en, it]) {
+    assert.ok(page.includes('href="/assets/layout-rhythm.css"'), "both locales load compact layout CSS");
+    for (const id of ["intent", "name", "email", "business", "format", "guests", "timing", "budget", "idea", "turnstile-widget", "submit-inquiry"]) {
+      assert.ok(page.includes(`id="${id}"`), `${id} is preserved in both locale forms`);
+    }
+  }
+  assert.ok(css.includes(".inquiry {"));
+  assert.ok(css.includes("#brief .form-grid"));
+  assert.ok(css.includes("@media (max-width: 540px)"));
+});
+
 test("hero photos use responsive compressed sources and explicit priority", () => {
   for (const page of [html, italianHtml]) {
     const start = page.indexOf('<div class="hero-atmosphere">');
@@ -557,7 +572,7 @@ test("English and Italian pages publish reciprocal language signals and translat
     assert.ok(sitemap.includes(`https://events.ymgconsultingservices.com${route}`), `${route} is in the sitemap`);
   }
   assert.match(html, /Great nights<br><em>rarely happen by accident\.<\/em>/);
-  assert.match(italian, /Le serate migliori<br><em>non nascono quasi mai per caso\.<\/em>/);
+  assert.match(italian, /Le grandi serate<br><em>raramente nascono per caso\.<\/em>/);
   assert.match(italian, /aria-label="Apri il menu di navigazione"/);
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
   assert.match(italian, /alt="Scena illustrativa di un evento con balli, violino e cena su una terrazza sul porto di Genova\."/);
