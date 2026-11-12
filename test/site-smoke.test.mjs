@@ -556,7 +556,8 @@ test("English and Italian pages publish reciprocal language signals and translat
   for (const route of ["/it/", "/it/privacy.html"]) {
     assert.ok(sitemap.includes(`https://events.ymgconsultingservices.com${route}`), `${route} is in the sitemap`);
   }
-  assert.match(italian, /Dove la buona compagnia<br><em>incontra il buon gusto\.<\/em>/);
+  assert.match(html, /Great nights<br><em>rarely happen by accident\.<\/em>/);
+  assert.match(italian, /Le serate migliori<br><em>non nascono quasi mai per caso\.<\/em>/);
   assert.match(italian, /aria-label="Apri il menu di navigazione"/);
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
   assert.match(italian, /alt="Scena illustrativa di un evento con balli, violino e cena su una terrazza sul porto di Genova\."/);

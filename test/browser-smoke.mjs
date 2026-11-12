@@ -575,7 +575,7 @@ try {
   });
   assert.ok(italianFontStatuses.length >= 2 && italianFontStatuses.every(status => status === "loaded"), "the Italian page loads local fonts for accented text");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
-  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Dove la buona compagniaincontra il buon gusto.");
+  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Le serate migliorinon nascono quasi mai per caso.");
   const expectedItalianArtAlts = [
     "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto.",
     "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo.",
