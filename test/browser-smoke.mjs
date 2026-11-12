@@ -202,6 +202,33 @@ try {
         `${width}px neighboring sections keep intentional, bounded gutters: ${JSON.stringify(desktopGutters)}`);
     }
 
+    const layoutRhythm = await page.evaluate(() => {
+      const inquiry = document.querySelector(".inquiry");
+      const title = inquiry.querySelector("h2").getBoundingClientRect();
+      const form = document.querySelector("#brief").getBoundingClientRect();
+      const layout = getComputedStyle(inquiry);
+      return {
+        formLeft: form.left,
+        formWidth: form.width,
+        sectionInnerWidth: inquiry.clientWidth - parseFloat(layout.paddingLeft) - parseFloat(layout.paddingRight),
+        titleLeft: title.left,
+        columns: getComputedStyle(document.querySelector(".form-grid")).gridTemplateColumns.split(" ").length,
+        topSpace: parseFloat(layout.paddingTop),
+        bottomSpace: parseFloat(layout.paddingBottom),
+      };
+    });
+    if (width > 850) {
+      assert.ok(Math.abs(layoutRhythm.formLeft - layoutRhythm.titleLeft) <= 1,
+        `${width}px inquiry content starts at the same horizontal gutter: ${JSON.stringify(layoutRhythm)}`);
+      assert.ok(layoutRhythm.formWidth >= layoutRhythm.sectionInnerWidth - 3,
+        `${width}px form uses the former empty desktop column: ${JSON.stringify(layoutRhythm)}`);
+      assert.equal(layoutRhythm.columns, width > 1250 ? 4 : 2,
+        `${width}px field grid balances desktop space: ${JSON.stringify(layoutRhythm)}`);
+      assert.ok(Math.abs(layoutRhythm.topSpace - layoutRhythm.bottomSpace) <= 2,
+        `${width}px inquiry section has balanced vertical padding: ${JSON.stringify(layoutRhythm)}`);
+    }
+    if (width <= 540) assert.equal(layoutRhythm.columns, 1, `${width}px retains single-column form controls`);
+
     const portrait = page.locator(".founder-portrait");
     await portrait.scrollIntoViewIfNeeded();
     await portrait.evaluate(image => image.decode());
@@ -575,7 +602,7 @@ try {
   });
   assert.ok(italianFontStatuses.length >= 2 && italianFontStatuses.every(status => status === "loaded"), "the Italian page loads local fonts for accented text");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
-  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Le serate migliorinon nascono quasi mai per caso.");
+  assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Le grandi serateraramente nascono per caso.");
   const expectedItalianArtAlts = [
     "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto.",
     "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo.",
