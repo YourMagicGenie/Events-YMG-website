@@ -108,6 +108,9 @@ button:focus-visible, select:focus-visible, textarea:focus-visible {
 .panel-title strong { display: block; font: 600 17px/1.25 Georgia, serif; color: #f5dfaa; }
 .panel-title small { display: block; margin-top: 4px; color: #d4ccbb; font-size: 11px; }
 .panel-title button { background: transparent; border: 1px solid #977f56; border-radius: 4px; color: #f6e2c4; min-width: 32px; min-height: 32px; }
+.panel-title-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.panel.is-collapsed { width: min(285px, calc(100vw - 46px)); max-height: none; overflow: hidden; }
+.panel.is-collapsed > :not(.panel-title) { display: none; }
 .switches { display: flex; flex-wrap: wrap; gap: 6px; }
 button {
   border: 1px solid #927952; border-radius: 5px;
