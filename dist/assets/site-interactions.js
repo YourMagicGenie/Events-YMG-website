@@ -98,7 +98,7 @@ const pathCopy = messages.turnstileLanguage === "it" ? {
 } : {
   businessInitial: "Choose an inquiry type first",
   businessPlaceholder: "Choose an inquiry type to tailor this field",
-  businessHelpInitial: "Choose the path that fits best; we’ll ask only for useful details.",
+  businessHelpInitial: "",
   venueLabel: "Venue or hospitality business *",
   venuePlaceholder: "Name of your venue or hospitality business",
   venueHelp: "Tell us which venue you would like to work with.",
@@ -217,6 +217,11 @@ document.querySelectorAll("[data-inquiry-intent]").forEach(link => {
 const form = document.getElementById("brief");
 if (form) {
   const feedback = document.getElementById("form-feedback");
+  const verificationFrame = document.getElementById("turnstile-widget");
+  const showVerification = needsVerification => {
+    verificationFrame.dataset.verified = String(!needsVerification);
+  };
+  showVerification(true);
   const submit = document.getElementById("submit-inquiry");
   const submitLabel = submit.querySelector(".submit-label");
   let challengeReady = false;
@@ -300,17 +305,20 @@ if (form) {
         callback: token => {
           turnstileToken = token;
           challengeReady = true;
+          showVerification(false);
           submit.disabled = false;
           if (feedback.dataset.state !== "success") setFeedback(messages.turnstileReady);
         },
         "expired-callback": () => {
           turnstileToken = "";
+          showVerification(true);
           challengeReady = false;
           submit.disabled = true;
           setFeedback(messages.turnstileExpired, "error");
         },
         "error-callback": () => {
           turnstileToken = "";
+          showVerification(true);
           challengeReady = false;
           submit.disabled = true;
           setFeedback(messages.turnstileError, "error");
@@ -347,6 +355,7 @@ if (form) {
       submitLabel.textContent = messages.submit;
       turnstileToken = "";
       challengeReady = false;
+      showVerification(true);
       submit.disabled = true;
       if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
     }
