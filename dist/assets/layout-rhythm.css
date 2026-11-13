@@ -153,6 +153,10 @@
     /* Photo Y90, H650 -> H610; hero section remains 650px tall. */
     bottom: 40px;
   }
+  html[lang="en"] .hero .photo-note {
+    /* 02G was not in this round: compensate for shortened parent photo. */
+    bottom: 39px;
+  }
   html[lang="en"] .intro {
     /* Top stays Y794; content moves up ~20px, height drops 39px. */
     padding-top: calc(var(--events-section-space) - 20px);
@@ -162,6 +166,8 @@
     /* Section starts at Approach's new end Y994; content also moves up 20px. */
     padding-top: 24px;
     padding-bottom: 32px;
+    /* Text/card height variations are ~10px shorter than the owner baseline. */
+    min-height: 782px;
   }
   html[lang="en"] .concepts .deck-toolbar {
     /*
