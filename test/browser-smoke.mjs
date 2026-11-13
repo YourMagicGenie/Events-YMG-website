@@ -499,6 +499,56 @@ try {
     await context.close();
   }
 
+  // The visual grid must be completely opt-in: normal pages never mount it.
+  const measurements = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await measurements.goto(baseUrl, { waitUntil: "load" });
+  assert.equal(await measurements.locator("#ymg-layout-inspector").count(), 0,
+    "the normal English homepage has no measurement overlay");
+  await measurements.goto(baseUrl + "/?layout=1", { waitUntil: "load" });
+  const overlay = measurements.locator("#ymg-layout-inspector");
+  await overlay.waitFor();
+  assert.equal(await measurements.locator('[data-ymg-layout-id="02B"]').count(), 1,
+    "the main hero headline has a stable layout reference");
+  assert.equal(await measurements.locator('[data-ymg-layout-id="08N"]').count(), 1,
+    "the inquiry status line has a stable layout reference");
+  const inspectorSelect = overlay.locator("select");
+  assert.ok((await inspectorSelect.locator("option").count()) >= 65,
+    "the catalog covers section headings, cards, fields and footers");
+  const inspectorButtons = overlay.locator('[data-action="inspect"]');
+  assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "true", "page clicking is protected in inspect mode");
+  await inspectorSelect.selectOption("07D");
+  const copyText = overlay.locator("textarea");
+  assert.match(await copyText.inputValue(), /07D \(Founder biography\), 1440px viewport/);
+  assert.match(await overlay.locator(".readout").textContent(), /Padding top/);
+  await overlay.locator('[data-action="grid"]').click();
+  assert.equal(await overlay.locator('[data-action="grid"]').getAttribute("aria-pressed"), "false", "grid can be hidden");
+  await overlay.locator('[data-action="grid"]').click();
+  await overlay.locator('[data-action="labels"]').click();
+  assert.match(await overlay.locator('[data-action="labels"]').textContent(), /all/, "all element ID badges can be exposed");
+  assert.match(await measurements.locator("#language-switch").getAttribute("href"), /\/it\/\?layout=1$/,
+    "switching to Italian preserves opt-in measurement mode");
+  await measurements.screenshot({ path: resolve(screenshotRoot, "inspector-desktop-1440.png"), fullPage: false });
+  await inspectorButtons.click();
+  assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "false", "normal interaction can be restored");
+  await measurements.locator('.primary-nav a[href="#partners"]').click();
+  assert.equal(new URL(measurements.url()).hash, "#partners",
+    "regular site navigation works after inspection is turned off");
+  await overlay.locator('[data-action="close"]').click();
+  assert.equal(await measurements.locator("#ymg-layout-inspector").count(), 0, "closing removes the inspector");
+  assert.doesNotMatch(measurements.url(), /[?&]layout=1/, "closing strips the measurement query parameter");
+  await measurements.close();
+
+  const italianMeasure = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await italianMeasure.goto(baseUrl + "/it/?layout=1", { waitUntil: "load" });
+  const italianOverlay = italianMeasure.locator("#ymg-layout-inspector");
+  await italianOverlay.waitFor();
+  assert.equal(await italianMeasure.locator('[data-ymg-layout-id="02B"]').count(), 1,
+    "Italian page uses the same headline identifier");
+  await italianOverlay.locator("select").selectOption("08D");
+  assert.match(await italianOverlay.locator("textarea").inputValue(), /08D \(Inquiry type\), 390px viewport, Italian page/);
+  await italianMeasure.screenshot({ path: resolve(screenshotRoot, "inspector-italian-mobile-390.png"), fullPage: false });
+  await italianMeasure.close();
+
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.route("https://fonts.googleapis.com/**", route => route.abort());
   await mobile.route("https://fonts.gstatic.com/**", route => route.abort());
