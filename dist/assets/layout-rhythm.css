@@ -135,3 +135,47 @@
     bottom: 79px;
   }
 }
+
+/*
+ * Second owner-measured 1280px calibration (#87).
+ * Only English at the existing desktop 1200–1399px design width.
+ * 02F photograph is shortened, not the hero's full-height layout box;
+ * downstream band and Approach thus keep their document anchors.
+ */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] .hero h1 {
+    /* H1 Y 164 -> 144; preserve eyebrow Y121. */
+    margin-top: 5px;
+    /* Paragraph Y454 -> 439, by replacing 5px of H1's -20px flow change. */
+    margin-bottom: 32px;
+  }
+  html[lang="en"] .hero .hero-atmosphere {
+    /* Photo Y90, H650 -> H610; hero section remains 650px tall. */
+    bottom: 40px;
+  }
+  html[lang="en"] .intro {
+    /* Top stays Y794; content moves up ~20px, height drops 39px. */
+    padding-top: calc(var(--events-section-space) - 20px);
+    padding-bottom: calc(var(--events-section-space) - 19px);
+  }
+  html[lang="en"] .concepts {
+    /* Section starts at Approach's new end Y994; content also moves up 20px. */
+    padding-top: 24px;
+    padding-bottom: 32px;
+  }
+  html[lang="en"] .concepts .deck-toolbar {
+    /*
+     * Controls Y1182 -> Y990: -39px upstream section, -20px top padding,
+     * then -133px visual adjustment. Transparent toolbar area cannot block copy.
+     * Visible buttons remain at the right to avoid heading collision.
+     */
+    transform: translateY(-133px);
+    pointer-events: none;
+  }
+  html[lang="en"] .concepts .deck-actions,
+  html[lang="en"] .concepts .deck-arrow { pointer-events: auto; }
+  html[lang="en"] .concepts #concept-deck {
+    /* Track Y1236 -> Y1140: -39px upstream, -20px top, -37px visual. */
+    transform: translateY(-37px);
+  }
+}
