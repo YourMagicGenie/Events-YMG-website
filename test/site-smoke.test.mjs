@@ -92,7 +92,11 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
     assert.match(footer, /<a class="logo" href="\/"><i>\.<\/i>ymg events<\/a>/);
     assert.ok(footer.includes(tagline), "footer states the Events service and location");
     assert.match(footer, /href="mailto:hello@ymgconsultingservices\.com"/);
-    assert.match(footer, /href="#inquire"/);
+    if (page === html) {
+      assert.doesNotMatch(footer, /href="#inquire"/, "English footer removes redundant 09C while retaining its email");
+    } else {
+      assert.match(footer, /href="#inquire"/, "Italian footer CTA remains unchanged");
+    }
     assert.doesNotMatch(footer, /Frederic David|Privacy notice|Informativa privacy|A Your Magic Genie project|Un progetto Your Magic Genie/);
     assert.ok(note.includes(location), "bottom line carries the VAT number");
     assert.ok(note.includes(privacy), "privacy notice stays reachable from every homepage");
