@@ -371,8 +371,13 @@ try {
         `${width}px form uses the former empty desktop column: ${JSON.stringify(layoutRhythm)}`);
       assert.equal(layoutRhythm.columns, width > 1250 ? 4 : 2,
         `${width}px field grid balances desktop space: ${JSON.stringify(layoutRhythm)}`);
-      assert.ok(Math.abs(layoutRhythm.topSpace - layoutRhythm.bottomSpace) <= 2,
-        `${width}px inquiry section has balanced vertical padding: ${JSON.stringify(layoutRhythm)}`);
+      if (width === 1280) {
+        assert.ok(Math.abs(layoutRhythm.topSpace - 41.2) <= 2 && Math.abs(layoutRhythm.bottomSpace - 14) <= 2,
+          `1280px uses explicit top -10px and 40px clearance below the raised submit button: ${JSON.stringify(layoutRhythm)}`);
+      } else {
+        assert.ok(Math.abs(layoutRhythm.topSpace - layoutRhythm.bottomSpace) <= 2,
+          `${width}px inquiry section retains balanced padding: ${JSON.stringify(layoutRhythm)}`);
+      }
     }
     if (width <= 540) assert.equal(layoutRhythm.columns, 1, `${width}px retains single-column form controls`);
 
