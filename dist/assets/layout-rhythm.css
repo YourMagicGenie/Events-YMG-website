@@ -185,3 +185,53 @@
     transform: translateY(-37px);
   }
 }
+
+/*
+ * Third measured EN desktop iteration (#89): explicit owner coordinate targets.
+ * Baseline uses pre-shrink measurements. Hero -40px and Approach -24px affect
+ * all downstream document Y coordinates in normal flow.
+ */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] .hero {
+    min-height: 610px;
+  }
+  html[lang="en"] .hero .hero-atmosphere {
+    /* The photograph now fills the shortened hero rather than ending 40px early. */
+    bottom: 0;
+  }
+  html[lang="en"] .hero-actions {
+    /* Both 02D and following 02E move down 10px without moving 02B/02C. */
+    margin-top: 34px;
+  }
+  html[lang="en"] .intro {
+    /* 04 is now 24px shorter, in addition to the upstream -40px hero shift. */
+    padding-bottom: calc(var(--events-section-space) - 43px);
+  }
+  html[lang="en"] .intro > div:nth-child(2) {
+    /* Text Y825 - hero40 + local37 = Y822 (owner's Y862 adjusted for hero). */
+    position: relative;
+    top: 37px;
+  }
+  html[lang="en"] .concepts {
+    /* Expected Y930; track bottom1622 + 40px breathing room -> bottom1662. */
+    min-height: 732px;
+  }
+  html[lang="en"] .concepts .concept-deck {
+    /* Reclaim empty flow after shifting the track while keeping its controls in flow. */
+    margin-bottom: -40px;
+  }
+  html[lang="en"] .concepts .deck-toolbar {
+    /* 05C full-width ghost toolbar replaced with a right-aligned 110px control. */
+    width: 110px;
+    justify-self: end;
+    margin-right: 14px;
+    transform: translateY(-57px);
+  }
+  html[lang="en"] .concepts .deck-actions {
+    justify-content: flex-end;
+  }
+  html[lang="en"] .concepts #concept-deck {
+    /* Y1140 - hero40 - approach24 - local20 = Y1056. */
+    transform: translateY(-57px);
+  }
+}
