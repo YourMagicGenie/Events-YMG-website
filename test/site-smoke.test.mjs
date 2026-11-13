@@ -546,8 +546,8 @@ test("founder credibility uses first-party community experience and keeps the br
   const italian = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
   const sources = readFileSync(new URL("../docs/FOUNDER-CREDIBILITY.md", import.meta.url), "utf8");
 
-  assert.match(html, /Through Porto Aperto \| Genova, a local international community for social and nightlife events/);
-  assert.match(html, /A lifetime of event coordination in the USA and Italy has created YMG Events\. We intend to serve you well\./);
+  assert.match(html, /Through Porto Aperto \| Genova, I’ve built a thriving international community around music, nightlife, and shared experiences/);
+  assert.match(html, /My team and I bring years of experience organizing everything from intimate gatherings to music festivals and international travel adventures/);
   assert.match(italian, /Con Porto Aperto \| Genova, una community locale internazionale dedicata alla socialità e alla vita notturna/);
   for (const page of [html, italian]) {
     assert.doesNotMatch(page, /instagram\.com|founder-reference/, "the owner removed the social profile link");
