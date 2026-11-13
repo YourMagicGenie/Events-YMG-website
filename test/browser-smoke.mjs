@@ -207,7 +207,7 @@ try {
         ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 953],
         ["05B Heading", heroPosition.conceptsHeading.y, 986],
         ["05C Carousel controls", heroPosition.carouselControls.y, 1002],
-        ["05C Carousel X", heroPosition.carouselControls.x, 1079],
+        ["05C Carousel X", heroPosition.carouselControls.x, 1093],
         ["05C Carousel width", heroPosition.carouselControls.width, 110],
         ["05D Carousel track", heroPosition.carouselTrack.y, 1056],
       ];
@@ -219,6 +219,9 @@ try {
         `04/05 sections should meet precisely: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.photo.y + heroPosition.photo.height - 700) <= 2,
         `02F must end at Y700: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.carouselControls.x + heroPosition.carouselControls.width -
+        (heroPosition.carouselTrack.x + heroPosition.carouselTrack.width)) <= 2,
+        `05C right edge must align with 05D after +14px: ${JSON.stringify(heroPosition)}`);
       assert.ok(heroPosition.carouselArrows.x >= heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
         `05C arrows must sit to the right of 05B text, not cover it: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.approachPaddingTop - 31.2) <= 2 && Math.abs(heroPosition.approachPaddingBottom - 8.2) <= 2,
@@ -264,11 +267,20 @@ try {
           inquiry: rect(".inquiry"), inquiryHeading: rect(".inquiry h2"),
           headingText: header.textContent, headingLineHeight: parseFloat(getComputedStyle(header).lineHeight),
           inquiryPaddingTop: parseFloat(getComputedStyle(inquiry).paddingTop),
+          intent: rect("#brief .form-grid > div:nth-child(1)"),
+          name: rect("#brief .form-grid > div:nth-child(2)"),
           business: rect("#brief .form-grid > div:nth-child(4)"),
           format: rect("#brief .form-grid > div:nth-child(5)"),
           guests: rect("#brief .form-grid > div:nth-child(6)"),
+          timing: rect("#brief .form-grid > div:nth-child(7)"),
           budget: rect("#brief .form-grid > div:nth-child(8)"),
           message: rect("#brief .form-grid > div:nth-child(9)"),
+          controls: Object.fromEntries(["intent","name","business","guests","timing","budget","idea"].map(id => [
+            id, rect("#" + id)
+          ])),
+          founderBiography: rect(".founder-bio"),
+          founderSignature: rect(".about .signature"),
+          founderParagraphs: [...document.querySelectorAll(".founder-bio p")].map(p => p.textContent),
           helpText: businessHelp.textContent, helpVisuallyClipped: getComputedStyle(businessHelp).clipPath,
           captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
           statusPosition: getComputedStyle(document.querySelector("#form-feedback")).position,
@@ -297,6 +309,22 @@ try {
       for (const id of ["business", "format", "guests"]) {
         assert.ok(Math.abs(compact[id].h - 74) <= 2, `08G/08H/08I fields equal 74px: ${JSON.stringify(compact)}`);
       }
+      for (const [label, current, peer] of [
+        ["08D inquiry type", compact.intent, compact.name],
+        ["08G business", compact.business, compact.guests],
+        ["08J timing", compact.timing, compact.guests],
+        ["08L message", compact.message, compact.budget],
+      ]) {
+        assert.ok(Math.abs(current.h - peer.h) <= 2,
+          `${label} wrapper must match its reference field height: ${JSON.stringify(compact)}`);
+      }
+      for (const id of ["intent","business","timing","idea"]) {
+        assert.ok(Math.abs(compact.controls[id].h - compact.controls.name.h) <= 2,
+          `${id} text control must match name input height: ${JSON.stringify(compact.controls)}`);
+      }
+      assert.equal(compact.founderParagraphs.length, 2, "07D founder bio is two paragraphs");
+      assert.ok(compact.founderSignature.y >= compact.founderBiography.bottom + 1,
+        `07E signature flows beneath the expanded biography: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
         `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
       assert.ok((compact.status.w <= 2 && compact.status.h <= 2) || compact.statusPosition === "fixed",
@@ -311,6 +339,8 @@ try {
         compact.footerTagline.w <= compact.footerIdentity.w + 1,
         `footer full tagline must remain visible inside W300 H70: ${JSON.stringify(compact)}`);
       assert.equal(compact.footerLinkCount, 0, "09C redundant English footer inquiry link removed");
+      assert.equal(await page.locator(".footer-tagline").textContent(), "Venue partnerships & event production",
+        "09A identity drops location suffix without removing the legal strip address");
       assert.ok(Math.abs(compact.footerPaddingTop - 18) <= 1, "09 top padding reduced by 5px");
       assert.ok(compact.footerEmail.x >= 700, "09B aligned to the right without 09C");
       assert.ok(compact.budget.y < compact.captcha.y && compact.message.y < compact.captcha.y,
@@ -702,7 +732,48 @@ try {
     "the catalog covers section headings, cards, fields and footers");
   const inspectorButtons = overlay.locator('[data-action="inspect"]');
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "true", "page clicking is protected in inspect mode");
+  const rulerGeometry = async () => measurements.evaluate(() => {
+    const root = document.querySelector("#ymg-layout-inspector").shadowRoot;
+    const horizontal = root.querySelector(".ruler-horizontal");
+    const vertical = root.querySelector(".ruler-vertical");
+    const hRect = horizontal.getBoundingClientRect();
+    const vRect = vertical.getBoundingClientRect();
+    const hValue = Math.ceil((scrollX + 100) / 100) * 100;
+    const vValue = Math.ceil((scrollY + 100) / 100) * 100;
+    const getTick = (node, value, dimension) => {
+      const tick = [...node.querySelectorAll(".tick")].find(item => item.textContent === String(value));
+      return tick ? parseFloat(tick.style[dimension]) : null;
+    };
+    return {
+      scrollX, scrollY, hOrigin: hRect.left, vOrigin: vRect.top,
+      horizontalTick: getTick(horizontal, hValue, "left"),
+      verticalTick: getTick(vertical, vValue, "top"),
+      expectedX: hValue - scrollX, expectedY: vValue - scrollY,
+      minorGridX: root.querySelector(".grid").style.getPropertyValue("--grid-x-small"),
+      majorGridY: root.querySelector(".grid").style.getPropertyValue("--grid-y-major")
+    };
+  });
+  await measurements.waitForFunction(() => {
+    const root = document.querySelector("#ymg-layout-inspector").shadowRoot;
+    return root.querySelector(".ruler-horizontal .tick") && root.querySelector(".ruler-vertical .tick");
+  });
+  const rulerAtTop = await rulerGeometry();
+  assert.ok(Math.abs(rulerAtTop.hOrigin) <= 1 && Math.abs(rulerAtTop.vOrigin) <= 1,
+    `grid and ruler must share the viewport origin: ${JSON.stringify(rulerAtTop)}`);
+  assert.ok(Math.abs(rulerAtTop.horizontalTick - rulerAtTop.expectedX) <= 1 &&
+    Math.abs(rulerAtTop.verticalTick - rulerAtTop.expectedY) <= 1,
+    `ruler tick positions must match 100px grid: ${JSON.stringify(rulerAtTop)}`);
   await inspectorSelect.selectOption("07D");
+  await measurements.waitForFunction(() => {
+    const root = document.querySelector("#ymg-layout-inspector").shadowRoot;
+    const nextValue = Math.ceil((scrollY + 100) / 100) * 100;
+    return [...root.querySelectorAll(".ruler-vertical .tick")].some(t => t.textContent === String(nextValue));
+  });
+  const rulerAfterScroll = await rulerGeometry();
+  assert.ok(rulerAfterScroll.scrollY > 100 &&
+    Math.abs(rulerAfterScroll.horizontalTick - rulerAfterScroll.expectedX) <= 1 &&
+    Math.abs(rulerAfterScroll.verticalTick - rulerAfterScroll.expectedY) <= 1,
+    `scrolled ruler must remain aligned to grid: ${JSON.stringify(rulerAfterScroll)}`);
   const founderPosition = await measurements.locator('[data-ymg-layout-id="07D"]').boundingBox();
   assert.ok(founderPosition && founderPosition.y >= 0 && founderPosition.y < 900,
     "choosing a reference jumps directly to the selected region");
@@ -723,6 +794,42 @@ try {
   assert.equal(await overlay.locator(".panel").evaluate(element => element.classList.contains("is-collapsed")), true);
   await collapseControl.click();
   assert.equal(await collapseControl.getAttribute("aria-expanded"), "true", "inspector panel can expand again");
+  // Drag only from the title bar. The panel should stay at its drop point.
+  const panel = overlay.locator(".panel");
+  const titleBar = overlay.locator(".panel-title");
+  const originalPanelBounds = await panel.boundingBox();
+  const titleBounds = await titleBar.boundingBox();
+  await measurements.mouse.move(titleBounds.x + 70, titleBounds.y + 15);
+  await measurements.mouse.down();
+  await measurements.mouse.move(titleBounds.x - 170, titleBounds.y + 125, { steps: 10 });
+  await measurements.mouse.up();
+  const droppedBounds = await panel.boundingBox();
+  assert.ok(droppedBounds.x < originalPanelBounds.x - 90 && droppedBounds.y > originalPanelBounds.y + 50,
+    `inspector moves to a user-selected point: ${JSON.stringify({ originalPanelBounds, droppedBounds })}`);
+  await measurements.mouse.move(500, 500);
+  const stationaryBounds = await panel.boundingBox();
+  assert.ok(Math.abs(stationaryBounds.x - droppedBounds.x) <= 1 &&
+    Math.abs(stationaryBounds.y - droppedBounds.y) <= 1,
+    "inspector remains at the drop point after moving the pointer");
+  await titleBar.focus();
+  await measurements.keyboard.press("ArrowLeft");
+  const keyboardBounds = await panel.boundingBox();
+  assert.ok(Math.abs(keyboardBounds.x - droppedBounds.x + 10) <= 2,
+    "focused title bar supports accessible 10px arrow-key movement");
+  const beforeAction = await panel.boundingBox();
+  await collapseControl.click();
+  const afterAction = await panel.boundingBox();
+  assert.ok(Math.abs(beforeAction.x - afterAction.x) <= 1 &&
+    Math.abs(beforeAction.y - afterAction.y) <= 1,
+    "clicking title action buttons does not start a drag");
+  await collapseControl.click();
+  await measurements.setViewportSize({ width: 800, height: 600 });
+  const resizedBounds = await panel.boundingBox();
+  assert.ok(resizedBounds.x >= 0 && resizedBounds.y >= 0 &&
+    resizedBounds.x + resizedBounds.width <= 800 + 1 &&
+    resizedBounds.y + resizedBounds.height <= 600 + 1,
+    `dragged inspector stays within a smaller viewport: ${JSON.stringify(resizedBounds)}`);
+  await measurements.setViewportSize({ width: 1440, height: 900 });
   await inspectorButtons.click();
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "false", "normal interaction can be restored");
   await measurements.locator('.primary-nav a[href="#approach"]').click();

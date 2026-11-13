@@ -41,11 +41,11 @@ button:focus-visible, select:focus-visible, textarea:focus-visible {
   pointer-events: none;
 }
 .ruler-horizontal {
-  top: 0; left: 24px; right: 0; height: 23px;
+  top: 0; left: 0; right: 0; height: 23px;
   border-width: 0 0 1px 0;
 }
 .ruler-vertical {
-  top: 23px; bottom: 0; left: 0; width: 24px;
+  top: 0; bottom: 0; left: 0; width: 24px;
   border-width: 0 1px 0 0;
 }
 .tick {
@@ -62,7 +62,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible {
   writing-mode: vertical-rl; font-size: 9px;
 }
 .ruler-vertical .tick::before {
-  content: ""; position: absolute; top: -2px; left: 12px;
+  content: ""; position: absolute; top: -3px; left: 12px;
   width: 6px; height: 1px; background: #dab977;
 }
 .tags { position: absolute; inset: 0; pointer-events: none; }
@@ -104,7 +104,13 @@ button:focus-visible, select:focus-visible, textarea:focus-visible {
   color: #f7eadb;
   backdrop-filter: blur(8px);
 }
-.panel-title { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+.panel-title {
+  display: flex; align-items: start; justify-content: space-between; gap: 8px;
+  cursor: grab; touch-action: none; user-select: none;
+}
+.panel-title:active { cursor: grabbing; }
+.panel-title:focus-visible { outline: 3px solid #e9c985; outline-offset: 3px; }
+.panel-title-actions, .panel-title button { cursor: pointer; touch-action: auto; }
 .panel-title strong { display: block; font: 600 17px/1.25 Georgia, serif; color: #f5dfaa; }
 .panel-title small { display: block; margin-top: 4px; color: #d4ccbb; font-size: 11px; }
 .panel-title button { background: transparent; border: 1px solid #977f56; border-radius: 4px; color: #f6e2c4; min-width: 32px; min-height: 32px; }
