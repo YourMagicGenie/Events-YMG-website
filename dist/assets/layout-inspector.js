@@ -209,7 +209,7 @@
     if (!entry) return;
     selected = entry;
     copyButton.textContent = "Copy element reference";
-    if (scroll) entry.element.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (scroll) entry.element.scrollIntoView({ behavior: "instant", block: "center" });
     updateSelection();
     schedule();
   }
