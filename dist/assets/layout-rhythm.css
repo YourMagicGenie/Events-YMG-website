@@ -363,15 +363,15 @@
     gap: 4px;
   }
   html[lang="en"] .site-footer .footer-identity .logo {
-    font-size: 32px;
+    font-size: 29px;
     line-height: 1.05;
     white-space: nowrap;
   }
   html[lang="en"] .site-footer .footer-identity .footer-tagline {
     margin: 0;
     max-width: 300px;
-    font-size: 10.5px;
-    line-height: 1.25;
+    font-size: 12px;
+    line-height: 1.15;
     overflow-wrap: normal;
   }
 }
