@@ -87,6 +87,14 @@
   }).filter(Boolean);
   if (!entries.length) return;
 
+  // Keep measurement mode active when switching between EN and IT pages.
+  const languageSwitch = document.querySelector("#language-switch");
+  if (languageSwitch) {
+    const languageUrl = new URL(languageSwitch.href);
+    languageUrl.searchParams.set("layout", "1");
+    languageSwitch.href = languageUrl.pathname + languageUrl.search + languageUrl.hash;
+  }
+
   const elementById = new Map(entries.map(entry => [entry.id, entry]));
   const host = document.createElement("div");
   host.id = "ymg-layout-inspector";
@@ -189,7 +197,7 @@
       "Padding top " + round(parseFloat(style.paddingTop) || 0) +
       "px · bottom " + round(parseFloat(style.paddingBottom) || 0) + "px\n" +
       "Viewport " + window.innerWidth + "×" + window.innerHeight +
-      "px · " + language + " · zoom " + round(window.devicePixelRatio * 100) + "% DPR";
+      "px · " + language + " · DPR " + window.devicePixelRatio;
     textArea.value =
       selected.id + " (" + selected.label + "), " + window.innerWidth +
       "px viewport, " + language + " page:\n" +
@@ -200,6 +208,7 @@
   function selectEntry(entry, scroll) {
     if (!entry) return;
     selected = entry;
+    copyButton.textContent = "Copy element reference";
     if (scroll) entry.element.scrollIntoView({ behavior: "smooth", block: "center" });
     updateSelection();
     schedule();
