@@ -268,6 +268,7 @@ try {
           message: rect("#brief .form-grid > div:nth-child(9)"),
           helpText: businessHelp.textContent, helpVisuallyClipped: getComputedStyle(businessHelp).clipPath,
           captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
+          statusPosition: getComputedStyle(document.querySelector("#form-feedback")).position,
           submit: rect("#submit-inquiry"),
           footer: rect(".site-footer"), footerPaddingTop:parseFloat(getComputedStyle(footer).paddingTop),
           footerEmail:rect(".footer-contact"), footerLinkCount:document.querySelectorAll(".footer-cta").length,
@@ -287,7 +288,8 @@ try {
       }
       assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
         `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
-      assert.ok(compact.status.w <= 2 && compact.status.h <= 2, "08N reserves no permanent visible box");
+      assert.ok((compact.status.w <= 2 && compact.status.h <= 2) || compact.statusPosition === "fixed",
+        "08N reserves no permanent space: neutral status is visually hidden and actionable errors are fixed notifications");
       assert.equal(compact.footerLinkCount, 0, "09C redundant English footer inquiry link removed");
       assert.ok(Math.abs(compact.footerPaddingTop - 18) <= 1, "09 top padding reduced by 5px");
       assert.ok(compact.footerEmail.x >= 700, "09B aligned to the right without 09C");
