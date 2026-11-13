@@ -517,6 +517,9 @@ try {
   const inspectorButtons = overlay.locator('[data-action="inspect"]');
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "true", "page clicking is protected in inspect mode");
   await inspectorSelect.selectOption("07D");
+  const founderPosition = await measurements.locator('[data-ymg-layout-id="07D"]').boundingBox();
+  assert.ok(founderPosition && founderPosition.y >= 0 && founderPosition.y < 900,
+    "choosing a reference jumps directly to the selected region");
   const copyText = overlay.locator("textarea");
   assert.match(await copyText.inputValue(), /07D \(Founder biography\), 1440px viewport/);
   assert.match(await overlay.locator(".readout").textContent(), /Padding top/);
@@ -546,6 +549,9 @@ try {
     "Italian page uses the same headline identifier");
   await italianOverlay.locator("select").selectOption("08D");
   assert.match(await italianOverlay.locator("textarea").inputValue(), /08D \(Inquiry type\), 390px viewport, Italian page/);
+  const italianFieldPosition = await italianMeasure.locator('[data-ymg-layout-id="08D"]').boundingBox();
+  assert.ok(italianFieldPosition && italianFieldPosition.y >= 0 && italianFieldPosition.y < 844,
+    "Italian mobile selection jumps directly to its form field");
   await italianMeasure.screenshot({ path: resolve(screenshotRoot, "inspector-italian-mobile-390.png"), fullPage: false });
   await italianMeasure.close();
 
