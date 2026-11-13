@@ -335,3 +335,43 @@
 #brief .turnstile-widget[data-verified="true"] > * {
   visibility: hidden;
 }
+
+/* Fifth owner-calibrated EN desktop pass (#93): list geometry and footer identity. */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] .partnerships {
+    /* 486px baseline minus 40px of unneeded section tail. */
+    min-height: 446px;
+  }
+  html[lang="en"] .partnerships > div:nth-child(2) {
+    /* 06F should finish with 06F3 rather than stretch to section height. */
+    align-self: start;
+  }
+  html[lang="en"] .partnerships .partnership:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  html[lang="en"] .site-footer .footer-identity {
+    flex: 0 0 300px;
+    width: 300px;
+    height: 70px;
+    min-width: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  html[lang="en"] .site-footer .footer-identity .logo {
+    font-size: 32px;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  html[lang="en"] .site-footer .footer-identity .footer-tagline {
+    margin: 0;
+    max-width: 300px;
+    font-size: 10.5px;
+    line-height: 1.25;
+    overflow-wrap: normal;
+  }
+}
