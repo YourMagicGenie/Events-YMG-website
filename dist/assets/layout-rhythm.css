@@ -235,3 +235,103 @@
     transform: translateY(-57px);
   }
 }
+
+/*
+ * Fourth measured EN desktop pass (#91) — partnership, inquiry and footer.
+ * Preserve responsive/mobile and Italian layout outside this bounded range.
+ * Form feedback stays accessible to screen readers without occupying the
+ * permanent 08N status card, and significant failures are still visible.
+ */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] .partnerships {
+    padding-top: 39px;
+    padding-bottom: 11px;
+    /* Baseline section top is ~1653; requested bottom Y2139. */
+    min-height: 486px;
+  }
+  html[lang="en"] .partnership:nth-child(2) {
+    /* Move 06F3 up 20px through real document flow. */
+    padding-bottom: 4px;
+  }
+  html[lang="en"] .partnership:last-child {
+    border-bottom: 0;
+  }
+
+  html[lang="en"] .inquiry {
+    padding-top: calc(var(--events-section-space) - 10px);
+    padding-bottom: 14px;
+  }
+  html[lang="en"] .inquiry h2 {
+    white-space: nowrap;
+  }
+  html[lang="en"] #brief {
+    position: relative;
+  }
+  html[lang="en"] #brief .form-grid > div {
+    min-height: 74px;
+  }
+  html[lang="en"] #brief #business-help {
+    /* Preserve conditional guidance for screen readers without a tall card. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  html[lang="en"] #brief #submit-inquiry {
+    transform: translateY(-25px);
+  }
+  html[lang="en"] #brief .form-feedback {
+    /* The former always-visible 08N box disappears from the layout. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    margin: 0;
+    min-height: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  html[lang="en"] #brief .form-feedback[data-state="error"],
+  html[lang="en"] #brief .form-feedback[data-state="success"] {
+    /* Display only actionable failures or success without reserving space. */
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: min(420px, calc(100vw - 36px));
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    padding: 12px 16px;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    box-shadow: 0 10px 24px rgba(0,0,0,.16);
+    z-index: 1000;
+    border-left-width: 4px;
+  }
+  html[lang="en"] .site-footer {
+    padding-top: 18px;
+  }
+  html[lang="en"] .site-footer .footer-contact {
+    margin-left: auto;
+  }
+}
+
+/*
+ * Shared Turnstile lifecycle: the *container* always retains its footprint
+ * so the form cannot jump after verification. Hide only embedded widget UI.
+ * Expiry/error/reset restores visible challenge UI before a new token.
+ */
+#brief .turnstile-widget {
+  min-height: 72px;
+}
+#brief .turnstile-widget[data-verified="true"] > * {
+  visibility: hidden;
+}
