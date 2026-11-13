@@ -723,6 +723,82 @@ try {
   await italianMeasure.screenshot({ path: resolve(screenshotRoot, "inspector-italian-mobile-390.png"), fullPage: false });
   await italianMeasure.close();
 
+  // Turnstile is a security gate, not a cosmetic field: exercise each callback
+  // with the same local API contract, without bypassing backend token validation.
+  const verification = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await verification.addInitScript(() => {
+    window.__verification = { callbacks: null, resets: 0 };
+    window.turnstile = {
+      render(selector, options) {
+        window.__verification.callbacks = options;
+        const host = document.querySelector(selector);
+        const badge = document.createElement("div");
+        badge.textContent = "Verification required";
+        badge.style.height = "65px";
+        host.appendChild(badge);
+        return "test-widget";
+      },
+      reset() { window.__verification.resets += 1; },
+    };
+  });
+  await verification.route("**/api/events/config", route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ ready: true, siteKey: "test-sitekey", action: "events_inquiry" }),
+  }));
+  let submittedBody = "";
+  await verification.route("**/api/events/inquiry", async route => {
+    submittedBody = route.request().postData() || "";
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+  await verification.goto(baseUrl, { waitUntil: "load" });
+  await verification.waitForFunction(() => Boolean(window.__verification?.callbacks));
+  const verificationGeometry = async () => verification.evaluate(() => {
+    const host = document.querySelector("#turnstile-widget");
+    const rect = host.getBoundingClientRect();
+    return {
+      y: rect.y, height: rect.height,
+      verified: host.dataset.verified,
+      childVisibility: getComputedStyle(host.firstElementChild).visibility,
+      submitDisabled: document.querySelector("#submit-inquiry").disabled,
+    };
+  });
+  const initial = await verificationGeometry();
+  assert.equal(initial.verified, "false", "08M starts visible until Turnstile verifies");
+  assert.equal(initial.childVisibility, "visible");
+  assert.ok(initial.height >= 72, "08M reserves its full position before verification");
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-1"));
+  const verified = await verificationGeometry();
+  assert.equal(verified.verified, "true");
+  assert.equal(verified.childVisibility, "hidden", "08M widget vanishes after a token");
+  assert.equal(verified.submitDisabled, false, "submission is enabled only after verification");
+  assert.equal(verified.y, initial.y, "widget disappearance cannot move its position");
+  assert.equal(verified.height, initial.height, "verification cannot collapse the grid row");
+  await verification.evaluate(() => window.__verification.callbacks["expired-callback"]());
+  const expired = await verificationGeometry();
+  assert.equal(expired.verified, "false", "expired token re-exposes the challenge");
+  assert.equal(expired.childVisibility, "visible");
+  assert.equal(expired.submitDisabled, true);
+  assert.equal(expired.height, initial.height);
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-2"));
+  await verification.evaluate(() => window.__verification.callbacks["error-callback"]());
+  const errored = await verificationGeometry();
+  assert.equal(errored.verified, "false", "Turnstile errors also expose challenge UI");
+  assert.equal(errored.submitDisabled, true);
+  await verification.locator("#intent").selectOption("private_celebration");
+  await verification.locator("#name").fill("Test Sender");
+  await verification.locator("#email").fill("sender@example.com");
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-final"));
+  await verification.locator("#submit-inquiry").click();
+  await verification.waitForFunction(() => window.__verification.resets === 1);
+  assert.match(submittedBody, /cf-turnstile-response=token-final/, "inquiry sends a verified token");
+  const afterSubmit = await verificationGeometry();
+  assert.equal(afterSubmit.verified, "false", "new submission requires a fresh Turnstile token");
+  assert.equal(afterSubmit.submitDisabled, true, "one-time token cannot be reused");
+  assert.equal(afterSubmit.height, initial.height, "reset leaves a stable footprint");
+  assert.equal(await verification.locator("#form-feedback").getAttribute("data-state"), "success",
+    "the successful inquiry has an accessible visible success notification");
+  await verification.close();
+
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.route("https://fonts.googleapis.com/**", route => route.abort());
   await mobile.route("https://fonts.gstatic.com/**", route => route.abort());
