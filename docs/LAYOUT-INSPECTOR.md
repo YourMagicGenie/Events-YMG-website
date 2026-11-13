@@ -14,7 +14,8 @@ The query parameter `?layout=1` turns on a temporary visual overlay on the homep
 3. **Inspect ON/OFF:** with inspection enabled, hover previews an outline and clicking a page element selects its label *without* activating the underlying button/link/form. Turn Inspect OFF when you need to interact with the real website.
 4. **Element reference dropdown:** choose an ID and scroll to it. The inspector shows its document X/Y, width/height, element padding, nearest section and viewport dimensions.
 5. **Copy element reference:** copies an editable request template containing element ID, viewport, language and measured bounds. You can specify the desired deltas after copying.
-6. **Close (X):** removes the overlay and drops the URL parameter. Escape turns off inspection without closing the overlay.
+6. **Minimize (−) / expand (+):** collapse the inspector panel to reveal the underlying page, especially useful when checking a selected element on mobile. Selecting an element from the dropdown on mobile places it above the control panel.
+7. **Close (X):** removes the overlay and drops the URL parameter. Escape turns off inspection without closing the overlay.
 
 For precision, leave browser zoom at 100% and include your viewport width (e.g., desktop 1440px, mobile 390px) in change requests. The inspector displays **CSS px**; physical `mm` depend on screen scaling, display density and browser settings and therefore aren't consistent layout instructions. Coordinates are measured from **the document's top-left**, not a screenshot crop or your current scroll position.
 
