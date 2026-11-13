@@ -5,6 +5,35 @@ import test from "node:test";
 const html = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
 const italianHtml = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
 
+test("opt-in measurement overlay and stable IDs exist for both localized homepages", () => {
+  const inspector = readFileSync(new URL("../dist/assets/layout-inspector.js", import.meta.url), "utf8");
+  const inspectorStyles = readFileSync(new URL("../dist/assets/layout-inspector.css", import.meta.url), "utf8");
+  const reference = readFileSync(new URL("../docs/LAYOUT-INSPECTOR.md", import.meta.url), "utf8");
+  for (const page of [html, italianHtml]) {
+    assert.ok(page.includes('src="/assets/layout-inspector.js"'), "measurement script is available in both locales");
+  }
+  assert.ok(inspector.includes('.get("layout") !== "1"'), "measurement mode requires explicit layout=1");
+  for (const [id, selector] of [
+    ["01A", "header .logo"],
+    ["02B", ".hero h1"],
+    ["04", ".intro"],
+    ["05D1", "#concept-deck .concept:nth-child(1)"],
+    ["07D", ".about > div:nth-child(2) > p"],
+    ["08C", "#brief"],
+    ["08N", "#form-feedback"],
+    ["09", ".site-footer"],
+    ["10", ".site-note"]
+  ]) {
+    assert.ok(inspector.includes('["' + id + '",'), id + " is a stable inspector ID");
+    assert.ok(inspector.includes(selector), id + " maps to an existing page selector");
+    assert.ok(reference.includes("| " + String.fromCharCode(96) + id + String.fromCharCode(96) + " |"), id + " appears in the human-readable catalog");
+  }
+  assert.ok(inspector.includes('event.preventDefault()'), "inspect mode intercepts accidental page activations");
+  assert.ok(inspector.includes('navigator.clipboard.writeText'), "reference copying is opt-in on click");
+  assert.ok(inspectorStyles.includes("background-size: 20px 20px"), "grid shows 20px minor lines");
+  assert.ok(inspectorStyles.includes("100px 100px"), "grid shows 100px major lines");
+});
+
 test("partnership section uses the tighter desktop gutter in both locales", () => {
   for (const page of [html, italianHtml]) {
     assert.match(page, /\.partnerships\{[^}]*grid-template-columns:minmax\(0,\.95fr\) minmax\(0,1\.05fr\);gap:clamp\(32px,5vw,72px\)/);
