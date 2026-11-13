@@ -343,6 +343,7 @@ try {
       const hero = document.querySelector(".hero");
       const imageRect = image.getBoundingClientRect();
       const heroRect = hero.getBoundingClientRect();
+      const photoRect = document.querySelector(".hero-atmosphere").getBoundingClientRect();
       const overlay = getComputedStyle(document.querySelector(".hero-atmosphere"), "::after").backgroundImage;
       return {
         photoBelowCopy: imageRect.top >= document.querySelector(".hero-copy").getBoundingClientRect().bottom - 1,
@@ -356,6 +357,8 @@ try {
         sizes: image.sizes,
         objectFit: getComputedStyle(image).objectFit,
         coversHero: Math.abs(imageRect.width - heroRect.width) < 1 && Math.abs(imageRect.height - heroRect.height) < 1,
+        fillsPhotoRegion: Math.abs(imageRect.width - photoRect.width) < 1 && Math.abs(imageRect.height - photoRect.height) < 1,
+        trimmedPhotoDistance: heroRect.bottom - photoRect.bottom,
         overlayAlpha: [...overlay.matchAll(/rgba\([^)]*,\s*([\d.]+)\s*\)/g)].map(match => Number(match[1])),
         primaryHref: document.querySelector(".hero-actions .btn.primary").getAttribute("href"),
         secondaryPresent: [...document.querySelectorAll(".hero-actions a")].some(link => /discover the atmosphere/i.test(link.textContent)),
@@ -368,7 +371,13 @@ try {
     assert.equal(heroVisual.mobileMedia, "(max-width: 540px)", "mobile image source has a defined breakpoint");
     assert.equal(heroVisual.sizes, "100vw", "hero image size matches the full-width composition");
     assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
-    assert.ok(heroVisual.coversHero, "hero image covers its background region");
+    assert.ok(heroVisual.fillsPhotoRegion, "hero image always covers its photograph region");
+    if (width === 1280) {
+      assert.ok(Math.abs(heroVisual.trimmedPhotoDistance - 40) <= 1,
+        `1280px photo stops 40px before the hero boundary: ${JSON.stringify(heroVisual)}`);
+    } else {
+      assert.ok(heroVisual.coversHero, "other viewport photos still cover their full hero background");
+    }
     assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "original overlay preserves text contrast");
     assert.equal(heroVisual.primaryHref, "#inquire", "primary hero CTA keeps its destination");
     assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
