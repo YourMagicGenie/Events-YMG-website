@@ -207,7 +207,7 @@ try {
         ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 953],
         ["05B Heading", heroPosition.conceptsHeading.y, 986],
         ["05C Carousel controls", heroPosition.carouselControls.y, 1002],
-        ["05C Carousel X", heroPosition.carouselControls.x, 1079],
+        ["05C Carousel X", heroPosition.carouselControls.x, 1093],
         ["05C Carousel width", heroPosition.carouselControls.width, 110],
         ["05D Carousel track", heroPosition.carouselTrack.y, 1056],
       ];
@@ -219,6 +219,9 @@ try {
         `04/05 sections should meet precisely: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.photo.y + heroPosition.photo.height - 700) <= 2,
         `02F must end at Y700: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.carouselControls.x + heroPosition.carouselControls.width -
+        (heroPosition.carouselTrack.x + heroPosition.carouselTrack.width)) <= 2,
+        `05C right edge must align with 05D after +14px: ${JSON.stringify(heroPosition)}`);
       assert.ok(heroPosition.carouselArrows.x >= heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
         `05C arrows must sit to the right of 05B text, not cover it: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.approachPaddingTop - 31.2) <= 2 && Math.abs(heroPosition.approachPaddingBottom - 8.2) <= 2,
@@ -264,11 +267,20 @@ try {
           inquiry: rect(".inquiry"), inquiryHeading: rect(".inquiry h2"),
           headingText: header.textContent, headingLineHeight: parseFloat(getComputedStyle(header).lineHeight),
           inquiryPaddingTop: parseFloat(getComputedStyle(inquiry).paddingTop),
+          intent: rect("#brief .form-grid > div:nth-child(1)"),
+          name: rect("#brief .form-grid > div:nth-child(2)"),
           business: rect("#brief .form-grid > div:nth-child(4)"),
           format: rect("#brief .form-grid > div:nth-child(5)"),
           guests: rect("#brief .form-grid > div:nth-child(6)"),
+          timing: rect("#brief .form-grid > div:nth-child(7)"),
           budget: rect("#brief .form-grid > div:nth-child(8)"),
           message: rect("#brief .form-grid > div:nth-child(9)"),
+          controls: Object.fromEntries(["intent","name","business","guests","timing","budget","idea"].map(id => [
+            id, rect("#" + id)
+          ])),
+          founderBiography: rect(".founder-bio"),
+          founderSignature: rect(".about .signature"),
+          founderParagraphs: [...document.querySelectorAll(".founder-bio p")].map(p => p.textContent),
           helpText: businessHelp.textContent, helpVisuallyClipped: getComputedStyle(businessHelp).clipPath,
           captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
           statusPosition: getComputedStyle(document.querySelector("#form-feedback")).position,
@@ -297,6 +309,22 @@ try {
       for (const id of ["business", "format", "guests"]) {
         assert.ok(Math.abs(compact[id].h - 74) <= 2, `08G/08H/08I fields equal 74px: ${JSON.stringify(compact)}`);
       }
+      for (const [label, current, peer] of [
+        ["08D inquiry type", compact.intent, compact.name],
+        ["08G business", compact.business, compact.guests],
+        ["08J timing", compact.timing, compact.guests],
+        ["08L message", compact.message, compact.budget],
+      ]) {
+        assert.ok(Math.abs(current.h - peer.h) <= 2,
+          `${label} wrapper must match its reference field height: ${JSON.stringify(compact)}`);
+      }
+      for (const id of ["intent","business","timing","idea"]) {
+        assert.ok(Math.abs(compact.controls[id].h - compact.controls.name.h) <= 2,
+          `${id} text control must match name input height: ${JSON.stringify(compact.controls)}`);
+      }
+      assert.equal(compact.founderParagraphs.length, 2, "07D founder bio is two paragraphs");
+      assert.ok(compact.founderSignature.y >= compact.founderBiography.bottom + 1,
+        `07E signature flows beneath the expanded biography: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
         `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
       assert.ok((compact.status.w <= 2 && compact.status.h <= 2) || compact.statusPosition === "fixed",
@@ -311,6 +339,8 @@ try {
         compact.footerTagline.w <= compact.footerIdentity.w + 1,
         `footer full tagline must remain visible inside W300 H70: ${JSON.stringify(compact)}`);
       assert.equal(compact.footerLinkCount, 0, "09C redundant English footer inquiry link removed");
+      assert.equal(await page.locator(".footer-tagline").textContent(), "Venue partnerships & event production",
+        "09A identity drops location suffix without removing the legal strip address");
       assert.ok(Math.abs(compact.footerPaddingTop - 18) <= 1, "09 top padding reduced by 5px");
       assert.ok(compact.footerEmail.x >= 700, "09B aligned to the right without 09C");
       assert.ok(compact.budget.y < compact.captcha.y && compact.message.y < compact.captcha.y,
