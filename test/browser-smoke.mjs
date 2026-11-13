@@ -531,6 +531,12 @@ try {
   assert.match(await measurements.locator("#language-switch").getAttribute("href"), /\/it\/\?layout=1$/,
     "switching to Italian preserves opt-in measurement mode");
   await measurements.screenshot({ path: resolve(screenshotRoot, "inspector-desktop-1440.png"), fullPage: false });
+  const collapseControl = overlay.locator('[data-action="collapse"]');
+  await collapseControl.click();
+  assert.equal(await collapseControl.getAttribute("aria-expanded"), "false", "inspector panel can minimize to reveal the page");
+  assert.equal(await overlay.locator(".panel").evaluate(element => element.classList.contains("is-collapsed")), true);
+  await collapseControl.click();
+  assert.equal(await collapseControl.getAttribute("aria-expanded"), "true", "inspector panel can expand again");
   await inspectorButtons.click();
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "false", "normal interaction can be restored");
   await measurements.locator('.primary-nav a[href="#approach"]').click();
@@ -552,6 +558,9 @@ try {
   const italianFieldPosition = await italianMeasure.locator('[data-ymg-layout-id="08D"]').boundingBox();
   assert.ok(italianFieldPosition && italianFieldPosition.y >= 0 && italianFieldPosition.y < 844,
     "Italian mobile selection jumps directly to its form field");
+  const mobileInspectorPanel = await italianOverlay.locator(".panel").boundingBox();
+  assert.ok(italianFieldPosition && mobileInspectorPanel && italianFieldPosition.y + italianFieldPosition.height < mobileInspectorPanel.y,
+    "the selected mobile form field stays visible above the inspector control panel");
   await italianMeasure.screenshot({ path: resolve(screenshotRoot, "inspector-italian-mobile-390.png"), fullPage: false });
   await italianMeasure.close();
 
