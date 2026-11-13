@@ -732,7 +732,48 @@ try {
     "the catalog covers section headings, cards, fields and footers");
   const inspectorButtons = overlay.locator('[data-action="inspect"]');
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "true", "page clicking is protected in inspect mode");
+  const rulerGeometry = async () => measurements.evaluate(() => {
+    const root = document.querySelector("#ymg-layout-inspector").shadowRoot;
+    const horizontal = root.querySelector(".ruler-horizontal");
+    const vertical = root.querySelector(".ruler-vertical");
+    const hRect = horizontal.getBoundingClientRect();
+    const vRect = vertical.getBoundingClientRect();
+    const hValue = Math.ceil((scrollX + 100) / 100) * 100;
+    const vValue = Math.ceil((scrollY + 100) / 100) * 100;
+    const getTick = (node, value, dimension) => {
+      const tick = [...node.querySelectorAll(".tick")].find(item => item.textContent === String(value));
+      return tick ? parseFloat(tick.style[dimension]) : null;
+    };
+    return {
+      scrollX, scrollY, hOrigin: hRect.left, vOrigin: vRect.top,
+      horizontalTick: getTick(horizontal, hValue, "left"),
+      verticalTick: getTick(vertical, vValue, "top"),
+      expectedX: hValue - scrollX, expectedY: vValue - scrollY,
+      minorGridX: root.querySelector(".grid").style.getPropertyValue("--grid-x-small"),
+      majorGridY: root.querySelector(".grid").style.getPropertyValue("--grid-y-major")
+    };
+  });
+  await measurements.waitForFunction(() => {
+    const root = document.querySelector("#ymg-layout-inspector").shadowRoot;
+    return root.querySelector(".ruler-horizontal .tick") && root.querySelector(".ruler-vertical .tick");
+  });
+  const rulerAtTop = await rulerGeometry();
+  assert.ok(Math.abs(rulerAtTop.hOrigin) <= 1 && Math.abs(rulerAtTop.vOrigin) <= 1,
+    `grid and ruler must share the viewport origin: ${JSON.stringify(rulerAtTop)}`);
+  assert.ok(Math.abs(rulerAtTop.horizontalTick - rulerAtTop.expectedX) <= 1 &&
+    Math.abs(rulerAtTop.verticalTick - rulerAtTop.expectedY) <= 1,
+    `ruler tick positions must match 100px grid: ${JSON.stringify(rulerAtTop)}`);
   await inspectorSelect.selectOption("07D");
+  await measurements.waitForFunction(() => {
+    const root = document.querySelector("#ymg-layout-inspector").shadowRoot;
+    const nextValue = Math.ceil((scrollY + 100) / 100) * 100;
+    return [...root.querySelectorAll(".ruler-vertical .tick")].some(t => t.textContent === String(nextValue));
+  });
+  const rulerAfterScroll = await rulerGeometry();
+  assert.ok(rulerAfterScroll.scrollY > 100 &&
+    Math.abs(rulerAfterScroll.horizontalTick - rulerAfterScroll.expectedX) <= 1 &&
+    Math.abs(rulerAfterScroll.verticalTick - rulerAfterScroll.expectedY) <= 1,
+    `scrolled ruler must remain aligned to grid: ${JSON.stringify(rulerAfterScroll)}`);
   const founderPosition = await measurements.locator('[data-ymg-layout-id="07D"]').boundingBox();
   assert.ok(founderPosition && founderPosition.y >= 0 && founderPosition.y < 900,
     "choosing a reference jumps directly to the selected region");
@@ -753,6 +794,42 @@ try {
   assert.equal(await overlay.locator(".panel").evaluate(element => element.classList.contains("is-collapsed")), true);
   await collapseControl.click();
   assert.equal(await collapseControl.getAttribute("aria-expanded"), "true", "inspector panel can expand again");
+  // Drag only from the title bar. The panel should stay at its drop point.
+  const panel = overlay.locator(".panel");
+  const titleBar = overlay.locator(".panel-title");
+  const originalPanelBounds = await panel.boundingBox();
+  const titleBounds = await titleBar.boundingBox();
+  await measurements.mouse.move(titleBounds.x + 70, titleBounds.y + 15);
+  await measurements.mouse.down();
+  await measurements.mouse.move(titleBounds.x - 170, titleBounds.y + 125, { steps: 10 });
+  await measurements.mouse.up();
+  const droppedBounds = await panel.boundingBox();
+  assert.ok(droppedBounds.x < originalPanelBounds.x - 90 && droppedBounds.y > originalPanelBounds.y + 50,
+    `inspector moves to a user-selected point: ${JSON.stringify({ originalPanelBounds, droppedBounds })}`);
+  await measurements.mouse.move(500, 500);
+  const stationaryBounds = await panel.boundingBox();
+  assert.ok(Math.abs(stationaryBounds.x - droppedBounds.x) <= 1 &&
+    Math.abs(stationaryBounds.y - droppedBounds.y) <= 1,
+    "inspector remains at the drop point after moving the pointer");
+  await titleBar.focus();
+  await measurements.keyboard.press("ArrowLeft");
+  const keyboardBounds = await panel.boundingBox();
+  assert.ok(Math.abs(keyboardBounds.x - droppedBounds.x + 10) <= 2,
+    "focused title bar supports accessible 10px arrow-key movement");
+  const beforeAction = await panel.boundingBox();
+  await collapseControl.click();
+  const afterAction = await panel.boundingBox();
+  assert.ok(Math.abs(beforeAction.x - afterAction.x) <= 1 &&
+    Math.abs(beforeAction.y - afterAction.y) <= 1,
+    "clicking title action buttons does not start a drag");
+  await collapseControl.click();
+  await measurements.setViewportSize({ width: 800, height: 600 });
+  const resizedBounds = await panel.boundingBox();
+  assert.ok(resizedBounds.x >= 0 && resizedBounds.y >= 0 &&
+    resizedBounds.x + resizedBounds.width <= 800 + 1 &&
+    resizedBounds.y + resizedBounds.height <= 600 + 1,
+    `dragged inspector stays within a smaller viewport: ${JSON.stringify(resizedBounds)}`);
+  await measurements.setViewportSize({ width: 1440, height: 900 });
   await inspectorButtons.click();
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "false", "normal interaction can be restored");
   await measurements.locator('.primary-nav a[href="#approach"]').click();
