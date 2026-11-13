@@ -34,6 +34,13 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
   assert.ok(inspectorStyles.includes("100px 100px"), "grid shows 100px major lines");
 });
 
+test("owner-approved English hero and Approach copy is exact and stays distinct from Italian", () => {
+  assert.ok(html.includes('<div class="eyebrow">EVENT PRODUCTION · GENOVA, ITALY</div>'));
+  assert.ok(html.includes("YMG Events specializes in event management and coordination; bringing the setting, service, music, and guest accomodation together into one unified experience. We can craft the format to your vision."));
+  assert.ok(!html.includes("VENUE PARTNERSHIPS · EVENT PRODUCTION"));
+  assert.ok(italianHtml.includes("Una serata che lascia il segno"), "Italian copy was not rewritten");
+});
+
 test("partnership section uses the tighter desktop gutter in both locales", () => {
   for (const page of [html, italianHtml]) {
     assert.match(page, /\.partnerships\{[^}]*grid-template-columns:minmax\(0,\.95fr\) minmax\(0,1\.05fr\);gap:clamp\(32px,5vw,72px\)/);
@@ -500,8 +507,8 @@ test("public positioning is venue-facing, factual, and consistent with metadata"
   for (const detail of [
     "We work with Genova venues and hosts to shape evenings with character",
     "thoughtful hospitality, distinctive music, and an experience planned around the space.",
-    "YMG Events specializes in event management and execution",
-    "We can shape the format to your vision.",
+    "YMG Events specializes in event management and coordination; bringing the setting",
+    "We can craft the format to your vision.",
     "tailored to your target demographic",
     "Discuss ticketing, hospitality costs, entertainment, promotion and each partner’s responsibilities.",
     "Dante David, a Genova-based event organizer",
