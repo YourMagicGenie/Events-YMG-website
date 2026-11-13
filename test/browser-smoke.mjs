@@ -244,6 +244,59 @@ try {
         `1280px hero calibration must not cause overflow: ${JSON.stringify(heroPosition)}`);
     }
 
+    if (width === 1280) {
+      const compact = await page.evaluate(() => {
+        const rect = selector => { const b = document.querySelector(selector).getBoundingClientRect();
+          return { x: b.left + scrollX, y: b.top + scrollY, w: b.width, h: b.height, bottom: b.bottom + scrollY }; };
+        const partnerships = document.querySelector(".partnerships");
+        const inquiry = document.querySelector(".inquiry");
+        const footer = document.querySelector(".site-footer");
+        const businessHelp = document.querySelector("#business-help");
+        const header = document.querySelector(".inquiry h2");
+        const partLast = document.querySelector(".partnership:last-child");
+        return {
+          partnership: rect(".partnerships"), partnershipLast: rect(".partnership:last-child"),
+          partnershipPadding: [parseFloat(getComputedStyle(partnerships).paddingTop),parseFloat(getComputedStyle(partnerships).paddingBottom)],
+          partnershipLastBorder: getComputedStyle(partLast).borderBottomWidth,
+          inquiry: rect(".inquiry"), inquiryHeading: rect(".inquiry h2"),
+          headingText: header.textContent, headingLineHeight: parseFloat(getComputedStyle(header).lineHeight),
+          inquiryPaddingTop: parseFloat(getComputedStyle(inquiry).paddingTop),
+          business: rect("#brief .form-grid > div:nth-child(4)"),
+          format: rect("#brief .form-grid > div:nth-child(5)"),
+          guests: rect("#brief .form-grid > div:nth-child(6)"),
+          budget: rect("#brief .form-grid > div:nth-child(8)"),
+          message: rect("#brief .form-grid > div:nth-child(9)"),
+          helpText: businessHelp.textContent, helpVisuallyClipped: getComputedStyle(businessHelp).clipPath,
+          captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
+          statusPosition: getComputedStyle(document.querySelector("#form-feedback")).position,
+          submit: rect("#submit-inquiry"),
+          footer: rect(".site-footer"), footerPaddingTop:parseFloat(getComputedStyle(footer).paddingTop),
+          footerEmail:rect(".footer-contact"), footerLinkCount:document.querySelectorAll(".footer-cta").length,
+        };
+      });
+      assert.ok(Math.abs(compact.partnershipPadding[0] - 39) <= 1, JSON.stringify(compact));
+      assert.ok(Math.abs(compact.partnershipPadding[1] - 11) <= 1, JSON.stringify(compact));
+      assert.equal(compact.partnershipLastBorder, "0px", "06F3 final underline removed");
+      assert.ok(Math.abs(compact.partnership.bottom - 2139) <= 5, `06 should end near Y2139: ${JSON.stringify(compact)}`);
+      assert.equal(compact.headingText, "Tell us what you\u0027re planning");
+      assert.ok(compact.inquiryHeading.h <= compact.headingLineHeight + 3, `08B heading must occupy one line: ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.inquiryPaddingTop - 41.2) <= 2, `08 top padding -10px: ${JSON.stringify(compact)}`);
+      assert.equal(compact.helpText, "", "08G redundant business prompt is removed");
+      assert.equal(compact.helpVisuallyClipped, "inset(50%)", "conditional helper remains accessible but does not occupy layout");
+      for (const id of ["business", "format", "guests"]) {
+        assert.ok(Math.abs(compact[id].h - 74) <= 2, `08G/08H/08I fields equal 74px: ${JSON.stringify(compact)}`);
+      }
+      assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
+        `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
+      assert.ok((compact.status.w <= 2 && compact.status.h <= 2) || compact.statusPosition === "fixed",
+        "08N reserves no permanent space: neutral status is visually hidden and actionable errors are fixed notifications");
+      assert.equal(compact.footerLinkCount, 0, "09C redundant English footer inquiry link removed");
+      assert.ok(Math.abs(compact.footerPaddingTop - 18) <= 1, "09 top padding reduced by 5px");
+      assert.ok(compact.footerEmail.x >= 700, "09B aligned to the right without 09C");
+      assert.ok(compact.budget.y < compact.captcha.y && compact.message.y < compact.captcha.y,
+        "08K/08L precede the compact CAPTCHA/submit row without overlap");
+    }
+
     const metrics = await page.evaluate(() => {
       const logo = document.querySelector(".logo");
       const subtitle = logo.querySelector("small");
@@ -318,8 +371,13 @@ try {
         `${width}px form uses the former empty desktop column: ${JSON.stringify(layoutRhythm)}`);
       assert.equal(layoutRhythm.columns, width > 1250 ? 4 : 2,
         `${width}px field grid balances desktop space: ${JSON.stringify(layoutRhythm)}`);
-      assert.ok(Math.abs(layoutRhythm.topSpace - layoutRhythm.bottomSpace) <= 2,
-        `${width}px inquiry section has balanced vertical padding: ${JSON.stringify(layoutRhythm)}`);
+      if (width === 1280) {
+        assert.ok(Math.abs(layoutRhythm.topSpace - 41.2) <= 2 && Math.abs(layoutRhythm.bottomSpace - 14) <= 2,
+          `1280px uses explicit top -10px and 40px clearance below the raised submit button: ${JSON.stringify(layoutRhythm)}`);
+      } else {
+        assert.ok(Math.abs(layoutRhythm.topSpace - layoutRhythm.bottomSpace) <= 2,
+          `${width}px inquiry section retains balanced padding: ${JSON.stringify(layoutRhythm)}`);
+      }
     }
     if (width <= 540) assert.equal(layoutRhythm.columns, 1, `${width}px retains single-column form controls`);
 
@@ -575,7 +633,12 @@ try {
     assert.equal(disabledBusinessField.disabled, true, `${width}px shows the conditional business field as disabled before a path is selected`);
     assert.equal(disabledBusinessField.opacity, "1", `${width}px disabled field remains fully legible`);
     assert.notEqual(disabledBusinessField.backgroundColor, audit.fields.find(field => field.id === "name").backgroundColor, `${width}px disabled and editable fields have distinct surfaces`);
-    assert.equal(new Set(audit.statusHeights).size, 1, `neutral, error and success feedback reserve the same height at ${width}px: ${JSON.stringify(audit.statusHeights)}`);
+    if (width === 1280) {
+      assert.ok(audit.statusHeights[0] <= 2 && audit.statusHeights[1] > 24 && audit.statusHeights[2] > 24,
+        `1280px neutral feedback has no visible panel, but error/success remain visible: ${JSON.stringify(audit.statusHeights)}`);
+    } else {
+      assert.equal(new Set(audit.statusHeights).size, 1, `other viewports retain stable feedback height at ${width}px: ${JSON.stringify(audit.statusHeights)}`);
+    }
     assert.equal(audit.errorField.borderColor, "rgb(116, 48, 55)", `${width}px error fields use the accessible red border`);
     assert.notEqual(audit.errorField.backgroundColor, "#faf8f2", `${width}px error fields receive a distinct surface`);
 
@@ -666,6 +729,82 @@ try {
     "the selected mobile form field stays visible above the inspector control panel");
   await italianMeasure.screenshot({ path: resolve(screenshotRoot, "inspector-italian-mobile-390.png"), fullPage: false });
   await italianMeasure.close();
+
+  // Turnstile is a security gate, not a cosmetic field: exercise each callback
+  // with the same local API contract, without bypassing backend token validation.
+  const verification = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await verification.addInitScript(() => {
+    window.__verification = { callbacks: null, resets: 0 };
+    window.turnstile = {
+      render(selector, options) {
+        window.__verification.callbacks = options;
+        const host = document.querySelector(selector);
+        const badge = document.createElement("div");
+        badge.textContent = "Verification required";
+        badge.style.height = "65px";
+        host.appendChild(badge);
+        return "test-widget";
+      },
+      reset() { window.__verification.resets += 1; },
+    };
+  });
+  await verification.route("**/api/events/config", route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ ready: true, siteKey: "test-sitekey", action: "events_inquiry" }),
+  }));
+  let submittedBody = "";
+  await verification.route("**/api/events/inquiry", async route => {
+    submittedBody = route.request().postData() || "";
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
+  await verification.goto(baseUrl, { waitUntil: "load" });
+  await verification.waitForFunction(() => Boolean(window.__verification?.callbacks));
+  const verificationGeometry = async () => verification.evaluate(() => {
+    const host = document.querySelector("#turnstile-widget");
+    const rect = host.getBoundingClientRect();
+    return {
+      y: rect.y, height: rect.height,
+      verified: host.dataset.verified,
+      childVisibility: getComputedStyle(host.firstElementChild).visibility,
+      submitDisabled: document.querySelector("#submit-inquiry").disabled,
+    };
+  });
+  const initial = await verificationGeometry();
+  assert.equal(initial.verified, "false", "08M starts visible until Turnstile verifies");
+  assert.equal(initial.childVisibility, "visible");
+  assert.ok(initial.height >= 72, "08M reserves its full position before verification");
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-1"));
+  const verified = await verificationGeometry();
+  assert.equal(verified.verified, "true");
+  assert.equal(verified.childVisibility, "hidden", "08M widget vanishes after a token");
+  assert.equal(verified.submitDisabled, false, "submission is enabled only after verification");
+  assert.equal(verified.y, initial.y, "widget disappearance cannot move its position");
+  assert.equal(verified.height, initial.height, "verification cannot collapse the grid row");
+  await verification.evaluate(() => window.__verification.callbacks["expired-callback"]());
+  const expired = await verificationGeometry();
+  assert.equal(expired.verified, "false", "expired token re-exposes the challenge");
+  assert.equal(expired.childVisibility, "visible");
+  assert.equal(expired.submitDisabled, true);
+  assert.equal(expired.height, initial.height);
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-2"));
+  await verification.evaluate(() => window.__verification.callbacks["error-callback"]());
+  const errored = await verificationGeometry();
+  assert.equal(errored.verified, "false", "Turnstile errors also expose challenge UI");
+  assert.equal(errored.submitDisabled, true);
+  await verification.locator("#intent").selectOption("private_celebration");
+  await verification.locator("#name").fill("Test Sender");
+  await verification.locator("#email").fill("sender@example.com");
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-final"));
+  await verification.locator("#submit-inquiry").click();
+  await verification.waitForFunction(() => window.__verification.resets === 1);
+  assert.match(submittedBody, /cf-turnstile-response=token-final/, "inquiry sends a verified token");
+  const afterSubmit = await verificationGeometry();
+  assert.equal(afterSubmit.verified, "false", "new submission requires a fresh Turnstile token");
+  assert.equal(afterSubmit.submitDisabled, true, "one-time token cannot be reused");
+  assert.equal(afterSubmit.height, initial.height, "reset leaves a stable footprint");
+  assert.equal(await verification.locator("#form-feedback").getAttribute("data-state"), "success",
+    "the successful inquiry has an accessible visible success notification");
+  await verification.close();
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.route("https://fonts.googleapis.com/**", route => route.abort());
