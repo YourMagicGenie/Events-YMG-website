@@ -167,6 +167,10 @@ try {
           description: bounds(".hero-copy > p"),
           caption: bounds(".hero .photo-note"),
           photo: bounds(".hero .hero-atmosphere"),
+          hero: bounds(".hero"),
+          inquiryButton: bounds(".hero-actions .btn"),
+          audienceLine: bounds(".hero .geo"),
+          approachCopy: bounds(".intro > div:nth-child(2) > p"),
           approach: bounds(".intro"),
           approachEyebrow: bounds(".intro .eyebrow"),
           concepts: bounds(".concepts"),
@@ -192,14 +196,20 @@ try {
         ["02G Hero photo caption", heroPosition.caption.y, 605],
         ["02F Photo top", heroPosition.photo.y, 90],
         ["02F Photo height", heroPosition.photo.height, 610],
-        ["04 Approach start", heroPosition.approach.y, 794],
-        ["04 Approach height", heroPosition.approach.height, 200],
-        ["05 Concepts start", heroPosition.concepts.y, 994],
-        ["05 Concepts height", heroPosition.concepts.height, 782],
-        ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 1017],
-        ["05B Heading", heroPosition.conceptsHeading.y, 1050],
-        ["05C Carousel controls", heroPosition.carouselControls.y, 990],
-        ["05D Carousel track", heroPosition.carouselTrack.y, 1140],
+        ["02 Hero height", heroPosition.hero.height, 610],
+        ["02D Hero inquiry", heroPosition.inquiryButton.y, 526],
+        ["02E Audience line", heroPosition.audienceLine.y, 602],
+        ["04 Approach start", heroPosition.approach.y, 754],
+        ["04 Approach height", heroPosition.approach.height, 176],
+        ["04C Approach description", heroPosition.approachCopy.y, 822],
+        ["05 Concepts start", heroPosition.concepts.y, 930],
+        ["05 Concepts height", heroPosition.concepts.height, 732],
+        ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 953],
+        ["05B Heading", heroPosition.conceptsHeading.y, 986],
+        ["05C Carousel controls", heroPosition.carouselControls.y, 1002],
+        ["05C Carousel X", heroPosition.carouselControls.x, 1079],
+        ["05C Carousel width", heroPosition.carouselControls.width, 110],
+        ["05D Carousel track", heroPosition.carouselTrack.y, 1056],
       ];
       for (const [label, actual, target] of expected) {
         assert.ok(Math.abs(actual - target) <= 5,
@@ -211,12 +221,21 @@ try {
         `02F must end at Y700: ${JSON.stringify(heroPosition)}`);
       assert.ok(heroPosition.carouselArrows.x >= heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
         `05C arrows must sit to the right of 05B text, not cover it: ${JSON.stringify(heroPosition)}`);
-      assert.ok(Math.abs(heroPosition.approachPaddingTop - 31.2) <= 2 && Math.abs(heroPosition.approachPaddingBottom - 32.2) <= 2,
+      assert.ok(Math.abs(heroPosition.approachPaddingTop - 31.2) <= 2 && Math.abs(heroPosition.approachPaddingBottom - 8.2) <= 2,
         `04 removes roughly 20px from each padding: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.conceptsPaddingTop - 24) <= 1 && Math.abs(heroPosition.conceptsPaddingBottom - 32) <= 1,
         `05 trims 20px from both paddings: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.carouselTrack.y - heroPosition.firstCard.y) <= 6,
         `05D child cards move with parent track: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.concepts.y + heroPosition.concepts.height -
+        (heroPosition.carouselTrack.y + heroPosition.carouselTrack.height) - 40) <= 5,
+        `05 section must end 40px after carousel track: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.approachCopy.y + heroPosition.approachCopy.height <=
+        heroPosition.conceptsEyebrow.y - 4,
+        `04C copy must clear 05A eyebrow after text revision: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.carouselControls.x >
+        heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
+        `narrow 05C controls cannot obstruct heading: ${JSON.stringify(heroPosition)}`);
       assert.equal(heroPosition.descriptionLines, 2,
         `02C should occupy precisely two lines at 1280px: ${JSON.stringify(heroPosition)}`);
       assert.ok(heroPosition.description.width >= 600,
@@ -373,8 +392,8 @@ try {
     assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
     assert.ok(heroVisual.fillsPhotoRegion, "hero image always covers its photograph region");
     if (width === 1280) {
-      assert.ok(Math.abs(heroVisual.trimmedPhotoDistance - 40) <= 1,
-        `1280px photo stops 40px before the hero boundary: ${JSON.stringify(heroVisual)}`);
+      assert.ok(Math.abs(heroVisual.trimmedPhotoDistance) <= 1,
+        `1280px photo fills the shortened hero (no dark tail): ${JSON.stringify(heroVisual)}`);
     } else {
       assert.ok(heroVisual.coversHero, "other viewport photos still cover their full hero background");
     }
