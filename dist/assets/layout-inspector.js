@@ -112,7 +112,7 @@
     '<div class="tags" aria-hidden="true"></div>',
     '<div class="outline" aria-hidden="true"></div>',
     '<aside class="panel" aria-label="Layout Inspector controls">',
-    '  <div class="panel-title"><div><strong>YMG Layout Inspector</strong><small>CSS pixels · document coordinates</small></div><button type="button" data-action="close" aria-label="Close layout inspector">✕</button></div>',
+    '  <div class="panel-title"><div><strong>YMG Layout Inspector</strong><small>CSS pixels · document coordinates</small></div><div class="panel-title-actions"><button type="button" data-action="collapse" aria-expanded="true" aria-label="Minimize inspector">−</button><button type="button" data-action="close" aria-label="Close layout inspector">✕</button></div></div>',
     '  <div class="switches">',
     '    <button type="button" data-action="grid" aria-pressed="true">Grid ON</button>',
     '    <button type="button" data-action="labels" aria-pressed="true">IDs: sections</button>',
@@ -209,7 +209,14 @@
     if (!entry) return;
     selected = entry;
     copyButton.textContent = "Copy element reference";
-    if (scroll) entry.element.scrollIntoView({ behavior: "instant", block: "center" });
+    if (scroll) {
+      if (window.innerWidth <= 650) {
+        const rect = entry.element.getBoundingClientRect();
+        window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - 145), behavior: "instant" });
+      } else {
+        entry.element.scrollIntoView({ behavior: "instant", block: "center" });
+      }
+    }
     updateSelection();
     schedule();
   }
@@ -316,6 +323,13 @@
       textArea.select();
       copyButton.textContent = "Select and copy the highlighted text";
     }
+  });
+  const collapseButton = shadow.querySelector('[data-action="collapse"]');
+  collapseButton.addEventListener("click", () => {
+    const collapsed = panel.classList.toggle("is-collapsed");
+    collapseButton.setAttribute("aria-expanded", String(!collapsed));
+    collapseButton.textContent = collapsed ? "+" : "−";
+    collapseButton.setAttribute("aria-label", collapsed ? "Expand inspector" : "Minimize inspector");
   });
   shadow.querySelector('[data-action="close"]').addEventListener("click", () => {
     host.remove();
