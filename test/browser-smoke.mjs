@@ -322,6 +322,12 @@ try {
         assert.ok(Math.abs(compact.controls[id].h - compact.controls.name.h) <= 2,
           `${id} text control must match name input height: ${JSON.stringify(compact.controls)}`);
       }
+      assert.ok(Math.abs(compact.founderBiography.y - 2340) <= 7,
+        `07D founder biography moves 75px down from the owner-supplied 2265px reference: ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.controls.business.h - compact.controls.guests.h) <= 0.25 &&
+        Math.abs(compact.controls.timing.h - compact.controls.format.h) <= 0.25 &&
+        Math.abs(compact.controls.guests.h - compact.controls.format.h) <= 0.25,
+        `08G, 08H, 08I and 08J actual white controls have identical heights: ${JSON.stringify(compact.controls)}`);
       assert.equal(compact.founderParagraphs.length, 2, "07D founder bio is two paragraphs");
       assert.ok(compact.founderSignature.y >= compact.founderBiography.bottom + 1,
         `07E signature flows beneath the expanded biography: ${JSON.stringify(compact)}`);
