@@ -375,3 +375,38 @@
     overflow-wrap: normal;
   }
 }
+
+/* Sixth owner reference pass (#95): 1280px EN field and carousel alignment. */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] .concepts .deck-toolbar {
+    /* Removes the former 14px inset; 05C and 05D share the same right edge. */
+    margin-right: 0;
+  }
+
+  /* Label + 48px control forms one consistent ~74px reference row. */
+  html[lang="en"] #brief .form-grid > div:nth-child(1),
+  html[lang="en"] #brief .form-grid > div:nth-child(4),
+  html[lang="en"] #brief .form-grid > div:nth-child(7),
+  html[lang="en"] #brief .form-grid > div:nth-child(9) {
+    min-height: 74px;
+    height: 74px;
+    align-self: start;
+  }
+  html[lang="en"] #brief #intent,
+  html[lang="en"] #brief #business,
+  html[lang="en"] #brief #timing {
+    height: 48px;
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+  html[lang="en"] #brief #idea {
+    /* Two 17px text lines + 6px vertical padding on each side = 46px. */
+    height: 48px;
+    min-height: 48px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    line-height: 17px;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+}
