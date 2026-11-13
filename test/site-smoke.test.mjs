@@ -18,7 +18,7 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
     ["02B", ".hero h1"],
     ["04", ".intro"],
     ["05D1", "#concept-deck .concept:nth-child(1)"],
-    ["07D", ".about > div:nth-child(2) > p"],
+    ["07D", ".about .founder-bio"],
     ["08C", "#brief"],
     ["08N", "#form-feedback"],
     ["09", ".site-footer"],
@@ -32,6 +32,11 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
   assert.ok(inspector.includes('navigator.clipboard.writeText'), "reference copying is opt-in on click");
   assert.ok(inspectorStyles.includes("background-size: 20px 20px"), "grid shows 20px minor lines");
   assert.ok(inspectorStyles.includes("100px 100px"), "grid shows 100px major lines");
+  assert.ok(inspectorStyles.includes("top: 0; left: 0; right: 0; height: 23px"), "horizontal ruler uses the viewport X origin");
+  assert.ok(inspectorStyles.includes("top: 0; bottom: 0; left: 0; width: 24px"), "vertical ruler uses the viewport Y origin");
+  assert.ok(inspector.includes('dragHandle.addEventListener("pointerdown"'), "layout inspector can be dragged from its title");
+  assert.ok(inspector.includes('event.target.closest(".panel-title-actions")'), "title action buttons do not initiate dragging");
+
 });
 
 test("owner-approved English hero and Approach copy is exact and stays distinct from Italian", () => {
@@ -53,7 +58,7 @@ test("lower-page story moves from partnerships to founder to inquiry without rep
     {
       page: html,
       stages: ["For rooftops, venues & hospitality partners", "Your local point of contact", "Start a conversation"],
-      founder: "I’m Dante David, a Genova-based event organizer from the USA. Through Porto Aperto | Genova, a local international community for social and nightlife events",
+      founder: "I’m Dante David, a Genova-based event organizer originally from the USA and founder of YMG Events. Through Porto Aperto | Genova",
       removed: /From idea to a clear plan|A clear venue partnership|Questions venue owners often ask|not a record of previous YMG bookings|Whether it’s a venue partnership|Prefer a direct conversation\?|Read how we handle your information/,
     },
     {
@@ -78,6 +83,16 @@ test("lower-page story moves from partnerships to founder to inquiry without rep
   }
 });
 
+test("English founder's full two-paragraph biography and message field are preserved", () => {
+  const paragraphs = [
+    "I’m Dante David, a Genova-based event organizer originally from the USA and founder of YMG Events. Through Porto Aperto | Genova, I’ve built a thriving international community around music, nightlife, and shared experiences.",
+    "My team and I bring years of experience organizing everything from intimate gatherings to music festivals and international travel adventures. We work closely with clients, venues, and partners to create memorable experiences. We handle the details so you can enjoy yourself at the event."
+  ];
+  assert.ok(html.includes('<div class="founder-bio"><p>' + paragraphs[0] + '</p><p>' + paragraphs[1] + '</p></div>'));
+  assert.match(html, /<textarea id="idea" name="idea" rows="2" maxlength="5000"/);
+  assert.ok(!italianHtml.includes(paragraphs[0]), "the Italian founder copy is untouched");
+});
+
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [
     { page: html, privacy: '<a href="/privacy.html">Privacy notice</a>', location: "YMG Events · Genova, Italy · P.IVA 03044510992", tagline: "Venue partnerships" },
@@ -93,6 +108,7 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
     assert.ok(footer.includes(tagline), "footer states the Events service and location");
     assert.match(footer, /href="mailto:hello@ymgconsultingservices\.com"/);
     if (page === html) {
+      assert.ok(footer.includes("Venue partnerships &amp; event production</p>"), "English footer tagline drops the city suffix");
       assert.doesNotMatch(footer, /href="#inquire"/, "English footer removes redundant 09C while retaining its email");
     } else {
       assert.match(footer, /href="#inquire"/, "Italian footer CTA remains unchanged");
