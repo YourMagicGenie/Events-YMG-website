@@ -244,6 +244,57 @@ try {
         `1280px hero calibration must not cause overflow: ${JSON.stringify(heroPosition)}`);
     }
 
+    if (width === 1280) {
+      const compact = await page.evaluate(() => {
+        const rect = selector => { const b = document.querySelector(selector).getBoundingClientRect();
+          return { x: b.left + scrollX, y: b.top + scrollY, w: b.width, h: b.height, bottom: b.bottom + scrollY }; };
+        const partnerships = document.querySelector(".partnerships");
+        const inquiry = document.querySelector(".inquiry");
+        const footer = document.querySelector(".site-footer");
+        const businessHelp = document.querySelector("#business-help");
+        const header = document.querySelector(".inquiry h2");
+        const partLast = document.querySelector(".partnership:last-child");
+        return {
+          partnership: rect(".partnerships"), partnershipLast: rect(".partnership:last-child"),
+          partnershipPadding: [parseFloat(getComputedStyle(partnerships).paddingTop),parseFloat(getComputedStyle(partnerships).paddingBottom)],
+          partnershipLastBorder: getComputedStyle(partLast).borderBottomWidth,
+          inquiry: rect(".inquiry"), inquiryHeading: rect(".inquiry h2"),
+          headingText: header.textContent, headingLineHeight: parseFloat(getComputedStyle(header).lineHeight),
+          inquiryPaddingTop: parseFloat(getComputedStyle(inquiry).paddingTop),
+          business: rect("#brief .form-grid > div:nth-child(4)"),
+          format: rect("#brief .form-grid > div:nth-child(5)"),
+          guests: rect("#brief .form-grid > div:nth-child(6)"),
+          budget: rect("#brief .form-grid > div:nth-child(8)"),
+          message: rect("#brief .form-grid > div:nth-child(9)"),
+          helpText: businessHelp.textContent, helpVisuallyClipped: getComputedStyle(businessHelp).clipPath,
+          captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
+          submit: rect("#submit-inquiry"),
+          footer: rect(".site-footer"), footerPaddingTop:parseFloat(getComputedStyle(footer).paddingTop),
+          footerEmail:rect(".footer-contact"), footerLinkCount:document.querySelectorAll(".footer-cta").length,
+        };
+      });
+      assert.ok(Math.abs(compact.partnershipPadding[0] - 39) <= 1, JSON.stringify(compact));
+      assert.ok(Math.abs(compact.partnershipPadding[1] - 11) <= 1, JSON.stringify(compact));
+      assert.equal(compact.partnershipLastBorder, "0px", "06F3 final underline removed");
+      assert.ok(Math.abs(compact.partnership.bottom - 2139) <= 5, `06 should end near Y2139: ${JSON.stringify(compact)}`);
+      assert.equal(compact.headingText, "Tell us what you\u0027re planning");
+      assert.ok(compact.inquiryHeading.h <= compact.headingLineHeight + 3, `08B heading must occupy one line: ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.inquiryPaddingTop - 41.2) <= 2, `08 top padding -10px: ${JSON.stringify(compact)}`);
+      assert.equal(compact.helpText, "", "08G redundant business prompt is removed");
+      assert.equal(compact.helpVisuallyClipped, "inset(50%)", "conditional helper remains accessible but does not occupy layout");
+      for (const id of ["business", "format", "guests"]) {
+        assert.ok(Math.abs(compact[id].h - 74) <= 2, `08G/08H/08I fields equal 74px: ${JSON.stringify(compact)}`);
+      }
+      assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
+        `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
+      assert.ok(compact.status.w <= 2 && compact.status.h <= 2, "08N reserves no permanent visible box");
+      assert.equal(compact.footerLinkCount, 0, "09C redundant English footer inquiry link removed");
+      assert.ok(Math.abs(compact.footerPaddingTop - 18) <= 1, "09 top padding reduced by 5px");
+      assert.ok(compact.footerEmail.x >= 700, "09B aligned to the right without 09C");
+      assert.ok(compact.budget.y < compact.captcha.y && compact.message.y < compact.captcha.y,
+        "08K/08L precede the compact CAPTCHA/submit row without overlap");
+    }
+
     const metrics = await page.evaluate(() => {
       const logo = document.querySelector(".logo");
       const subtitle = logo.querySelector("small");
@@ -575,7 +626,12 @@ try {
     assert.equal(disabledBusinessField.disabled, true, `${width}px shows the conditional business field as disabled before a path is selected`);
     assert.equal(disabledBusinessField.opacity, "1", `${width}px disabled field remains fully legible`);
     assert.notEqual(disabledBusinessField.backgroundColor, audit.fields.find(field => field.id === "name").backgroundColor, `${width}px disabled and editable fields have distinct surfaces`);
-    assert.equal(new Set(audit.statusHeights).size, 1, `neutral, error and success feedback reserve the same height at ${width}px: ${JSON.stringify(audit.statusHeights)}`);
+    if (width === 1280) {
+      assert.ok(audit.statusHeights[0] <= 2 && audit.statusHeights[1] > 24 && audit.statusHeights[2] > 24,
+        `1280px neutral feedback has no visible panel, but error/success remain visible: ${JSON.stringify(audit.statusHeights)}`);
+    } else {
+      assert.equal(new Set(audit.statusHeights).size, 1, `other viewports retain stable feedback height at ${width}px: ${JSON.stringify(audit.statusHeights)}`);
+    }
     assert.equal(audit.errorField.borderColor, "rgb(116, 48, 55)", `${width}px error fields use the accessible red border`);
     assert.notEqual(audit.errorField.backgroundColor, "#faf8f2", `${width}px error fields receive a distinct surface`);
 
