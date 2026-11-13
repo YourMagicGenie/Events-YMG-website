@@ -208,17 +208,17 @@
     padding-bottom: calc(var(--events-section-space) - 43px);
   }
   html[lang="en"] .intro > div:nth-child(2) {
-    /* Text Y825 - hero40 + local37 = Y822 (owner's Y862 adjusted for hero). */
+    /* The paragraph's actual pre-offset top is Y792, so +30px places it at Y822. */
     position: relative;
-    top: 37px;
+    top: 30px;
   }
   html[lang="en"] .concepts {
-    /* Expected Y930; track bottom1622 + 40px breathing room -> bottom1662. */
-    min-height: 732px;
+    /* Measured track height ~557px: bottom1613 + 40px -> section bottom1653. */
+    min-height: 723px;
   }
   html[lang="en"] .concepts .concept-deck {
     /* Reclaim empty flow after shifting the track while keeping its controls in flow. */
-    margin-bottom: -40px;
+    margin-bottom: -49px;
   }
   html[lang="en"] .concepts .deck-toolbar {
     /* 05C full-width ghost toolbar replaced with a right-aligned 110px control. */
