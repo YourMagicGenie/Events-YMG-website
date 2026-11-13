@@ -275,7 +275,7 @@ try {
           timing: rect("#brief .form-grid > div:nth-child(7)"),
           budget: rect("#brief .form-grid > div:nth-child(8)"),
           message: rect("#brief .form-grid > div:nth-child(9)"),
-          controls: Object.fromEntries(["intent","name","business","guests","timing","budget","idea"].map(id => [
+          controls: Object.fromEntries(["intent","name","business","format","guests","timing","budget","idea"].map(id => [
             id, rect("#" + id)
           ])),
           founderBiography: rect(".founder-bio"),
