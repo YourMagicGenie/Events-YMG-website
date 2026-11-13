@@ -530,8 +530,8 @@ try {
   await measurements.screenshot({ path: resolve(screenshotRoot, "inspector-desktop-1440.png"), fullPage: false });
   await inspectorButtons.click();
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "false", "normal interaction can be restored");
-  await measurements.locator('.primary-nav a[href="#partners"]').click();
-  assert.equal(new URL(measurements.url()).hash, "#partners",
+  await measurements.locator('.primary-nav a[href="#approach"]').click();
+  assert.equal(new URL(measurements.url()).hash, "#approach",
     "regular site navigation works after inspection is turned off");
   await overlay.locator('[data-action="close"]').click();
   assert.equal(await measurements.locator("#ymg-layout-inspector").count(), 0, "closing removes the inspector");
