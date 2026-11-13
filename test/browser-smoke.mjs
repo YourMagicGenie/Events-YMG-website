@@ -150,6 +150,45 @@ try {
     }
     assert.equal(externalFontRequests.length, 0, `${width}px page loads no Google Fonts stylesheet or font file`);
 
+    if (width === 1280) {
+      await page.evaluate(async () => { await document.fonts.ready; });
+      const heroPosition = await page.evaluate(() => {
+        const bounds = selector => {
+          const rect = document.querySelector(selector).getBoundingClientRect();
+          return { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+        };
+        const paragraph = document.querySelector(".hero-copy > p");
+        const paragraphHeight = paragraph.getBoundingClientRect().height;
+        const paragraphLineHeight = Number.parseFloat(getComputedStyle(paragraph).lineHeight);
+        return {
+          wordmark: bounds("header .logo"),
+          eyebrow: bounds(".hero .eyebrow"),
+          headline: bounds(".hero h1"),
+          description: bounds(".hero-copy > p"),
+          caption: bounds(".hero .photo-note"),
+          descriptionLines: Math.round(paragraphHeight / paragraphLineHeight),
+          overflow: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      });
+      const expected = [
+        ["01A Header wordmark", heroPosition.wordmark.y, 4],
+        ["02A Hero eyebrow", heroPosition.eyebrow.y, 121],
+        ["02B Hero headline", heroPosition.headline.y, 164],
+        ["02C Hero description", heroPosition.description.y, 454],
+        ["02G Hero photo caption", heroPosition.caption.y, 605],
+      ];
+      for (const [label, actual, target] of expected) {
+        assert.ok(Math.abs(actual - target) <= 5,
+          `${label} 1280px should reach Y≈${target}±5px; actual=${actual}: ${JSON.stringify(heroPosition)}`);
+      }
+      assert.equal(heroPosition.descriptionLines, 2,
+        `02C should occupy precisely two lines at 1280px: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.description.width >= 600,
+        `02C should use the wider available text column: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.overflow <= 0,
+        `1280px hero calibration must not cause overflow: ${JSON.stringify(heroPosition)}`);
+    }
+
     const metrics = await page.evaluate(() => {
       const logo = document.querySelector(".logo");
       const subtitle = logo.querySelector("small");
