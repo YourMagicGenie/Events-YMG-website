@@ -125,7 +125,7 @@ IDs are assigned dynamically to the existing matching elements in inspector mode
 | `07A` | Founder eyebrow | `.about .eyebrow` |
 | `07B` | Founder heading | `.about h2` |
 | `07C` | Founder portrait | `.founder-portrait` |
-| `07D` | Founder biography | `.about > div:nth-child(2) > p` |
+| `07D` | Founder biography (both paragraphs) | `.about .founder-bio` |
 | `07E` | Founder signature | `.about .signature` |
 
 ### 08 — Inquiry
