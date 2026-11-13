@@ -166,6 +166,20 @@ try {
           headline: bounds(".hero h1"),
           description: bounds(".hero-copy > p"),
           caption: bounds(".hero .photo-note"),
+          photo: bounds(".hero .hero-atmosphere"),
+          approach: bounds(".intro"),
+          approachEyebrow: bounds(".intro .eyebrow"),
+          concepts: bounds(".concepts"),
+          conceptsEyebrow: bounds(".concepts > .eyebrow"),
+          conceptsHeading: bounds(".concepts h2"),
+          carouselControls: bounds(".deck-toolbar"),
+          carouselArrows: bounds(".deck-actions"),
+          carouselTrack: bounds("#concept-deck"),
+          firstCard: bounds("#concept-deck .concept"),
+          approachPaddingTop: parseFloat(getComputedStyle(document.querySelector(".intro")).paddingTop),
+          approachPaddingBottom: parseFloat(getComputedStyle(document.querySelector(".intro")).paddingBottom),
+          conceptsPaddingTop: parseFloat(getComputedStyle(document.querySelector(".concepts")).paddingTop),
+          conceptsPaddingBottom: parseFloat(getComputedStyle(document.querySelector(".concepts")).paddingBottom),
           descriptionLines: Math.round(paragraphHeight / paragraphLineHeight),
           overflow: document.documentElement.scrollWidth - window.innerWidth,
         };
@@ -173,14 +187,36 @@ try {
       const expected = [
         ["01A Header wordmark", heroPosition.wordmark.y, 4],
         ["02A Hero eyebrow", heroPosition.eyebrow.y, 121],
-        ["02B Hero headline", heroPosition.headline.y, 164],
-        ["02C Hero description", heroPosition.description.y, 454],
+        ["02B Hero headline", heroPosition.headline.y, 144],
+        ["02C Hero description", heroPosition.description.y, 439],
         ["02G Hero photo caption", heroPosition.caption.y, 605],
+        ["02F Photo top", heroPosition.photo.y, 90],
+        ["02F Photo height", heroPosition.photo.height, 610],
+        ["04 Approach start", heroPosition.approach.y, 794],
+        ["04 Approach height", heroPosition.approach.height, 200],
+        ["05 Concepts start", heroPosition.concepts.y, 994],
+        ["05 Concepts height", heroPosition.concepts.height, 782],
+        ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 1017],
+        ["05B Heading", heroPosition.conceptsHeading.y, 1050],
+        ["05C Carousel controls", heroPosition.carouselControls.y, 990],
+        ["05D Carousel track", heroPosition.carouselTrack.y, 1140],
       ];
       for (const [label, actual, target] of expected) {
         assert.ok(Math.abs(actual - target) <= 5,
           `${label} 1280px should reach Y≈${target}±5px; actual=${actual}: ${JSON.stringify(heroPosition)}`);
       }
+      assert.ok(Math.abs(heroPosition.approach.y + heroPosition.approach.height - heroPosition.concepts.y) <= 1,
+        `04/05 sections should meet precisely: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.photo.y + heroPosition.photo.height - 700) <= 2,
+        `02F must end at Y700: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.carouselArrows.x >= heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
+        `05C arrows must sit to the right of 05B text, not cover it: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.approachPaddingTop - 31.2) <= 2 && Math.abs(heroPosition.approachPaddingBottom - 32.2) <= 2,
+        `04 removes roughly 20px from each padding: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.conceptsPaddingTop - 24) <= 1 && Math.abs(heroPosition.conceptsPaddingBottom - 32) <= 1,
+        `05 trims 20px from both paddings: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.carouselTrack.y - heroPosition.firstCard.y) <= 6,
+        `05D child cards move with parent track: ${JSON.stringify(heroPosition)}`);
       assert.equal(heroPosition.descriptionLines, 2,
         `02C should occupy precisely two lines at 1280px: ${JSON.stringify(heroPosition)}`);
       assert.ok(heroPosition.description.width >= 600,
@@ -307,6 +343,7 @@ try {
       const hero = document.querySelector(".hero");
       const imageRect = image.getBoundingClientRect();
       const heroRect = hero.getBoundingClientRect();
+      const photoRect = document.querySelector(".hero-atmosphere").getBoundingClientRect();
       const overlay = getComputedStyle(document.querySelector(".hero-atmosphere"), "::after").backgroundImage;
       return {
         photoBelowCopy: imageRect.top >= document.querySelector(".hero-copy").getBoundingClientRect().bottom - 1,
@@ -320,6 +357,8 @@ try {
         sizes: image.sizes,
         objectFit: getComputedStyle(image).objectFit,
         coversHero: Math.abs(imageRect.width - heroRect.width) < 1 && Math.abs(imageRect.height - heroRect.height) < 1,
+        fillsPhotoRegion: Math.abs(imageRect.width - photoRect.width) < 1 && Math.abs(imageRect.height - photoRect.height) < 1,
+        trimmedPhotoDistance: heroRect.bottom - photoRect.bottom,
         overlayAlpha: [...overlay.matchAll(/rgba\([^)]*,\s*([\d.]+)\s*\)/g)].map(match => Number(match[1])),
         primaryHref: document.querySelector(".hero-actions .btn.primary").getAttribute("href"),
         secondaryPresent: [...document.querySelectorAll(".hero-actions a")].some(link => /discover the atmosphere/i.test(link.textContent)),
@@ -332,7 +371,13 @@ try {
     assert.equal(heroVisual.mobileMedia, "(max-width: 540px)", "mobile image source has a defined breakpoint");
     assert.equal(heroVisual.sizes, "100vw", "hero image size matches the full-width composition");
     assert.equal(heroVisual.objectFit, "cover", "hero image crops without distortion");
-    assert.ok(heroVisual.coversHero, "hero image covers its background region");
+    assert.ok(heroVisual.fillsPhotoRegion, "hero image always covers its photograph region");
+    if (width === 1280) {
+      assert.ok(Math.abs(heroVisual.trimmedPhotoDistance - 40) <= 1,
+        `1280px photo stops 40px before the hero boundary: ${JSON.stringify(heroVisual)}`);
+    } else {
+      assert.ok(heroVisual.coversHero, "other viewport photos still cover their full hero background");
+    }
     assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "original overlay preserves text contrast");
     assert.equal(heroVisual.primaryHref, "#inquire", "primary hero CTA keeps its destination");
     assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
