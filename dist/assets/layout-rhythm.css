@@ -413,8 +413,8 @@
 
 /*
  * Seventh measured EN desktop pass (#97): preserve the photograph and move
- * the entire founder text column (07D biography + 07E signature) down 75px
- * in natural grid flow. Align the *actual white controls*, not only wrappers.
+ * the entire founder text column (07D biography + 07E signature) down 71px
+ * in natural grid flow (75px prior, then -4px on 14 Nov). Align the *actual white controls*, not only wrappers.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
   html[lang="en"] .about > div:nth-child(2) {
@@ -430,6 +430,3 @@
     box-sizing: border-box;
   }
 }
-
-/* Eighth owner-calibrated refinement (14 Nov): EN 1280px founder text */
-/* The existing +75px flow padding was reduced by exactly 4px to +71px. */
