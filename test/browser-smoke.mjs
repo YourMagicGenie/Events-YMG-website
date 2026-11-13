@@ -256,6 +256,9 @@ try {
         const partLast = document.querySelector(".partnership:last-child");
         return {
           partnership: rect(".partnerships"), partnershipLast: rect(".partnership:last-child"),
+          partnershipPoints: rect(".partnerships > div:nth-child(2)"),
+          partnershipLastPaddingBottom: parseFloat(getComputedStyle(partLast).paddingBottom),
+          founder: rect(".about"),
           partnershipPadding: [parseFloat(getComputedStyle(partnerships).paddingTop),parseFloat(getComputedStyle(partnerships).paddingBottom)],
           partnershipLastBorder: getComputedStyle(partLast).borderBottomWidth,
           inquiry: rect(".inquiry"), inquiryHeading: rect(".inquiry h2"),
@@ -270,14 +273,22 @@ try {
           captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
           statusPosition: getComputedStyle(document.querySelector("#form-feedback")).position,
           submit: rect("#submit-inquiry"),
-          footer: rect(".site-footer"), footerPaddingTop:parseFloat(getComputedStyle(footer).paddingTop),
+          footer: rect(".site-footer"), footerIdentity: rect(".footer-identity"),
+          footerLogo: rect(".footer-identity .logo"), footerTagline: rect(".footer-tagline"),
+          footerPaddingTop:parseFloat(getComputedStyle(footer).paddingTop),
           footerEmail:rect(".footer-contact"), footerLinkCount:document.querySelectorAll(".footer-cta").length,
         };
       });
       assert.ok(Math.abs(compact.partnershipPadding[0] - 39) <= 1, JSON.stringify(compact));
       assert.ok(Math.abs(compact.partnershipPadding[1] - 11) <= 1, JSON.stringify(compact));
       assert.equal(compact.partnershipLastBorder, "0px", "06F3 final underline removed");
-      assert.ok(Math.abs(compact.partnership.bottom - 2139) <= 5, `06 should end near Y2139: ${JSON.stringify(compact)}`);
+      assert.equal(compact.partnershipLastPaddingBottom, 0, "06F3 has no bottom padding");
+      assert.ok(Math.abs(compact.partnershipPoints.bottom - compact.partnershipLast.bottom) <= 1,
+        `06F list must finish at the last point\u0027s bottom: ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.partnership.bottom - 2099) <= 5,
+        `06 should end 40px earlier than its previous Y2139 baseline: ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.founder.y - compact.partnership.bottom) <= 1,
+        `07 must follow the shorter partnership section naturally: ${JSON.stringify(compact)}`);
       assert.equal(compact.headingText, "Tell us what you\u0027re planning");
       assert.ok(compact.inquiryHeading.h <= compact.headingLineHeight + 3, `08B heading must occupy one line: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.inquiryPaddingTop - 41.2) <= 2, `08 top padding -10px: ${JSON.stringify(compact)}`);
@@ -290,6 +301,15 @@ try {
         `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
       assert.ok((compact.status.w <= 2 && compact.status.h <= 2) || compact.statusPosition === "fixed",
         "08N reserves no permanent space: neutral status is visually hidden and actionable errors are fixed notifications");
+      assert.ok(Math.abs(compact.footerIdentity.w - 300) <= 1 && Math.abs(compact.footerIdentity.h - 70) <= 1,
+        `09A needs W300 H70: ${JSON.stringify(compact)}`);
+      assert.ok(compact.footerLogo.y >= compact.footerIdentity.y - 1 &&
+        compact.footerLogo.bottom <= compact.footerIdentity.bottom + 1,
+        `footer wordmark must fit its 70px identity: ${JSON.stringify(compact)}`);
+      assert.ok(compact.footerTagline.y >= compact.footerLogo.bottom - 1 &&
+        compact.footerTagline.bottom <= compact.footerIdentity.bottom + 1 &&
+        compact.footerTagline.w <= compact.footerIdentity.w + 1,
+        `footer full tagline must remain visible inside W300 H70: ${JSON.stringify(compact)}`);
       assert.equal(compact.footerLinkCount, 0, "09C redundant English footer inquiry link removed");
       assert.ok(Math.abs(compact.footerPaddingTop - 18) <= 1, "09 top padding reduced by 5px");
       assert.ok(compact.footerEmail.x >= 700, "09B aligned to the right without 09C");
@@ -883,6 +903,19 @@ try {
     assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `clearing slide ${index + 1} preserves the inquiry path`);
     assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), "", `clearing slide ${index + 1} sends an empty format for path-aware generic fallback`);
   }
+  await mobile.goto(baseUrl, { waitUntil: "load" });
+  assert.equal(await mobile.locator("#business").getAttribute("placeholder"), "Choose an inquiry type",
+    "English initial business placeholder is concise");
+  assert.equal(await mobile.locator("#business-label").textContent(), "Choose an inquiry type",
+    "English initial business label matches the placeholder");
+  assert.equal(await mobile.locator("#budget").getAttribute("placeholder"), "Event or per-guest budget...",
+    "budget placeholder matches approved wording");
+  await mobile.locator("#intent").selectOption("private_celebration");
+  assert.equal(await mobile.locator("#business").getAttribute("placeholder"), "If you already know...",
+    "private celebration displays the optional short location placeholder");
+  assert.equal(await mobile.locator("#business").evaluate(input => input.required), false,
+    "private celebration keeps the venue optional");
+
   await mobile.locator("#format").selectOption("Wine pairing");
   assert.equal(await mobile.locator("#format-context").isVisible(), true, "a manually changed event format remains explicit");
   assert.match(await mobile.locator("#format-context-status").textContent(), /Wine pairing/);
