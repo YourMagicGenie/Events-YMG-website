@@ -203,7 +203,7 @@ try {
         ["04 Approach height", heroPosition.approach.height, 176],
         ["04C Approach description", heroPosition.approachCopy.y, 822],
         ["05 Concepts start", heroPosition.concepts.y, 930],
-        ["05 Concepts height", heroPosition.concepts.height, 732],
+        ["05 Concepts height", heroPosition.concepts.height, 723],
         ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 953],
         ["05B Heading", heroPosition.conceptsHeading.y, 986],
         ["05C Carousel controls", heroPosition.carouselControls.y, 1002],
