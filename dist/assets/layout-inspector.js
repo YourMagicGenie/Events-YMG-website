@@ -51,7 +51,7 @@
     ["07A", "Founder eyebrow", ".about .eyebrow"],
     ["07B", "Founder heading", ".about h2"],
     ["07C", "Founder portrait", ".founder-portrait"],
-    ["07D", "Founder biography", ".about > div:nth-child(2) > p"],
+    ["07D", "Founder biography", ".about .founder-bio"],
     ["07E", "Founder signature", ".about .signature"],
     ["08", "Inquiry section", ".inquiry"],
     ["08A", "Inquiry eyebrow", ".inquiry .eyebrow"],
@@ -112,7 +112,7 @@
     '<div class="tags" aria-hidden="true"></div>',
     '<div class="outline" aria-hidden="true"></div>',
     '<aside class="panel" aria-label="Layout Inspector controls">',
-    '  <div class="panel-title"><div><strong>YMG Layout Inspector</strong><small>CSS pixels · document coordinates</small></div><div class="panel-title-actions"><button type="button" data-action="collapse" aria-expanded="true" aria-label="Minimize inspector">−</button><button type="button" data-action="close" aria-label="Close layout inspector">✕</button></div></div>',
+    '  <div class="panel-title" tabindex="0" aria-label="Move YMG Layout Inspector: drag here or use arrow keys"><div><strong>YMG Layout Inspector</strong><small>CSS pixels · document coordinates · drag to move</small></div><div class="panel-title-actions"><button type="button" data-action="collapse" aria-expanded="true" aria-label="Minimize inspector">−</button><button type="button" data-action="close" aria-label="Close layout inspector">✕</button></div></div>',
     '  <div class="switches">',
     '    <button type="button" data-action="grid" aria-pressed="true">Grid ON</button>',
     '    <button type="button" data-action="labels" aria-pressed="true">IDs: sections</button>',
@@ -124,7 +124,7 @@
     '  <label for="ymg-inspector-copytext">Copy-ready change request</label>',
     '  <textarea id="ymg-inspector-copytext" readonly rows="3"></textarea>',
     '  <button type="button" class="copy" data-action="copy">Copy element reference</button>',
-    '  <p class="help">X + right / − left · Y + down / − up. Use px, not mm. State the screen width when requesting a change. Click a page element while Inspect is ON; turn it OFF to operate the site normally.</p>',
+    '  <p class="help">X + right / − left · Y + down / − up. Use px, not mm. State the screen width when requesting a change. Drag the panel by its title or use arrow keys when its title is focused. Click a page element while Inspect is ON; turn it OFF to operate the site normally.</p>',
     '</aside>'
   ].join("");
   shadow.append(styles, surface);
@@ -143,6 +143,70 @@
   const labelsButton = shadow.querySelector('[data-action="labels"]');
   const inspectButton = shadow.querySelector('[data-action="inspect"]');
   const copyButton = shadow.querySelector('[data-action="copy"]');
+  const dragHandle = shadow.querySelector(".panel-title");
+  let dragged = false;
+  let dragging = null;
+  const panelMargin = 4;
+
+  function clampPanelPosition(left, top) {
+    const maxLeft = Math.max(panelMargin, window.innerWidth - panel.offsetWidth - panelMargin);
+    const maxTop = Math.max(panelMargin, window.innerHeight - panel.offsetHeight - panelMargin);
+    return {
+      left: Math.min(maxLeft, Math.max(panelMargin, left)),
+      top: Math.min(maxTop, Math.max(panelMargin, top))
+    };
+  }
+  function movePanel(left, top) {
+    const clamped = clampPanelPosition(left, top);
+    panel.style.left = clamped.left + "px";
+    panel.style.top = clamped.top + "px";
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+    dragged = true;
+  }
+  function keepPanelVisible() {
+    if (!dragged) return;
+    const rect = panel.getBoundingClientRect();
+    movePanel(rect.left, rect.top);
+  }
+  dragHandle.addEventListener("pointerdown", event => {
+    /* Let panel action buttons activate normally without initiating a drag. */
+    if (event.button !== 0 || event.target.closest(".panel-title-actions")) return;
+    const rect = panel.getBoundingClientRect();
+    dragging = {
+      id: event.pointerId, startX: event.clientX, startY: event.clientY,
+      left: rect.left, top: rect.top
+    };
+    dragHandle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  dragHandle.addEventListener("pointermove", event => {
+    if (!dragging || event.pointerId !== dragging.id) return;
+    movePanel(
+      dragging.left + event.clientX - dragging.startX,
+      dragging.top + event.clientY - dragging.startY
+    );
+  });
+  function finishDragging(event) {
+    if (!dragging || event.pointerId !== dragging.id) return;
+    dragging = null;
+    if (dragHandle.hasPointerCapture(event.pointerId)) dragHandle.releasePointerCapture(event.pointerId);
+  }
+  dragHandle.addEventListener("pointerup", finishDragging);
+  dragHandle.addEventListener("pointercancel", finishDragging);
+  dragHandle.addEventListener("keydown", event => {
+    if (event.target !== dragHandle) return;
+    const delta = {
+      ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+      ArrowUp: [0, -1], ArrowDown: [0, 1]
+    }[event.key];
+    if (!delta) return;
+    const rect = panel.getBoundingClientRect();
+    const step = event.shiftKey ? 25 : 10;
+    movePanel(rect.left + delta[0] * step, rect.top + delta[1] * step);
+    event.preventDefault();
+  });
+
 
   for (const entry of entries) {
     const option = document.createElement("option");
@@ -330,6 +394,7 @@
     collapseButton.setAttribute("aria-expanded", String(!collapsed));
     collapseButton.textContent = collapsed ? "+" : "−";
     collapseButton.setAttribute("aria-label", collapsed ? "Expand inspector" : "Minimize inspector");
+    keepPanelVisible();
   });
   shadow.querySelector('[data-action="close"]').addEventListener("click", () => {
     host.remove();
@@ -360,7 +425,7 @@
     }
   });
   window.addEventListener("scroll", () => { redrawRulers = true; schedule(); }, { passive: true });
-  window.addEventListener("resize", () => { redrawRulers = true; schedule(); }, { passive: true });
+  window.addEventListener("resize", () => { keepPanelVisible(); redrawRulers = true; schedule(); }, { passive: true });
   const resizeObserver = new ResizeObserver(schedule);
   for (const entry of entries) resizeObserver.observe(entry.element);
   updateSelection();
