@@ -1109,12 +1109,12 @@ try {
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the Italian card chooses the venue partnership pathway");
   assert.equal(await mobile.locator("#format-context").isVisible(), true, "the Italian route shows its selected event format");
-  assert.equal(await mobile.locator("#format-context-status").textContent(), "Formato selezionato: Serate in terrazza", "the Italian context summary is localized while preserving the canonical backend value");
-  assert.equal(await mobile.locator("#clear-format").textContent(), "Rimuovi il formato selezionato", "the Italian clear action is localized");
+  assert.equal(await mobile.locator("#format-context-status").textContent(), "Format selezionato: Serate in terrazza", "the Italian context summary is localized while preserving the canonical backend value");
+  assert.equal(await mobile.locator("#clear-format").textContent(), "Rimuovi il format selezionato", "the Italian clear action is localized");
   await mobile.locator("#clear-format").click();
   assert.equal(await mobile.locator("#format").inputValue(), "", "Italian users can remove a selected format");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "clearing an Italian format preserves the venue inquiry path");
-  assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
+  assert.equal(await mobile.locator("#business-label").textContent(), "Locale o location *", "Italian venue field explains its purpose");
   assert.equal(await mobile.locator('a[href*="instagram.com"]').count(), 0, "the Italian founder section no longer links to Instagram");
   assert.equal(await mobile.locator(".offer-item, .faq-item, .process").count(), 0, "the Italian page drops the same repeated sections");
   const italianDownload = mobile.locator(".partnership-download");
