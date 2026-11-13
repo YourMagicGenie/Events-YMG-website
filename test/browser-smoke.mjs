@@ -278,6 +278,7 @@ try {
           controls: Object.fromEntries(["intent","name","business","format","guests","timing","budget","idea"].map(id => [
             id, rect("#" + id)
           ])),
+          founderTextPadding: parseFloat(getComputedStyle(document.querySelector(".about > div:nth-child(2)")).paddingTop),
           founderBiography: rect(".founder-bio"),
           founderSignature: rect(".about .signature"),
           founderParagraphs: [...document.querySelectorAll(".founder-bio p")].map(p => p.textContent),
@@ -322,8 +323,10 @@ try {
         assert.ok(Math.abs(compact.controls[id].h - compact.controls.name.h) <= 2,
           `${id} text control must match name input height: ${JSON.stringify(compact.controls)}`);
       }
-      assert.ok(Math.abs(compact.founderBiography.y - 2331) <= 5,
-        `07D founder biography moves 75px relative to rendered 2256px baseline (owner reference ~2265px): ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.founderTextPadding - 176) <= 0.25,
+        `07D/07E column padding must be the prior 180px minus 4px at width 1280: ${JSON.stringify(compact)}`);
+      assert.ok(Math.abs(compact.founderBiography.y - 2327) <= 2,
+        `07D biography must move 4px upward from browser-measured Y2331 without changing neighboring sections: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.controls.business.h - compact.controls.guests.h) <= 0.25 &&
         Math.abs(compact.controls.timing.h - compact.controls.format.h) <= 0.25 &&
         Math.abs(compact.controls.guests.h - compact.controls.format.h) <= 0.25,
