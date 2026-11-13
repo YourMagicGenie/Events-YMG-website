@@ -108,3 +108,30 @@
   .partnerships, .about, .inquiry { padding-top: 42px; padding-bottom: 42px; }
   .inquiry { gap: 22px; }
 }
+
+/*
+ * 1280px English-only hero calibration — Layout Inspector #85.
+ * Preserve baseline 1280px section flow by applying each change as an independent
+ * delta, not by translating all children by the same amount.
+ */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] header .logo { position: relative; top: -3px; }
+  html[lang="en"] .hero-copy {
+    /* Existing 4vw (~51px at 1280) minus 20px: eyebrow Y 141 -> 121. */
+    padding-top: calc(clamp(48px, 4vw, 64px) - 20px);
+  }
+  html[lang="en"] .hero h1 {
+    /* +5px top margin cancels 5px of eyebrow's -20px shift. */
+    margin-top: 25px;
+    /* +5px bottom margin cancels 5px of headline's -15px shift. */
+    margin-bottom: 27px;
+  }
+  html[lang="en"] .hero-copy > p {
+    /* Full copy column permits a two-line paragraph, rather than three. */
+    max-width: 660px;
+  }
+  html[lang="en"] .photo-note {
+    /* Bottom anchor moves caption upward while leaving photo framing intact. */
+    bottom: 79px;
+  }
+}
