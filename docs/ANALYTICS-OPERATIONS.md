@@ -2,12 +2,7 @@
 
 ## Current state
 
-The feature is **off by default**. The isolated preview config sets
-`EVENTS_METRICS_ENABLED` to `false`; production is deployed automatically from checked main merges. The public English and Italian privacy notices therefore
-continue to describe the current no-analytics behavior. Do not turn this on
-until issue [#9](https://github.com/YourMagicGenie/Events-YMG-website/issues/9)
-has a self-managed processing review and owner retention/activation decision and the notice is updated to match the actual
-Worker setup.
+**Enabled in production on 14 November 2026** at the owner's direction (#30). The owner accepted Analytics Engine's fixed, automatic three-month retention. `wrangler.production.json` binds the `events_metrics` dataset as `EVENTS_ANALYTICS`, adds the separate 30/minute `EVENTS_METRICS_LIMITER` and sets `EVENTS_METRICS_ENABLED` to `"true"`. Both privacy notices (section 6, plus the provider and retention sections) describe the anonymous counts, legitimate-interest basis and three-month deletion. The isolated preview config keeps metrics off.
 
 The site checks the Worker's same-origin `/api/events/metrics/config` endpoint.
 When it is disabled, the browser sends no page, section, concept or inquiry
@@ -100,5 +95,6 @@ Complete these steps only after #9 privacy review:
 - [Cloudflare Monitors](https://developers.cloudflare.com/notifications/monitors/)
 - [Analytics Engine SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)
 
-## Current activation boundary — 11 November
-Optional metrics remain disabled. Owner did not approve the fixed Analytics Engine three-month retention or activation; do not infer that decision from permission to complete independent technical work. The actual parent-zone automatic RUM injection is now disabled for Events only through configuration rule 99bc03ac741e44ccab032c4d13e9b655. This is separate from the dormant conversion-metrics implementation.
+## Activation history
+- 11 November 2026: kept disabled pending the owner's retention decision. The parent-zone automatic RUM injection was disabled for Events only through configuration rule 99bc03ac741e44ccab032c4d13e9b655; that stays separate from these counts.
+- 14 November 2026: owner approved activation and three-month retention; privacy notices updated in the same release. The relay-failure monitor (step 4) still has to be created and tested in the Cloudflare dashboard.

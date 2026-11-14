@@ -1155,9 +1155,18 @@ try {
   assert.ok(ItalianDesktopMetrics.documentWidth <= ItalianDesktopMetrics.width, `1440px Italian page has no horizontal overflow: ${JSON.stringify(ItalianDesktopMetrics)}`);
   assert.ok(await mobile.locator("#language-switch").isVisible(), "the English language switch is visible on desktop");
   for (const imageSelector of [".hero-atmosphere img", ".founder-portrait"]) {
+    // Widening the viewport can make srcset switch sources mid-decode, which
+    // rejects decode() while the new candidate loads; retry briefly.
     const loaded = await mobile.locator(imageSelector).evaluate(async image => {
-      await image.decode();
-      return image.naturalWidth > 0;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        try {
+          await image.decode();
+          return image.naturalWidth > 0;
+        } catch {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      return image.complete && image.naturalWidth > 0;
     });
     assert.equal(loaded, true, `Italian ${imageSelector} loads as a real image before screenshot`);
   }
