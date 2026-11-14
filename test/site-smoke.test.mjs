@@ -95,8 +95,8 @@ test("English founder's full two-paragraph biography and message field are prese
 
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [
-    { page: html, privacy: '<a href="/privacy.html">Privacy notice</a>', location: "YMG Events · Genova, Italy · P.IVA 03044510992", tagline: "Venue partnerships" },
-    { page: italianHtml, privacy: '<a href="/it/privacy.html">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location e produzione eventi" },
+    { page: html, privacy: '<a href="/privacy">Privacy notice</a>', location: "YMG Events · Genova, Italy · P.IVA 03044510992", tagline: "Venue partnerships" },
+    { page: italianHtml, privacy: '<a href="/it/privacy">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location e produzione eventi" },
   ];
 
   for (const { page, privacy, location, tagline } of footerCases) {
@@ -199,9 +199,9 @@ test("hero photos use responsive compressed sources and explicit priority", () =
 test("indexing metadata and sitemap cover only canonical public pages", () => {
   const routes = [
     ["/", html],
-    ["/privacy.html", readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8")],
+    ["/privacy", readFileSync(new URL("../dist/privacy.html", import.meta.url), "utf8")],
     ["/it/", italianHtml],
-    ["/it/privacy.html", readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8")],
+    ["/it/privacy", readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8")],
   ];
   const origin = "https://events.ymgconsultingservices.com";
   const sitemap = readFileSync(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
@@ -305,11 +305,11 @@ test("English and Italian branded recovery pages are accessible and excluded fro
   const variants = [
     {
       path: "404.html", page: readFileSync(new URL("../dist/404.html", import.meta.url), "utf8"),
-      lang: "en", heading: "We couldn’t find that page.", home: 'href="/"', concepts: 'href="/#concepts"', inquire: 'href="/#inquire"', privacy: 'href="/privacy.html"', otherLanguage: 'href="/it/"',
+      lang: "en", heading: "We couldn’t find that page.", home: 'href="/"', concepts: 'href="/#concepts"', inquire: 'href="/#inquire"', privacy: 'href="/privacy"', otherLanguage: 'href="/it/"',
     },
     {
       path: "it/404.html", page: readFileSync(new URL("../dist/it/404.html", import.meta.url), "utf8"),
-      lang: "it", heading: "Non troviamo questa pagina.", home: 'href="/it/"', concepts: 'href="/it/#concepts"', inquire: 'href="/it/#inquire"', privacy: 'href="/it/privacy.html"', otherLanguage: 'href="/"',
+      lang: "it", heading: "Non troviamo questa pagina.", home: 'href="/it/"', concepts: 'href="/it/#concepts"', inquire: 'href="/it/#inquire"', privacy: 'href="/it/privacy"', otherLanguage: 'href="/"',
     },
   ];
   const sitemap = readFileSync(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
@@ -620,12 +620,12 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/it\/">/);
   assert.match(html, /hreflang="it" href="https:\/\/events\.ymgconsultingservices\.com\/it\//);
   assert.match(italian, /hreflang="en" href="https:\/\/events\.ymgconsultingservices\.com\//);
-  assert.match(englishPrivacy, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/privacy\.html"/);
-  assert.match(italianPrivacy, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/it\/privacy\.html"/);
-  assert.match(italianPrivacy, /hreflang="en" href="https:\/\/events\.ymgconsultingservices\.com\/privacy\.html"/);
-  assert.match(italianPrivacy, /id="privacy-language-switch"[^>]*href="\/privacy\.html"/);
+  assert.match(englishPrivacy, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/privacy"/);
+  assert.match(italianPrivacy, /rel="canonical" href="https:\/\/events\.ymgconsultingservices\.com\/it\/privacy"/);
+  assert.match(italianPrivacy, /hreflang="en" href="https:\/\/events\.ymgconsultingservices\.com\/privacy"/);
+  assert.match(italianPrivacy, /id="privacy-language-switch"[^>]*href="\/privacy"/);
 
-  for (const route of ["/it/", "/it/privacy.html"]) {
+  for (const route of ["/it/", "/it/privacy"]) {
     assert.ok(sitemap.includes(`https://events.ymgconsultingservices.com${route}`), `${route} is in the sitemap`);
   }
   assert.match(html, /Great nights<br><em>rarely happen by accident\.<\/em>/);
@@ -637,7 +637,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /placeholder="Es\. Giulia Rossi"/);
   assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);
   assert.match(italian, /<button[^>]*data-concept="Rooftop evenings"/);
-  assert.match(italian, /<a href="\/it\/privacy\.html">Informativa privacy<\/a>/);
+  assert.match(italian, /<a href="\/it\/privacy">Informativa privacy<\/a>/);
   assert.match(italianPrivacy, /Informativa privacy/);
   assert.match(italianPrivacy, /Navigazione e sicurezza/);
   assert.match(italianPrivacy, /Contatti e richieste di eventi/);

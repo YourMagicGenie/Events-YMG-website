@@ -7,7 +7,7 @@ const origin = new URL(process.argv[argument + 1]);
 assert.equal(origin.protocol, 'https:');
 assert.equal(origin.pathname, '/');
 const read = (path, options = {}) => fetch(new URL(path, origin), { signal: AbortSignal.timeout(25000), ...options });
-const routes = [['/', 200], ['/it/', 200], ['/privacy.html', 200], ['/it/privacy.html', 200], ['/robots.txt', 200], ['/sitemap.xml', 200], ['/assets/dante-david-480.webp', 200], ['/assets/event-hero-480.webp', 200], ['/assets/fonts/dm-sans-latin.woff2', 200], ['/downloads/ymg-events-collaborazioni-location-it.pdf', 200], ['/not-a-real-events-page', 404], ['/api/not-a-real-endpoint', 404]];
+const routes = [['/', 200], ['/it/', 200], ['/privacy', 200], ['/it/privacy', 200], ['/robots.txt', 200], ['/sitemap.xml', 200], ['/assets/dante-david-480.webp', 200], ['/assets/event-hero-480.webp', 200], ['/assets/fonts/dm-sans-latin.woff2', 200], ['/downloads/ymg-events-collaborazioni-location-it.pdf', 200], ['/not-a-real-events-page', 404], ['/api/not-a-real-endpoint', 404]];
 for (let i = 0; i < routes.length; i += 4) {
   await Promise.all(routes.slice(i, i + 4).map(async ([path, status]) => {
     const response = await read(path);
