@@ -833,7 +833,14 @@ try {
     "clicking title action buttons does not start a drag");
   await collapseControl.click();
   await measurements.setViewportSize({ width: 800, height: 600 });
-  const resizedBounds = await panel.boundingBox();
+  // The inspector re-clamps on the window resize event, which can land after
+  // setViewportSize resolves on slower CI runners; poll briefly before asserting.
+  let resizedBounds = await panel.boundingBox();
+  for (let attempt = 0; attempt < 40 &&
+    (resizedBounds.x + resizedBounds.width > 801 || resizedBounds.y + resizedBounds.height > 601); attempt++) {
+    await measurements.waitForTimeout(50);
+    resizedBounds = await panel.boundingBox();
+  }
   assert.ok(resizedBounds.x >= 0 && resizedBounds.y >= 0 &&
     resizedBounds.x + resizedBounds.width <= 800 + 1 &&
     resizedBounds.y + resizedBounds.height <= 600 + 1,
