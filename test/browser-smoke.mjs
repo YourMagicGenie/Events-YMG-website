@@ -27,7 +27,8 @@ const mimeTypes = {
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
-    const relativePath = pathname.endsWith("/") ? `${pathname.slice(1)}index.html` : pathname.slice(1);
+    // Mirrors Cloudflare assets: "/privacy" serves privacy.html (the canonical URL has no extension).
+    const relativePath = pathname.endsWith("/") ? `${pathname.slice(1)}index.html` : /\/[^./]+$/.test(pathname) ? `${pathname.slice(1)}.html` : pathname.slice(1);
     let filePath = resolve(siteRoot, relativePath);
     if (filePath !== siteRoot && !filePath.startsWith(`${siteRoot}${sep}`)) {
       response.writeHead(404).end("Not found");
@@ -1172,16 +1173,16 @@ try {
   }
   await mobile.screenshot({ path: resolve(screenshotRoot, "italian-1440px.png"), fullPage: true });
   await mobile.setViewportSize({ width: 390, height: 844 });
-  const ItalianPrivacyLink = mobile.locator('.site-note a[href="/it/privacy.html"]');
+  const ItalianPrivacyLink = mobile.locator('.site-note a[href="/it/privacy"]');
   await ItalianPrivacyLink.scrollIntoViewIfNeeded();
   await ItalianPrivacyLink.click();
-  assert.equal(new URL(mobile.url()).pathname, "/it/privacy.html", "Italian privacy link preserves the selected language");
+  assert.equal(new URL(mobile.url()).pathname, "/it/privacy", "Italian privacy link preserves the selected language");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it");
   await mobile.locator("#privacy-language-switch").click();
-  assert.equal(new URL(mobile.url()).pathname, "/privacy.html", "privacy language switch opens the English counterpart");
+  assert.equal(new URL(mobile.url()).pathname, "/privacy", "privacy language switch opens the English counterpart");
   assert.equal(await mobile.locator("html").getAttribute("lang"), "en");
   await mobile.locator("#privacy-language-switch").click();
-  assert.equal(new URL(mobile.url()).pathname, "/it/privacy.html", "privacy language switch returns to its Italian counterpart");
+  assert.equal(new URL(mobile.url()).pathname, "/it/privacy", "privacy language switch returns to its Italian counterpart");
   await mobile.close();
 
   const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -1366,11 +1367,11 @@ try {
   const privacy = await browser.newPage();
   await privacy.route("https://fonts.googleapis.com/**", route => route.abort());
   await privacy.route("https://fonts.gstatic.com/**", route => route.abort());
-  for (const path of ["/", "/privacy.html", "/robots.txt", "/sitemap.xml", "/assets/favicon.svg", "/it/", "/it/privacy.html"]) {
+  for (const path of ["/", "/privacy", "/robots.txt", "/sitemap.xml", "/assets/favicon.svg", "/it/", "/it/privacy"]) {
     const response = await fetch(`${baseUrl}${path}`);
     assert.equal(response.status, 200, `${path} continues to resolve after adding the custom not-found route`);
   }
-  const privacyResponse = await privacy.goto(`${baseUrl}/privacy.html`, { waitUntil: "load" });
+  const privacyResponse = await privacy.goto(`${baseUrl}/privacy`, { waitUntil: "load" });
   assert.equal(privacyResponse.status(), 200, "privacy page is available");
   const privacyReadability = await privacy.evaluate(() => {
     const rgb = color => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);

@@ -21,8 +21,8 @@ When access is available, inspect these URLs in the Events property:
 
 1. `https://events.ymgconsultingservices.com/`
 2. `https://events.ymgconsultingservices.com/it/`
-3. `https://events.ymgconsultingservices.com/privacy.html`
-4. `https://events.ymgconsultingservices.com/it/privacy.html`
+3. `https://events.ymgconsultingservices.com/privacy`
+4. `https://events.ymgconsultingservices.com/it/privacy`
 
 For each URL, record the inspection date, whether Google knows the URL, crawl and indexing permission, last crawl, user-declared canonical, Google-selected canonical, sitemap association and any specific issue code. Request recrawling only when the live URL is accessible and a changed page needs reprocessing; a sitemap or request is a hint, not a guarantee.
 
@@ -35,3 +35,6 @@ Google references:
 
 ## 11 November live refresh
 Public HTTP smoke passes on all four canonical pages, sitemap and robots; source schema/hreflang tests pass. Fresh cloud-browser Search Console access reaches the public about/sign-in page, not an authenticated property. URL Inspection, Google-selected canonical, actual index status and recrawl request remain unverified; this is an authenticated-access dependency. No claim that a public site: query proves indexing.
+
+## 14 November fix: privacy URL redirect loop
+The live check found that Cloudflare's asset handling sends `/privacy.html` to `/privacy` with a 307 redirect, while `/privacy` declared `/privacy.html` as its canonical. The Italian page did the same. The sitemap, canonicals, `hreflang`, Open Graph URLs and internal links now all use the extensionless `/privacy` and `/it/privacy`, which return 200 directly. Older `.html` links still work through the redirect.

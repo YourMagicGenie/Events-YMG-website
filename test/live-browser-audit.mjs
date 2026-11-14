@@ -5,7 +5,7 @@ const origin='https://events.ymgconsultingservices.com';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const report=[];
 try {
- for(const route of ['/', '/it/', '/privacy.html', '/it/privacy.html']) {
+ for(const route of ['/', '/it/', '/privacy', '/it/privacy']) {
   const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
   const page=await context.newPage(); const requests=[];const errors=[];
   page.on('request',r=>requests.push({url:r.url(),topLevel:r.frame()===page.mainFrame()}));
