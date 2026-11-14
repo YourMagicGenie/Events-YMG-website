@@ -155,7 +155,8 @@ test("local assets and public crawl files are present", () => {
   assert.match(privacy, /class="skip-link" href="#main-content"/);
   for (const subject of ["Frederic Dante David", "Your Magic Genie Group", "03044510992", "Cloudflare Turnstile", "Google Apps Script", "Google Workspace", "European Economic Area", "standard contractual clauses", "How long information is kept", "Your rights"]) assert.ok(privacy.includes(subject));
   assert.match(privacy, /When online sending is available/);
-  assert.match(privacy, /Optional conversion measurement is disabled/);
+  assert.match(privacy, /Cloudflare deletes these counts automatically after three months/);
+  assert.doesNotMatch(privacy, /Optional conversion measurement is disabled/);
   assert.doesNotMatch(privacy, /If online sending is unavailable|Scope and changes|Unsplash/);
   assert.doesNotMatch(privacy, /this repository|draft must|qualified adviser|being confirmed/);
   const dataFlow = readFileSync(new URL("../docs/PRIVACY-DATA-FLOW.md", import.meta.url), "utf8");
@@ -396,7 +397,7 @@ test("Worker config serves this repo's assets from a separate preview worker", (
   assert.notEqual(config.name, "ymg-events-website");
   assert.equal(config.main, "src/worker.js");
   assert.equal(config.workers_dev, true);
-  assert.equal(config.vars.EVENTS_METRICS_ENABLED, "false", "analytics remains disabled until privacy review and production activation");
+  assert.equal(config.vars.EVENTS_METRICS_ENABLED, "false", "the preview Worker keeps analytics off; production enables it");
   assert.deepEqual(config.analytics_engine_datasets, [{
     binding: "EVENTS_ANALYTICS",
     dataset: "ymg_events_preview_metrics",

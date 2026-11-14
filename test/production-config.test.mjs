@@ -12,8 +12,9 @@ test('production and isolated preview have explicit separate deployment targets'
   assert.equal(preview.routes, undefined);
   assert.equal(production.assets.directory, './dist');
   assert.equal(production.main, 'src/worker.js');
-  assert.equal(production.vars.EVENTS_METRICS_ENABLED, 'false');
-  assert.equal(production.analytics_engine_datasets, undefined);
+  assert.equal(production.vars.EVENTS_METRICS_ENABLED, 'true');
+  assert.deepEqual(production.analytics_engine_datasets, [{ binding: 'EVENTS_ANALYTICS', dataset: 'events_metrics' }]);
+  assert.deepEqual(production.ratelimits.find(binding => binding.name === 'EVENTS_METRICS_LIMITER')?.simple, { limit: 30, period: 60 });
   assert.equal(production.observability.enabled, false);
   assert.ok(production.ratelimits.every(binding => !preview.ratelimits.some(other => other.namespace_id === binding.namespace_id)));
   assert.equal(pkg.scripts['deploy:auto'], 'wrangler deploy --config wrangler.production.json');
