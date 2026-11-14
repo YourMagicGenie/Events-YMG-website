@@ -63,8 +63,8 @@ test("lower-page story moves from partnerships to founder to inquiry without rep
     },
     {
       page: italianHtml,
-      stages: ["Per terrazze, locali e realtà dell’ospitalità", "Il tuo referente a Genova", "Iniziamo una conversazione"],
-      founder: "Sono Dante David, organizzatore di eventi a Genova, originario degli Stati Uniti. Con Porto Aperto | Genova, una community locale internazionale",
+      stages: ["Per terrazze, locali e realtà dell’ospitalità", "Il tuo referente a Genova", "Parliamone"],
+      founder: "Sono Dante David, organizzatore di eventi a Genova, originario degli Stati Uniti e fondatore di YMG Events. Con Porto Aperto | Genova",
       removed: /Dall’idea a un piano chiaro|Una collaborazione chiara|Domande pratiche per i gestori|non costituiscono un portfolio|Che si tratti di una collaborazione|Preferisci parlarne direttamente\?|Scopri come trattiamo i tuoi dati/,
     },
   ];
@@ -96,7 +96,7 @@ test("English founder's full two-paragraph biography and message field are prese
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [
     { page: html, privacy: '<a href="/privacy.html">Privacy notice</a>', location: "YMG Events · Genova, Italy · P.IVA 03044510992", tagline: "Venue partnerships" },
-    { page: italianHtml, privacy: '<a href="/it/privacy.html">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location" },
+    { page: italianHtml, privacy: '<a href="/it/privacy.html">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location e produzione eventi" },
   ];
 
   for (const { page, privacy, location, tagline } of footerCases) {
@@ -548,7 +548,7 @@ test("founder credibility uses first-party community experience and keeps the br
 
   assert.match(html, /Through Porto Aperto \| Genova, I’ve built a thriving international community around music, nightlife, and shared experiences/);
   assert.match(html, /My team and I bring years of experience organizing everything from intimate gatherings to music festivals and international travel adventures/);
-  assert.match(italian, /Con Porto Aperto \| Genova, una community locale internazionale dedicata alla socialità e alla vita notturna/);
+  assert.match(italian, /Con Porto Aperto \| Genova ho creato una community internazionale vivace, unita dalla musica, dalla vita notturna e dalle esperienze condivise/);
   for (const page of [html, italian]) {
     assert.doesNotMatch(page, /instagram\.com|founder-reference/, "the owner removed the social profile link");
     assert.match(page, /<div class="signature">Dante David <span[^>]*>Your Magic Genie<\/span><\/div>/);
@@ -633,7 +633,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
   assert.match(italian, /alt="Scena illustrativa di un evento con balli, violino e cena su una terrazza sul porto di Genova\."/);
   assert.match(italian, /<label for="name">Nome e cognome \*<\/label>/);
-  assert.match(italian, /placeholder="Come possiamo chiamarti\?"/);
+  assert.match(italian, /placeholder="Es\. Giulia Rossi"/);
   assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);
   assert.match(italian, /<button[^>]*data-concept="Rooftop evenings"/);
   assert.match(italian, /<a href="\/it\/privacy\.html">Informativa privacy<\/a>/);
@@ -680,7 +680,7 @@ test("venue, corporate and private inquiries have explicit localized routes and 
   assert.match(handler, /Inquiry source: \$\{INQUIRY_SOURCES\.get\(source\)\}/);
   assert.match(handler, /eventsNotificationSubject\(name, intent, format\)/);
   assert.match(englishPrivacy, /name, reply email, inquiry type, organization or venue/);
-  assert.match(italianPrivacy, /nome, email di risposta, tipo di richiesta, azienda o location/);
+  assert.match(italianPrivacy, /nome, indirizzo email per la risposta, tipo di richiesta, azienda o location/);
 });
 
 test("event format context is bilingual, explicit, clearable and sent through the existing form field", () => {
@@ -697,7 +697,7 @@ test("event format context is bilingual, explicit, clearable and sent through th
     assert.match(page, /\.format-context button\{min-height:44px/);
   }
   assert.match(messages, /selectedFormatPrefix: "Selected event format:"/);
-  assert.match(messages, /selectedFormatPrefix: "Formato selezionato:"/);
+  assert.match(messages, /selectedFormatPrefix: "Format selezionato:"/);
   assert.match(interactions, /selectedFromConcept = true/);
   assert.match(interactions, /format\.value = ""/);
   assert.match(interactions, /new FormData\(form\)/);
@@ -711,7 +711,7 @@ test("partnership pitch is concise, localized and avoids unsupported commitments
   assert.match(italian, /<h2>La tua location\.<br><em class="single-line">Su misura per la tua serata\.<\/em><\/h2>/);
   assert.match(html, /Decide who you want to welcome and design an experience that will bring them through your doors\./);
   assert.match(html, /Every venue requires a unique touch to set it apart\./);
-  assert.match(italian, /Ogni location ha bisogno di un tocco unico che la distingua\./);
+  assert.match(italian, /Ogni locale merita un tocco che lo distingua\./);
   for (const page of [html, italian]) {
     assert.doesNotMatch(page, /A setting that earns its place|Una location protagonista|before committing|Prima di impegnarci/);
     assert.doesNotMatch(page, /guaranteed (?:sales|attendance)|vendite garantite/i);

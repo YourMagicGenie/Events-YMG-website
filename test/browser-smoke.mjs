@@ -833,7 +833,14 @@ try {
     "clicking title action buttons does not start a drag");
   await collapseControl.click();
   await measurements.setViewportSize({ width: 800, height: 600 });
-  const resizedBounds = await panel.boundingBox();
+  // The inspector re-clamps on the window resize event, which can land after
+  // setViewportSize resolves on slower CI runners; poll briefly before asserting.
+  let resizedBounds = await panel.boundingBox();
+  for (let attempt = 0; attempt < 40 &&
+    (resizedBounds.x + resizedBounds.width > 801 || resizedBounds.y + resizedBounds.height > 601); attempt++) {
+    await measurements.waitForTimeout(50);
+    resizedBounds = await panel.boundingBox();
+  }
   assert.ok(resizedBounds.x >= 0 && resizedBounds.y >= 0 &&
     resizedBounds.x + resizedBounds.width <= 800 + 1 &&
     resizedBounds.y + resizedBounds.height <= 600 + 1,
@@ -1109,12 +1116,12 @@ try {
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "the Italian card chooses the venue partnership pathway");
   assert.equal(await mobile.locator("#format-context").isVisible(), true, "the Italian route shows its selected event format");
-  assert.equal(await mobile.locator("#format-context-status").textContent(), "Formato selezionato: Serate in terrazza", "the Italian context summary is localized while preserving the canonical backend value");
-  assert.equal(await mobile.locator("#clear-format").textContent(), "Rimuovi il formato selezionato", "the Italian clear action is localized");
+  assert.equal(await mobile.locator("#format-context-status").textContent(), "Format selezionato: Serate in terrazza", "the Italian context summary is localized while preserving the canonical backend value");
+  assert.equal(await mobile.locator("#clear-format").textContent(), "Rimuovi il format selezionato", "the Italian clear action is localized");
   await mobile.locator("#clear-format").click();
   assert.equal(await mobile.locator("#format").inputValue(), "", "Italian users can remove a selected format");
   assert.equal(await mobile.locator("#intent").inputValue(), "venue_partnership", "clearing an Italian format preserves the venue inquiry path");
-  assert.equal(await mobile.locator("#business-label").textContent(), "Location o attività ricettiva *", "Italian venue field explains its purpose");
+  assert.equal(await mobile.locator("#business-label").textContent(), "Locale o location *", "Italian venue field explains its purpose");
   assert.equal(await mobile.locator('a[href*="instagram.com"]').count(), 0, "the Italian founder section no longer links to Instagram");
   assert.equal(await mobile.locator(".offer-item, .faq-item, .process").count(), 0, "the Italian page drops the same repeated sections");
   const italianDownload = mobile.locator(".partnership-download");
