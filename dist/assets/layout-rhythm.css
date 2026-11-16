@@ -70,7 +70,7 @@
   #brief .form-grid > .wide { grid-column: span 2; }
   #brief .form-grid > .wide:last-child { grid-column: span 3; }
   #brief .turnstile-widget { grid-column: 1; margin-top: 0; min-width: 0; }
-  #brief .form-feedback { grid-column: 2; align-self: stretch; margin-top: 0; min-height: 72px; }
+  #brief .form-feedback { grid-column: 2; align-self: center; }
   #brief #submit-inquiry { grid-column: 3; align-self: stretch; min-height: 72px; width: 100%; }
 
   .site-footer { padding-top: 23px; padding-bottom: 18px; }
@@ -239,8 +239,8 @@
 /*
  * Fourth measured EN desktop pass (#91) — partnership, inquiry and footer.
  * Preserve responsive/mobile and Italian layout outside this bounded range.
- * Form feedback stays accessible to screen readers without occupying the
- * permanent 08N status card, and significant failures are still visible.
+ * 08N's permanent card is removed for all locales/widths; actionable
+ * submission failures or success appear as plain unboxed text.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
   html[lang="en"] .partnerships {
@@ -283,38 +283,6 @@
   }
   html[lang="en"] #brief #submit-inquiry {
     transform: translateY(-25px);
-  }
-  html[lang="en"] #brief .form-feedback {
-    /* The former always-visible 08N box disappears from the layout. */
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    border: 0;
-    margin: 0;
-    min-height: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  html[lang="en"] #brief .form-feedback[data-state="error"],
-  html[lang="en"] #brief .form-feedback[data-state="success"] {
-    /* Display only actionable failures or success without reserving space. */
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    width: min(420px, calc(100vw - 36px));
-    height: auto;
-    max-height: none;
-    min-height: 0;
-    padding: 12px 16px;
-    margin: 0;
-    overflow: visible;
-    clip-path: none;
-    white-space: normal;
-    box-shadow: 0 10px 24px rgba(0,0,0,.16);
-    z-index: 1000;
-    border-left-width: 4px;
   }
   html[lang="en"] .site-footer {
     padding-top: 18px;
