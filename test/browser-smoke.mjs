@@ -205,11 +205,18 @@ try {
             right: b.right + window.scrollX,
           };
         };
+        const intent = document.querySelector("#intent");
+        const intentStyle = getComputedStyle(intent);
         const idea = document.querySelector("#idea");
         const btn = document.querySelector("#submit-inquiry");
         const captcha = document.querySelector("#turnstile-widget");
         return {
           messageWrapper: rect("#idea-label"),
+          intent: rect("#intent"), name: rect("#name"), email: rect("#email"),
+          intentAppearance: intentStyle.appearance,
+          intentChevron: intentStyle.backgroundImage,
+          intentBorderTop: intentStyle.borderTopWidth,
+          intentBorderBottom: intentStyle.borderBottomWidth,
           message: rect("#idea"), submit: rect("#submit-inquiry"),
           captcha: rect("#turnstile-widget"), inquiry: rect(".inquiry"),
           form: rect("#brief"),
@@ -218,8 +225,20 @@ try {
           captchaGridColumn: getComputedStyle(captcha).gridColumnStart,
         };
       });
-      assert.ok(Math.abs(formGeometry.message.h - 140) <= 1,
-        `08L white write-in area must be 140px at 1440 EN: ${JSON.stringify(formGeometry)}`);
+      assert.ok(Math.abs(formGeometry.intent.h - formGeometry.name.h) <= 0.25 &&
+        Math.abs(formGeometry.intent.h - formGeometry.email.h) <= 0.25 &&
+        Math.abs(formGeometry.intent.h - 48) <= 0.25,
+        `08D actual select must match 08E/08F white control height: ${JSON.stringify(formGeometry)}`);
+      assert.equal(formGeometry.intentAppearance, "none",
+        "08D needs the same non-beveled painted border as its adjacent inputs");
+      assert.ok(formGeometry.intentChevron.includes("select-chevron.svg"),
+        "08D native select must retain the same-origin dropdown arrow");
+      assert.equal(formGeometry.intentBorderTop, "1px");
+      assert.equal(formGeometry.intentBorderBottom, "1px");
+      assert.ok(Math.abs(formGeometry.message.h - 173) <= 1,
+        `08L white write-in area must grow 33px from 140px to align with 08O: ${JSON.stringify(formGeometry)}`);
+      assert.ok(Math.abs(formGeometry.message.bottom - formGeometry.submit.bottom) <= 1,
+        `08L and 08O must finish at the same rendered document Y: ${JSON.stringify(formGeometry)}`);
       assert.ok(Math.abs(formGeometry.submit.x - 86.4) <= 2 &&
         Math.abs(formGeometry.submit.y - 3549) <= 4 &&
         Math.abs(formGeometry.submit.w - 293) <= 1 &&
