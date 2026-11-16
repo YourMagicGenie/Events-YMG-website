@@ -128,7 +128,7 @@ test("all bilingual north-east CTA arrows are thin accessible SVGs, never iPhone
     assert.equal((page.match(/<svg class="arrow ui-arrow"/g) || []).length, expected,
       `${locale} must convert every former Unicode arrow to a stable vector`);
     assert.doesNotMatch(page, /↗|&#x2197;|&#8599;/i, `${locale} must not use emoji-prone Unicode arrows`);
-    assert.equal((page.match(/<svg class="arrow ui-arrow"[^>]*aria-hidden="true" focusable="false"/g) || []).length, expected,
+    assert.equal((page.match(/<svg class="arrow ui-arrow"[^>]*width="18" height="18"[^>]*aria-hidden="true" focusable="false"/g) || []).length, expected,
       `${locale} icons are decorative, unfocusable, and not redundantly announced`);
     assert.equal((page.match(/stroke="currentColor" stroke-width="1.5"/g) || []).length, expected,
       `${locale} icons inherit adjacent CTA text color and retain thin strokes`);
