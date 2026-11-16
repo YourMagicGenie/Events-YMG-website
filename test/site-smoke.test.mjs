@@ -560,6 +560,23 @@ test("founder credibility uses first-party community experience and keeps the br
   assert.match(sources, /included under issue #12/);
 });
 
+test("four live form control boxes use identical paint geometry, without native select bevels", () => {
+  const css = readFileSync(new URL("../dist/assets/layout-rhythm.css", import.meta.url), "utf8");
+  const section = css.slice(css.indexOf("Owner alignment correction (#109)"));
+  assert.ok(section.length > 350, "final control paint rules exist");
+  for (const id of ["business", "format", "guests", "timing"]) {
+    assert.ok(section.includes("#brief #" + id), id + " is in the shared paint rule");
+    assert.ok(html.includes('id="' + id + '"'), "EN " + id + " still exists");
+    assert.ok(italianHtml.includes('id="' + id + '"'), "IT " + id + " still exists");
+  }
+  assert.match(section, /appearance:\s*none/);
+  assert.match(section, /height:\s*48px/);
+  assert.match(section, /min-height:\s*48px/);
+  assert.match(section, /max-height:\s*48px/);
+  assert.match(section, /line-height:\s*24px/);
+  assert.match(section, /background-image:\s*url\("data:image\/svg\+xml/);
+});
+
 test("inquiry form collects reply email and submits inline through the Worker", () => {
   assert.match(html, /<input required id="email" name="email" type="email" autocomplete="email"/);
   assert.match(html, /id="submit-inquiry" type="submit" disabled><span class="submit-label">Send my inquiry email/);
