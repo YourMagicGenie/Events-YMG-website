@@ -84,3 +84,22 @@ nav .language-switch { display: inline-flex; align-items: center; justify-conten
   text-underline-offset: 4px;
   font-size: 13px;
 }
+
+
+/* Platform-independent, understated diagonal CTA arrows.
+ * These SVGs inherit their link's text color and cannot become iOS emoji. */
+.ui-arrow {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  vertical-align: -0.18em;
+  overflow: visible;
+  color: inherit;
+}
+.concept button .ui-arrow,
+.site-note .ui-arrow,
+.site-footer .ui-arrow {
+  width: 16px;
+  height: 16px;
+}
