@@ -445,9 +445,34 @@
  * The 13px visual separation remains usable when Turnstile renders.
  */
 @media (min-width: 1400px) and (max-width: 1499px) {
+  /* 08D: match the painted 48px edges of 08E and 08F. Native select
+   * bevels had made an equal-sized CSS box visually ~2px shorter. */
+  html[lang="en"] #brief #intent {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    display: block;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    line-height: 24px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    padding-right: 36px;
+    border-top: 1px solid #69766e;
+    border-bottom: 1px solid #69766e;
+    background-clip: padding-box;
+    background-image: url("/assets/select-chevron.svg");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 12px 8px;
+  }
+  /* 08L: new bottom is flush with 08O's measured bottom ~Y3621.
+   * Enlarging its white area 33px increases the form grid row by 33px,
+   * so counter-offset the submit and Turnstile to retain their positions. */
   html[lang="en"] #brief #idea {
-    height: 140px;
-    min-height: 140px;
+    height: 173px;
+    min-height: 173px;
     box-sizing: border-box;
     resize: vertical;
   }
@@ -460,13 +485,13 @@
     width: 293px;
     min-height: 72px;
     height: 72px;
-    transform: translateY(-55px);
+    transform: translateY(-88px);
   }
   html[lang="en"] #brief .turnstile-widget {
     grid-column: 1;
     grid-row: 3;
     align-self: start;
     margin-top: 0;
-    transform: translateY(30px);
+    transform: translateY(-3px);
   }
 }
