@@ -67,7 +67,6 @@
     ["08K", "Budget field", "#brief .form-grid > div:nth-child(8)"],
     ["08L", "Message field", "#brief .form-grid > div:nth-child(9)"],
     ["08M", "Spam protection", "#turnstile-widget"],
-    ["08N", "Form status message", "#form-feedback"],
     ["08O", "Submit inquiry button", "#submit-inquiry"],
     ["09", "Footer", ".site-footer"],
     ["09A", "Footer identity", ".footer-identity"],

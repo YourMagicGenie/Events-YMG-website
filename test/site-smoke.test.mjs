@@ -20,7 +20,6 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
     ["05D1", "#concept-deck .concept:nth-child(1)"],
     ["07D", ".about .founder-bio"],
     ["08C", "#brief"],
-    ["08N", "#form-feedback"],
     ["09", ".site-footer"],
     ["10", ".site-note"]
   ]) {
@@ -28,6 +27,8 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
     assert.ok(inspector.includes(selector), id + " maps to an existing page selector");
     assert.ok(reference.includes("| " + String.fromCharCode(96) + id + String.fromCharCode(96) + " |"), id + " appears in the human-readable catalog");
   }
+  assert.ok(!inspector.includes('["08N",'), "08N retired from inspector");
+  assert.ok(inspector.includes('["08O", "Submit inquiry button"'), "08O remains a stable inspector reference");
   assert.ok(inspector.includes('event.preventDefault()'), "inspect mode intercepts accidental page activations");
   assert.ok(inspector.includes('navigator.clipboard.writeText'), "reference copying is opt-in on click");
   assert.ok(inspectorStyles.includes("background-size: 20px 20px"), "grid shows 20px minor lines");
@@ -593,9 +594,12 @@ test("inquiry controls expose bilingual required guidance and accessible states"
     assert.match(page, /#brief input:focus-visible,#brief select:focus-visible,#brief textarea:focus-visible\{outline:3px solid/);
     assert.match(page, /#brief \[aria-invalid="true"\]\{border-color:#743037/);
     assert.match(page, /#brief input:disabled,#brief select:disabled,#brief textarea:disabled\{/);
-    assert.match(page, /\.form-feedback\[data-state="error"\]\{/);
-    assert.match(page, /\.form-feedback\[data-state="success"\]\{/);
-    assert.match(page, /\.form-feedback\{[^}]*min-height:96px/);
+    assert.ok(page.includes('.form-feedback{position:absolute;width:1px;height:1px;min-height:0'), "neutral form status has no visible panel or layout height");
+    assert.ok(page.includes('clip-path:inset(50%)'), "neutral status remains accessible");
+    assert.ok(page.includes('.form-feedback[data-state="error"],.form-feedback[data-state="success"]{position:static;display:block'), "real errors and success appear as plain text");
+    assert.ok(page.includes('background:transparent;box-shadow:none'), "real outcomes have no colored panel or shadow");
+    assert.ok(page.includes('.form-feedback[data-state="error"]{color:#743037}'), "errors retain readable color");
+    assert.ok(page.includes('.form-feedback[data-state="success"]{color:#174c3b}'), "success retains readable color");
   }
   assert.match(interactions, /form\.addEventListener\("invalid"/);
   assert.match(interactions, /form\.addEventListener\("input", updateFieldValidity\)/);
