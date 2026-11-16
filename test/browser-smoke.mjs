@@ -667,8 +667,10 @@ try {
         ["band accent", style(".band span").color, style(".band").backgroundColor],
         ["enabled carousel arrow", style('.deck-arrow:not([aria-disabled="true"])').color, style('.deck-arrow:not([aria-disabled="true"])').backgroundColor],
         ["preview notice", style(".site-note").color, style(".site-note").backgroundColor],
-        ["inquiry error message", errorColor, errorBackground],
-        ["inquiry success message", successColor, successBackground],
+        // The permanent colored 08N panel is gone. Plain outcome text sits
+        // directly on the inquiry section's ivory surface.
+        ["inquiry error message", errorColor, errorBackground === "rgba(0, 0, 0, 0)" ? inquiry.backgroundColor : errorBackground],
+        ["inquiry success message", successColor, successBackground === "rgba(0, 0, 0, 0)" ? inquiry.backgroundColor : successBackground],
         ["footer supporting text", style("footer p").color, style("footer").backgroundColor],
       ].map(([name, foreground, background]) => ({ name, ratio: contrast(foreground, background) }));
       const selectors = [
