@@ -398,3 +398,40 @@
     box-sizing: border-box;
   }
 }
+
+/*
+ * Owner alignment correction (#109): native select menus used a 46px painted
+ * control inside a 48px CSS-height box, while text inputs painted all 48px.
+ * Normalize the actual control appearance instead of resizing the 74px rows.
+ * Native <select> keyboard and pointer behavior remains intact.
+ */
+#brief #business,
+#brief #format,
+#brief #guests,
+#brief #timing {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  line-height: 24px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  background-clip: padding-box;
+}
+#brief #format,
+#brief #guests {
+  /* Retain a legible dropdown cue without browser-dependent native bevels. */
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23172a28' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 12px 8px;
+}
