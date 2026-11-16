@@ -574,7 +574,11 @@ test("four live form control boxes use identical paint geometry, without native 
   assert.match(section, /min-height:\s*48px/);
   assert.match(section, /max-height:\s*48px/);
   assert.match(section, /line-height:\s*24px/);
-  assert.match(section, /background-image:\s*url\("data:image\/svg\+xml/);
+  assert.match(section, /background-image:\s*url\("\/assets\/select-chevron\.svg"\)/);
+  assert.doesNotMatch(section, /data:image\/svg\+xml/, "select arrow must not violate CSP");
+  const chevron = readFileSync(new URL("../dist/assets/select-chevron.svg", import.meta.url), "utf8");
+  assert.match(chevron, /<svg[^>]*viewBox="0 0 12 8"/);
+  assert.match(chevron, /<path[^>]*stroke="#172a28"/);
 });
 
 test("inquiry form collects reply email and submits inline through the Worker", () => {
