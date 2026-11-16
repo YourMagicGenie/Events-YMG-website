@@ -146,7 +146,6 @@ IDs are assigned dynamically to the existing matching elements in inspector mode
 | `08K` | Budget field | `#brief .form-grid > div:nth-child(8)` |
 | `08L` | Message field | `#brief .form-grid > div:nth-child(9)` |
 | `08M` | Spam protection | `#turnstile-widget` |
-| `08N` | Form status message | `#form-feedback` |
 | `08O` | Submit inquiry button | `#submit-inquiry` |
 
 ### 09 — Footer
@@ -172,3 +171,5 @@ IDs are assigned dynamically to the existing matching elements in inspector mode
 - Normal site behavior, visual appearance, SEO, inquiry submission, accessibility semantics and PDFs are unchanged when inspector mode is off.
 - Any future layout edits should add screenshots/tests at the requested desktop/tablet/mobile widths; the inspector measures placement, it does not replace responsive QA.
 - Implementation: `dist/assets/layout-inspector.js`, `dist/assets/layout-inspector.css`; [GitHub issue #82](https://github.com/YourMagicGenie/Events-YMG-website/issues/82).
+
+**Retired reference:** 08N is intentionally absent. The old form status box was removed from the visual layout; a visually hidden live region continues to announce service state, with plain text shown only for real errors or successful submissions. The 08O submit button keeps its existing ID.
