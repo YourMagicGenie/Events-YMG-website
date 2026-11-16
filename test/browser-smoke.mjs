@@ -337,8 +337,8 @@ try {
         `07E signature flows beneath the expanded biography: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
         `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
-      assert.ok((compact.status.w <= 2 && compact.status.h <= 2) || compact.statusPosition === "fixed",
-        "08N reserves no permanent space: neutral status is visually hidden and actionable errors are fixed notifications");
+      assert.ok(compact.status.w <= 2 && compact.status.h <= 2,
+        "08N has no visual footprint at EN 1280px");
       assert.ok(Math.abs(compact.footerIdentity.w - 300) <= 1 && Math.abs(compact.footerIdentity.h - 70) <= 1,
         `09A needs W300 H70: ${JSON.stringify(compact)}`);
       assert.ok(compact.footerLogo.y >= compact.footerIdentity.y - 1 &&
@@ -602,6 +602,7 @@ try {
       const successColor = getComputedStyle(feedback).color;
       const successBackground = getComputedStyle(feedback).backgroundColor;
       const statusHeights = [];
+      const statusStyles = [];
       for (const [state, text] of [
         ["", "Connecting to the secure inquiry service…"],
         ["error", "Online inquiries are temporarily unavailable. Please email us directly using the address shown here."],
@@ -611,6 +612,13 @@ try {
         else delete feedback.dataset.state;
         feedback.textContent = text;
         statusHeights.push(Math.round(feedback.getBoundingClientRect().height));
+        const feedbackStyle = getComputedStyle(feedback);
+        statusStyles.push({
+          background: feedbackStyle.backgroundColor,
+          border: parseFloat(feedbackStyle.borderLeftWidth),
+          shadow: feedbackStyle.boxShadow,
+          clip: feedbackStyle.clipPath,
+        });
       }
       if (originalFeedback.state) feedback.dataset.state = originalFeedback.state;
       else delete feedback.dataset.state;
@@ -674,7 +682,7 @@ try {
         const visible = rect.width > 0 && rect.height > 0 && getComputedStyle(element).visibility !== "hidden";
         return visible ? { selector, width: rect.width, height: rect.height } : null;
       }).filter(Boolean));
-      return { readings, targets, fields, statusHeights, errorField };
+      return { readings, targets, fields, statusHeights, statusStyles, errorField };
     });
     for (const reading of audit.readings) {
       assert.ok(reading.ratio >= 4.5, `${reading.name} contrast is ${reading.ratio}:1 at ${width}px; expected at least 4.5:1`);
@@ -693,11 +701,19 @@ try {
     assert.equal(disabledBusinessField.disabled, true, `${width}px shows the conditional business field as disabled before a path is selected`);
     assert.equal(disabledBusinessField.opacity, "1", `${width}px disabled field remains fully legible`);
     assert.notEqual(disabledBusinessField.backgroundColor, audit.fields.find(field => field.id === "name").backgroundColor, `${width}px disabled and editable fields have distinct surfaces`);
-    if (width === 1280) {
-      assert.ok(audit.statusHeights[0] <= 2 && audit.statusHeights[1] > 24 && audit.statusHeights[2] > 24,
-        `1280px neutral feedback has no visible panel, but error/success remain visible: ${JSON.stringify(audit.statusHeights)}`);
-    } else {
-      assert.equal(new Set(audit.statusHeights).size, 1, `other viewports retain stable feedback height at ${width}px: ${JSON.stringify(audit.statusHeights)}`);
+    assert.ok(audit.statusHeights[0] <= 2,
+      `${width}px EN: neutral 08N status is visually clipped and has no card footprint: ${JSON.stringify(audit.statusHeights)}`);
+    assert.equal(audit.statusStyles[0].clip, "inset(50%)",
+      `${width}px neutral status remains a screen-reader-only live region`);
+    for (const i of [1, 2]) {
+      assert.ok(audit.statusHeights[i] >= 16,
+        `${width}px real error/success feedback remains readable when necessary`);
+      assert.equal(audit.statusStyles[i].background, "rgba(0, 0, 0, 0)",
+        `${width}px: no colored 08N box for actual outcomes`);
+      assert.equal(audit.statusStyles[i].border, 0,
+        `${width}px: no 08N panel border`);
+      assert.equal(audit.statusStyles[i].shadow, "none",
+        `${width}px: no 08N notification box shadow`);
     }
     assert.equal(audit.errorField.borderColor, "rgb(116, 48, 55)", `${width}px error fields use the accessible red border`);
     assert.notEqual(audit.errorField.backgroundColor, "#faf8f2", `${width}px error fields receive a distinct surface`);
@@ -735,10 +751,12 @@ try {
   await overlay.waitFor();
   assert.equal(await measurements.locator('[data-ymg-layout-id="02B"]').count(), 1,
     "the main hero headline has a stable layout reference");
-  assert.equal(await measurements.locator('[data-ymg-layout-id="08N"]').count(), 1,
-    "the inquiry status line has a stable layout reference");
+  assert.equal(await measurements.locator('[data-ymg-layout-id="08N"]').count(), 0,
+    "the retired 08N panel no longer appears in the inspector catalog");
+  assert.equal(await measurements.locator('[data-ymg-layout-id="08O"]').count(), 1,
+    "the submit button keeps its original 08O layout reference");
   const inspectorSelect = overlay.locator("select");
-  assert.ok((await inspectorSelect.locator("option").count()) >= 65,
+  assert.ok((await inspectorSelect.locator("option").count()) >= 64,
     "the catalog covers section headings, cards, fields and footers");
   const inspectorButtons = overlay.locator('[data-action="inspect"]');
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "true", "page clicking is protected in inspect mode");
