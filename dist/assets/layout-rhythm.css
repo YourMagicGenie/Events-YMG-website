@@ -398,3 +398,40 @@
     box-sizing: border-box;
   }
 }
+
+/*
+ * Owner alignment correction (#109): native select menus used a 46px painted
+ * control inside a 48px CSS-height box, while text inputs painted all 48px.
+ * Normalize the actual control appearance instead of resizing the 74px rows.
+ * Native <select> keyboard and pointer behavior remains intact.
+ */
+#brief #business,
+#brief #format,
+#brief #guests,
+#brief #timing {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  line-height: 24px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  background-clip: padding-box;
+}
+#brief #format,
+#brief #guests {
+  /* Retain a legible dropdown cue without browser-dependent native bevels. */
+  padding-right: 36px;
+  background-image: url("/assets/select-chevron.svg");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 12px 8px;
+}
