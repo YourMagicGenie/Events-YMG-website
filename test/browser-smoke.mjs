@@ -151,6 +151,46 @@ try {
     }
     assert.equal(externalFontRequests.length, 0, `${width}px page loads no Google Fonts stylesheet or font file`);
 
+    // Control *painting*, not the surrounding 74px form-grid divs:
+    // user noticed a ~2px native-select bevel despite equal DOM heights.
+    if (width === 1280 || width === 1440) {
+      await page.evaluate(async () => { await document.fonts.ready; });
+      const paintedControls = await page.evaluate(() => {
+        return ["business", "format", "guests", "timing"].map(id => {
+          const node = document.getElementById(id);
+          const bounds = node.getBoundingClientRect();
+          const style = getComputedStyle(node);
+          return {
+            id, top: bounds.top + scrollY, bottom: bounds.bottom + scrollY,
+            height: bounds.height, appearance: style.appearance,
+            boxSizing: style.boxSizing, paddingTop: style.paddingTop,
+            paddingBottom: style.paddingBottom, lineHeight: style.lineHeight,
+            borderTop: style.borderTopWidth, borderBottom: style.borderBottomWidth,
+            backgroundImage: style.backgroundImage,
+          };
+        });
+      });
+      const first = paintedControls[0];
+      for (const box of paintedControls) {
+        assert.ok(Math.abs(box.height - 48) <= 0.25,
+          `white 08G/08H/08I/08J boxes must paint full 48px at ${width}px: ${JSON.stringify(paintedControls)}`);
+        assert.ok(Math.abs(box.top - first.top) <= 0.25 &&
+          Math.abs(box.bottom - first.bottom) <= 0.25,
+          `four white boxes must align their TOP and BOTTOM edges at ${width}px: ${JSON.stringify(paintedControls)}`);
+        assert.equal(box.appearance, "none", `${box.id} uses the normalized non-beveled control appearance`);
+        assert.equal(box.boxSizing, "border-box");
+        assert.equal(box.lineHeight, "24px");
+        assert.equal(box.paddingTop, "11px");
+        assert.equal(box.paddingBottom, "11px");
+        assert.equal(box.borderTop, "1px");
+        assert.equal(box.borderBottom, "1px");
+      }
+      for (const id of ["format", "guests"]) {
+        assert.notEqual(paintedControls.find(control => control.id === id).backgroundImage, "none",
+          `${id} retains a visible dropdown chevron after native bevel removal`);
+      }
+    }
+
     if (width === 1280) {
       await page.evaluate(async () => { await document.fonts.ready; });
       const heroPosition = await page.evaluate(() => {
