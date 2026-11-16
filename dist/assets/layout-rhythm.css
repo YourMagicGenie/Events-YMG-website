@@ -438,9 +438,9 @@
 
 /*
  * 1440px EN inquiry refinement (#111).
- * The message input grows by 65px (75 -> 140px), so the next grid row
- * naturally shifts down by 65px. Offset the two left-hand controls
- * independently to preserve the owner's original document coordinates:
+ * The message input grows by about 65px (75 -> 140px); the browser-measured
+ * row starts near Y3604 after surrounding flow. Compensate with independent
+ * visual offsets to preserve the owner's requested document coordinates:
  * 08O submit X86/Y3549/W293/H72, then 08M Turnstile Y3634 (+85px).
  * The 13px visual separation remains usable when Turnstile renders.
  */
@@ -460,13 +460,13 @@
     width: 293px;
     min-height: 72px;
     height: 72px;
-    transform: translateY(-65px);
+    transform: translateY(-55px);
   }
   html[lang="en"] #brief .turnstile-widget {
     grid-column: 1;
     grid-row: 3;
     align-self: start;
     margin-top: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
 }
