@@ -117,9 +117,26 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
     assert.doesNotMatch(footer, /Frederic David|Privacy notice|Informativa privacy|A Your Magic Genie project|Un progetto Your Magic Genie/);
     assert.ok(note.includes(location), "bottom line carries the VAT number");
     assert.ok(note.includes(privacy), "privacy notice stays reachable from every homepage");
-    assert.ok(note.includes('<a href="https://ymgconsultingservices.com/">Your Magic Genie · Atlas ↗</a>'));
+    assert.ok(note.includes('<a href="https://ymgconsultingservices.com/">Your Magic Genie · Atlas <svg class="arrow ui-arrow"'), "Atlas footer uses a real vector arrow rather than Unicode");
     assert.doesNotMatch(footer + note, /\bREA\b|sede legale|Via Val Trebbia/i, "no unverified registry claim or private street address");
   }
+});
+
+test("all bilingual north-east CTA arrows are thin accessible SVGs, never iPhone emoji glyphs", () => {
+  const css = readFileSync(new URL("../dist/assets/legibility.css", import.meta.url), "utf8");
+  for (const [page, expected, locale] of [[html, 11, "EN"], [italianHtml, 12, "IT"]]) {
+    assert.equal((page.match(/<svg class="arrow ui-arrow"/g) || []).length, expected,
+      `${locale} must convert every former Unicode arrow to a stable vector`);
+    assert.doesNotMatch(page, /↗|&#x2197;|&#8599;/i, `${locale} must not use emoji-prone Unicode arrows`);
+    assert.equal((page.match(/<svg class="arrow ui-arrow"[^>]*aria-hidden="true" focusable="false"/g) || []).length, expected,
+      `${locale} icons are decorative, unfocusable, and not redundantly announced`);
+    assert.equal((page.match(/stroke="currentColor" stroke-width="1.5"/g) || []).length, expected,
+      `${locale} icons inherit adjacent CTA text color and retain thin strokes`);
+    assert.ok(page.includes('<a class="btn header-cta" href="#inquire">'), `${locale} header action intact`);
+    assert.ok(page.includes('<svg class="arrow ui-arrow"'), `${locale} keeps a visible diagonal vector cue`);
+  }
+  assert.match(css, /\.ui-arrow\s*\{[\s\S]*?width:\s*18px;[\s\S]*?height:\s*18px;/);
+  assert.match(css, /\.concept button \.ui-arrow/);
 });
 
 test("main page exposes mobile navigation and a direct inquiry control", () => {
