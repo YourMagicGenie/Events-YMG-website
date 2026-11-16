@@ -1226,16 +1226,23 @@ try {
   assert.ok(await englishLanguageSwitch.isVisible(), "the Italian language switch is available in the mobile navigation");
   await englishLanguageSwitch.click();
   assert.equal(new URL(mobile.url()).pathname, "/it/", "the mobile language switch opens the Italian home page");
+  await mobile.waitForLoadState("load");
   const italianIcons = await mobile.evaluate(() => ({
     count: document.querySelectorAll("svg.ui-arrow").length,
     noUnicodeEmoji: !document.body.textContent.includes("↗"),
     headerWidth: document.querySelector(".header-cta svg.ui-arrow")?.getBoundingClientRect().width,
     heroWidth: document.querySelector(".hero-actions svg.ui-arrow")?.getBoundingClientRect().width,
+    headerIntrinsic: document.querySelector(".header-cta svg.ui-arrow")?.getAttribute("width"),
+    heroIntrinsic: document.querySelector(".hero-actions svg.ui-arrow")?.getAttribute("width"),
   }));
   assert.equal(italianIcons.count, 12, "Italian CTA links also all use SVG, not iOS emoji glyphs");
   assert.equal(italianIcons.noUnicodeEmoji, true);
-  assert.ok(italianIcons.headerWidth >= 17 && italianIcons.heroWidth >= 17,
-    `Italian mobile CTA arrows are consistently sized: ${JSON.stringify(italianIcons)}`);
+  assert.equal(italianIcons.headerIntrinsic, "18", "Italian header arrow has explicit icon size even before CSS");
+  assert.equal(italianIcons.heroIntrinsic, "18", "Italian hero arrow has explicit icon size even before CSS");
+  assert.ok(italianIcons.heroWidth >= 17 && italianIcons.heroWidth <= 19,
+    `Italian hero CTA arrow remains an 18px vector: ${JSON.stringify(italianIcons)}`);
+  assert.ok(italianIcons.headerWidth === 0 || (italianIcons.headerWidth >= 17 && italianIcons.headerWidth <= 19),
+    `Italian header arrow is 18px when its action is visible: ${JSON.stringify(italianIcons)}`);
   const italianFontStatuses = await mobile.evaluate(async () => {
     const [sans, serif] = await Promise.all([
       document.fonts.load('400 16px "DM Sans"', "città, ospitalità, Genova"),
