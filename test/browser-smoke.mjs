@@ -1235,7 +1235,7 @@ try {
   assert.equal(italianIcons.count, 12, "Italian CTA links also all use SVG, not iOS emoji glyphs");
   assert.equal(italianIcons.noUnicodeEmoji, true);
   assert.ok(italianIcons.headerWidth >= 17 && italianIcons.heroWidth >= 17,
-    "Italian mobile CTA arrows are consistently sized");
+    `Italian mobile CTA arrows are consistently sized: ${JSON.stringify(italianIcons)}`);
   const italianFontStatuses = await mobile.evaluate(async () => {
     const [sans, serif] = await Promise.all([
       document.fonts.load('400 16px "DM Sans"', "città, ospitalità, Genova"),
