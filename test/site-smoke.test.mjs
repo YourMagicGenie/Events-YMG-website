@@ -581,6 +581,19 @@ test("four live form control boxes use identical paint geometry, without native 
   assert.match(chevron, /<path[^>]*stroke="#172a28"/);
 });
 
+test("1440px EN inquiry refinements target visible controls, not field wrappers", () => {
+  const css = readFileSync(new URL("../dist/assets/layout-rhythm.css", import.meta.url), "utf8");
+  const scoped = css.slice(css.lastIndexOf("@media (min-width: 1400px) and (max-width: 1499px)"));
+  assert.match(scoped, /html\[lang="en"\] #brief #intent \{/);
+  assert.match(scoped, /-webkit-appearance:\s*none/);
+  assert.match(scoped, /background-image:\s*url\("\/assets\/select-chevron\.svg"\)/);
+  assert.match(scoped, /html\[lang="en"\] #brief #idea \{\s*height:\s*173px;\s*min-height:\s*173px/);
+  assert.match(scoped, /transform:\s*translateY\(-88px\)/);
+  assert.match(scoped, /transform:\s*translateY\(-3px\)/);
+  assert.ok(html.includes('<select id="intent"'), "native inquiry select remains interactive");
+  assert.ok(italianHtml.includes('<select id="intent"'), "Italian form remains present");
+});
+
 test("inquiry form collects reply email and submits inline through the Worker", () => {
   assert.match(html, /<input required id="email" name="email" type="email" autocomplete="email"/);
   assert.match(html, /id="submit-inquiry" type="submit" disabled><span class="submit-label">Send my inquiry email/);
