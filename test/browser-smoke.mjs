@@ -285,7 +285,11 @@ try {
           founderParagraphs: [...document.querySelectorAll(".founder-bio p")].map(p => p.textContent),
           helpText: businessHelp.textContent, helpVisuallyClipped: getComputedStyle(businessHelp).clipPath,
           captcha: rect("#turnstile-widget"), status: rect("#form-feedback"),
+          statusState: document.querySelector("#form-feedback").dataset.state || "",
           statusPosition: getComputedStyle(document.querySelector("#form-feedback")).position,
+          statusBackground: getComputedStyle(document.querySelector("#form-feedback")).backgroundColor,
+          statusBorder: parseFloat(getComputedStyle(document.querySelector("#form-feedback")).borderLeftWidth),
+          statusShadow: getComputedStyle(document.querySelector("#form-feedback")).boxShadow,
           submit: rect("#submit-inquiry"),
           footer: rect(".site-footer"), footerIdentity: rect(".footer-identity"),
           footerLogo: rect(".footer-identity .logo"), footerTagline: rect(".footer-tagline"),
@@ -337,8 +341,15 @@ try {
         `07E signature flows beneath the expanded biography: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.inquiry.bottom - compact.submit.bottom - 40) <= 4,
         `08 bottom should have 40px below 08O: ${JSON.stringify(compact)}`);
-      assert.ok(compact.status.w <= 2 && compact.status.h <= 2,
-        "08N has no visual footprint at EN 1280px");
+      if (compact.statusState === "error" || compact.statusState === "success") {
+        assert.ok(compact.status.h >= 16, "real errors/success must remain readable");
+        assert.equal(compact.statusBackground, "rgba(0, 0, 0, 0)", "no colored 08N box");
+        assert.equal(compact.statusBorder, 0, "no 08N box border");
+        assert.equal(compact.statusShadow, "none", "no floating 08N notification shadow");
+      } else {
+        assert.ok(compact.status.w <= 2 && compact.status.h <= 2,
+          "neutral 08N has no visual footprint at EN 1280px");
+      }
       assert.ok(Math.abs(compact.footerIdentity.w - 300) <= 1 && Math.abs(compact.footerIdentity.h - 70) <= 1,
         `09A needs W300 H70: ${JSON.stringify(compact)}`);
       assert.ok(compact.footerLogo.y >= compact.footerIdentity.y - 1 &&
