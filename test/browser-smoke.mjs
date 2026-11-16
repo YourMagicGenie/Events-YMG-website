@@ -121,6 +121,37 @@ try {
       if (/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(request.url())) externalFontRequests.push(request.url());
     });
     const pageResponse = await page.goto(baseUrl, { waitUntil: "load" });
+    const iconRendering = await page.evaluate(() => {
+      const measure = selector => {
+        const svg = document.querySelector(selector);
+        const rect = svg?.getBoundingClientRect();
+        return svg && rect ? {
+          width: rect.width, height: rect.height,
+          color: getComputedStyle(svg).color,
+          parentColor: getComputedStyle(svg.parentElement).color,
+          stroke: svg.querySelector("path").getAttribute("stroke"),
+          ariaHidden: svg.getAttribute("aria-hidden"),
+          focusable: svg.getAttribute("focusable"),
+        } : null;
+      };
+      return {
+        count: document.querySelectorAll("svg.ui-arrow").length,
+        header: measure(".header-cta svg.ui-arrow"),
+        hero: measure(".hero-actions svg.ui-arrow"),
+        unicodeArrowText: document.body.textContent.includes("↗"),
+        scrollWidth: document.documentElement.scrollWidth,
+      };
+    });
+    assert.equal(iconRendering.count, 11, `${width}px EN retains all 11 decorative CTA arrow icons`);
+    assert.equal(iconRendering.unicodeArrowText, false, `${width}px never asks iOS to render a Unicode arrow emoji`);
+    for (const [label, icon] of [["header", iconRendering.header], ["hero", iconRendering.hero]]) {
+      assert.ok(icon && icon.width >= 17 && icon.width <= 19 && icon.height >= 17 && icon.height <= 19,
+        `${width}px ${label} arrow is the restrained 18px vector, not a large emoji: ${JSON.stringify(iconRendering)}`);
+      assert.equal(icon.color, icon.parentColor, `${width}px ${label} arrow inherits its CTA color`);
+      assert.equal(icon.stroke, "currentColor", `${width}px ${label} arrow uses color-inheriting SVG strokes`);
+      assert.equal(icon.ariaHidden, "true");
+      assert.equal(icon.focusable, "false");
+    }
     assert.equal(pageResponse.status(), 200, `${width}px homepage responds successfully`);
     const inPageLinks = await page.evaluate(() => {
       const links = [...document.querySelectorAll('a[href^="#"]')].map(link => link.getAttribute("href"));
@@ -1195,6 +1226,16 @@ try {
   assert.ok(await englishLanguageSwitch.isVisible(), "the Italian language switch is available in the mobile navigation");
   await englishLanguageSwitch.click();
   assert.equal(new URL(mobile.url()).pathname, "/it/", "the mobile language switch opens the Italian home page");
+  const italianIcons = await mobile.evaluate(() => ({
+    count: document.querySelectorAll("svg.ui-arrow").length,
+    noUnicodeEmoji: !document.body.textContent.includes("↗"),
+    headerWidth: document.querySelector(".header-cta svg.ui-arrow")?.getBoundingClientRect().width,
+    heroWidth: document.querySelector(".hero-actions svg.ui-arrow")?.getBoundingClientRect().width,
+  }));
+  assert.equal(italianIcons.count, 12, "Italian CTA links also all use SVG, not iOS emoji glyphs");
+  assert.equal(italianIcons.noUnicodeEmoji, true);
+  assert.ok(italianIcons.headerWidth >= 17 && italianIcons.heroWidth >= 17,
+    "Italian mobile CTA arrows are consistently sized");
   const italianFontStatuses = await mobile.evaluate(async () => {
     const [sans, serif] = await Promise.all([
       document.fonts.load('400 16px "DM Sans"', "città, ospitalità, Genova"),
