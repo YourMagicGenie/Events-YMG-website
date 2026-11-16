@@ -191,6 +191,54 @@ try {
       }
     }
 
+    // Measured owner request (#111): 1440px EN only.
+    // The textarea increase must not shift the submit/Turnstile stack from
+    // the previous document-coordinate targets.
+    if (width === 1440) {
+      await page.evaluate(async () => { await document.fonts.ready; });
+      const formGeometry = await page.evaluate(() => {
+        const rect = selector => {
+          const b = document.querySelector(selector).getBoundingClientRect();
+          return {
+            x: b.x + window.scrollX, y: b.y + window.scrollY,
+            w: b.width, h: b.height, bottom: b.bottom + window.scrollY,
+            right: b.right + window.scrollX,
+          };
+        };
+        const idea = document.querySelector("#idea");
+        const btn = document.querySelector("#submit-inquiry");
+        const captcha = document.querySelector("#turnstile-widget");
+        return {
+          messageWrapper: rect("#idea-label"),
+          message: rect("#idea"), submit: rect("#submit-inquiry"),
+          captcha: rect("#turnstile-widget"), inquiry: rect(".inquiry"),
+          form: rect("#brief"),
+          ideaMinHeight: getComputedStyle(idea).minHeight,
+          submitGridColumn: getComputedStyle(btn).gridColumnStart,
+          captchaGridColumn: getComputedStyle(captcha).gridColumnStart,
+        };
+      });
+      assert.ok(Math.abs(formGeometry.message.h - 140) <= 1,
+        `08L white write-in area must be 140px at 1440 EN: ${JSON.stringify(formGeometry)}`);
+      assert.ok(Math.abs(formGeometry.submit.x - 86.4) <= 2 &&
+        Math.abs(formGeometry.submit.y - 3549) <= 4 &&
+        Math.abs(formGeometry.submit.w - 293) <= 1 &&
+        Math.abs(formGeometry.submit.h - 72) <= 1,
+        `08O must occupy 08M's former X86/Y3549 slot as W293/H72: ${JSON.stringify(formGeometry)}`);
+      assert.ok(Math.abs(formGeometry.captcha.x - 86.4) <= 2 &&
+        Math.abs(formGeometry.captcha.y - 3634) <= 4 &&
+        Math.abs(formGeometry.captcha.w - 320) <= 1,
+        `08M must sit 85px below its former Y3549 position: ${JSON.stringify(formGeometry)}`);
+      assert.ok(formGeometry.submit.bottom + 10 <= formGeometry.captcha.y &&
+        formGeometry.submit.bottom + 17 >= formGeometry.captcha.y,
+        `08M should be immediately below 08O, without overlap: ${JSON.stringify(formGeometry)}`);
+      assert.ok(formGeometry.submit.right < formGeometry.message.x - 16 &&
+        formGeometry.message.bottom + 10 < formGeometry.captcha.y,
+        `the expanded 08L cannot collide with submit or Turnstile: ${JSON.stringify(formGeometry)}`);
+      assert.ok(formGeometry.captcha.bottom < formGeometry.inquiry.bottom,
+        `Turnstile must remain inside inquiry section without footer overlap: ${JSON.stringify(formGeometry)}`);
+    }
+
     if (width === 1280) {
       await page.evaluate(async () => { await document.fonts.ready; });
       const heroPosition = await page.evaluate(() => {
