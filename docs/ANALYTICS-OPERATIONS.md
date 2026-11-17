@@ -52,27 +52,32 @@ Complete these steps only after #9 privacy review:
    the privacy page, one page-view point, section/concept points, one accepted
    test submission and a simulated relay failure before enabling the feature
    publicly. The accepted test proves relay acceptance only, not mailbox receipt.
-4. In Cloudflare, open **Observability → Alerts → Monitors** and create an email
-   threshold monitor for the `events_metrics` dataset. Use this query, a
-   15-minute lookback and a threshold of at least 2 failures; send to the
-   owner-controlled email destination and repeat at most hourly:
+4. In Cloudflare, open **Observability → Alerts → Monitors** (Beta since
+   October 2026) and select **Create a Monitor** → **Threshold** → custom SQL.
+   Monitors use the Analytics SQL API dialect, so the dataset is addressed as
+   `events.analyticsEngine.events_metrics`, and sample weights are applied
+   automatically. Use this query, a threshold of **≥ 2**, the owner's email
+   destination only, and repeat at most hourly:
 
    ```sql
-   SELECT COALESCE(SUM(_sample_interval * double1), 0) AS relay_failures
-   FROM events_metrics
+   SELECT SUM(double1) AS relay_failures
+   FROM events.analyticsEngine.events_metrics
    WHERE index1 = 'relay_failure'
      AND timestamp >= NOW() - INTERVAL '15' MINUTE
    ```
 
+   If the query preview reports a missing account scope, add
+   `AND accountTag = '<account ID>'` (the ID is on the account home page).
    This threshold favors actionable alerts for a low-volume site. A single
    failed request will not page anyone; the Worker still returns a clear retry
-   message and direct-email fallback. Review the custom query in the dashboard
-   before saving it, since monitor availability depends on the Cloudflare plan
-   and account permissions.
-5. Verify the monitor with a controlled relay-failure test, ensure its email
-   destination is restricted to the owner, and record the real alert result on
-   issue #30. Do not put customer data or inquiry content in alert names,
-   labels, or notes.
+   message and direct-email fallback.
+5. Verify the alert path without breaking the live relay: temporarily change
+   the monitor's `index1 = 'relay_failure'` to `index1 = 'page_view'` and the
+   threshold to **≥ 1**, open the site once, confirm the email arrives, then
+   restore the query and threshold. This proves monitor → email delivery; the
+   relay-failure counter itself is covered by `test/form-handler.test.mjs`.
+   Record the real result on issue #30. Do not put customer data or inquiry
+   content in alert names, labels, or notes.
 
 ## Operational limits
 
