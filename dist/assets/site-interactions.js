@@ -72,7 +72,7 @@ const clearFormat = document.getElementById("clear-format");
 const pathCopy = messages.turnstileLanguage === "it" ? {
   businessInitial: "Seleziona prima il tipo di richiesta",
   businessPlaceholder: "Scegli il tipo di richiesta per adattare questo campo",
-  businessHelpInitial: "Scegli il tipo di richiesta: ti chiederemo solo i dettagli che servono.",
+  businessHelpInitial: "",
   venueLabel: "Locale o location *",
   venuePlaceholder: "Nome del locale o della location",
   venueHelp: "Indica il locale o la location per cui vorresti collaborare.",

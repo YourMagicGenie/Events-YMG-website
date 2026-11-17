@@ -110,27 +110,32 @@
 }
 
 /*
+ * 17 Nov 2026: every owner-calibrated desktop rule below originally targeted
+ * html[lang="en"]. The owner asked for Italian to share the same geometry, so
+ * the selectors now use html[lang] (same specificity) and apply to EN and IT.
+ */
+/*
  * 1280px English-only hero calibration — Layout Inspector #85.
  * Preserve baseline 1280px section flow by applying each change as an independent
  * delta, not by translating all children by the same amount.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] header .logo { position: relative; top: -3px; }
-  html[lang="en"] .hero-copy {
+  html[lang] header .logo { position: relative; top: -3px; }
+  html[lang] .hero-copy {
     /* Existing 4vw (~51px at 1280) minus 20px: eyebrow Y 141 -> 121. */
     padding-top: calc(clamp(48px, 4vw, 64px) - 20px);
   }
-  html[lang="en"] .hero h1 {
+  html[lang] .hero h1 {
     /* +5px top margin cancels 5px of eyebrow's -20px shift. */
     margin-top: 25px;
     /* +5px bottom margin cancels 5px of headline's -15px shift. */
     margin-bottom: 27px;
   }
-  html[lang="en"] .hero-copy > p {
+  html[lang] .hero-copy > p {
     /* Full copy column permits a two-line paragraph, rather than three. */
     max-width: 660px;
   }
-  html[lang="en"] .photo-note {
+  html[lang] .photo-note {
     /* Bottom anchor moves caption upward while leaving photo framing intact. */
     bottom: 79px;
   }
@@ -143,33 +148,33 @@
  * downstream band and Approach thus keep their document anchors.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] .hero h1 {
+  html[lang] .hero h1 {
     /* H1 Y 164 -> 144; preserve eyebrow Y121. */
     margin-top: 5px;
     /* Paragraph Y454 -> 439, by replacing 5px of H1's -20px flow change. */
     margin-bottom: 32px;
   }
-  html[lang="en"] .hero .hero-atmosphere {
+  html[lang] .hero .hero-atmosphere {
     /* Photo Y90, H650 -> H610; hero section remains 650px tall. */
     bottom: 40px;
   }
-  html[lang="en"] .hero .photo-note {
+  html[lang] .hero .photo-note {
     /* 02G was not in this round: compensate for shortened parent photo. */
     bottom: 39px;
   }
-  html[lang="en"] .intro {
+  html[lang] .intro {
     /* Top stays Y794; content moves up ~20px, height drops 39px. */
     padding-top: calc(var(--events-section-space) - 20px);
     padding-bottom: calc(var(--events-section-space) - 19px);
   }
-  html[lang="en"] .concepts {
+  html[lang] .concepts {
     /* Section starts at Approach's new end Y994; content also moves up 20px. */
     padding-top: 24px;
     padding-bottom: 32px;
     /* Text/card height variations are ~10px shorter than the owner baseline. */
     min-height: 782px;
   }
-  html[lang="en"] .concepts .deck-toolbar {
+  html[lang] .concepts .deck-toolbar {
     /*
      * Controls Y1182 -> Y990: -39px upstream section, -20px top padding,
      * then -133px visual adjustment. Transparent toolbar area cannot block copy.
@@ -178,9 +183,9 @@
     transform: translateY(-133px);
     pointer-events: none;
   }
-  html[lang="en"] .concepts .deck-actions,
-  html[lang="en"] .concepts .deck-arrow { pointer-events: auto; }
-  html[lang="en"] .concepts #concept-deck {
+  html[lang] .concepts .deck-actions,
+  html[lang] .concepts .deck-arrow { pointer-events: auto; }
+  html[lang] .concepts #concept-deck {
     /* Track Y1236 -> Y1140: -39px upstream, -20px top, -37px visual. */
     transform: translateY(-37px);
   }
@@ -192,45 +197,45 @@
  * all downstream document Y coordinates in normal flow.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] .hero {
+  html[lang] .hero {
     min-height: 610px;
   }
-  html[lang="en"] .hero .hero-atmosphere {
+  html[lang] .hero .hero-atmosphere {
     /* The photograph now fills the shortened hero rather than ending 40px early. */
     bottom: 0;
   }
-  html[lang="en"] .hero-actions {
+  html[lang] .hero-actions {
     /* Both 02D and following 02E move down 10px without moving 02B/02C. */
     margin-top: 34px;
   }
-  html[lang="en"] .intro {
+  html[lang] .intro {
     /* 04 is now 24px shorter, in addition to the upstream -40px hero shift. */
     padding-bottom: calc(var(--events-section-space) - 43px);
   }
-  html[lang="en"] .intro > div:nth-child(2) {
+  html[lang] .intro > div:nth-child(2) {
     /* The paragraph's actual pre-offset top is Y792, so +30px places it at Y822. */
     position: relative;
     top: 30px;
   }
-  html[lang="en"] .concepts {
+  html[lang] .concepts {
     /* Measured track height ~557px: bottom1613 + 40px -> section bottom1653. */
     min-height: 723px;
   }
-  html[lang="en"] .concepts .concept-deck {
+  html[lang] .concepts .concept-deck {
     /* Reclaim empty flow after shifting the track while keeping its controls in flow. */
     margin-bottom: -49px;
   }
-  html[lang="en"] .concepts .deck-toolbar {
+  html[lang] .concepts .deck-toolbar {
     /* 05C full-width ghost toolbar replaced with a right-aligned 110px control. */
     width: 110px;
     justify-self: end;
     margin-right: 14px;
     transform: translateY(-57px);
   }
-  html[lang="en"] .concepts .deck-actions {
+  html[lang] .concepts .deck-actions {
     justify-content: flex-end;
   }
-  html[lang="en"] .concepts #concept-deck {
+  html[lang] .concepts #concept-deck {
     /* Y1140 - hero40 - approach24 - local20 = Y1056. */
     transform: translateY(-57px);
   }
@@ -243,34 +248,34 @@
  * submission failures or success appear as plain unboxed text.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] .partnerships {
+  html[lang] .partnerships {
     padding-top: 39px;
     padding-bottom: 11px;
     /* Baseline section top is ~1653; requested bottom Y2139. */
     min-height: 486px;
   }
-  html[lang="en"] .partnership:nth-child(2) {
+  html[lang] .partnership:nth-child(2) {
     /* Move 06F3 up 20px through real document flow. */
     padding-bottom: 4px;
   }
-  html[lang="en"] .partnership:last-child {
+  html[lang] .partnership:last-child {
     border-bottom: 0;
   }
 
-  html[lang="en"] .inquiry {
+  html[lang] .inquiry {
     padding-top: calc(var(--events-section-space) - 10px);
     padding-bottom: 14px;
   }
-  html[lang="en"] .inquiry h2 {
+  html[lang] .inquiry h2 {
     white-space: nowrap;
   }
-  html[lang="en"] #brief {
+  html[lang] #brief {
     position: relative;
   }
-  html[lang="en"] #brief .form-grid > div {
+  html[lang] #brief .form-grid > div {
     min-height: 74px;
   }
-  html[lang="en"] #brief #business-help {
+  html[lang] #brief #business-help {
     /* Preserve conditional guidance for screen readers without a tall card. */
     position: absolute;
     width: 1px;
@@ -281,13 +286,13 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  html[lang="en"] #brief #submit-inquiry {
+  html[lang] #brief #submit-inquiry {
     transform: translateY(-25px);
   }
-  html[lang="en"] .site-footer {
+  html[lang] .site-footer {
     padding-top: 18px;
   }
-  html[lang="en"] .site-footer .footer-contact {
+  html[lang] .site-footer .footer-contact {
     margin-left: auto;
   }
 }
@@ -306,19 +311,19 @@
 
 /* Fifth owner-calibrated EN desktop pass (#93): list geometry and footer identity. */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] .partnerships {
+  html[lang] .partnerships {
     /* 486px baseline minus 40px of unneeded section tail. */
     min-height: 446px;
   }
-  html[lang="en"] .partnerships > div:nth-child(2) {
+  html[lang] .partnerships > div:nth-child(2) {
     /* 06F should finish with 06F3 rather than stretch to section height. */
     align-self: start;
   }
-  html[lang="en"] .partnerships .partnership:last-child {
+  html[lang] .partnerships .partnership:last-child {
     padding-bottom: 0;
     border-bottom: 0;
   }
-  html[lang="en"] .site-footer .footer-identity {
+  html[lang] .site-footer .footer-identity {
     flex: 0 0 300px;
     width: 300px;
     height: 70px;
@@ -330,12 +335,12 @@
     align-items: flex-start;
     gap: 0;
   }
-  html[lang="en"] .site-footer .footer-identity .logo {
+  html[lang] .site-footer .footer-identity .logo {
     font-size: 29px;
     line-height: 1.05;
     white-space: nowrap;
   }
-  html[lang="en"] .site-footer .footer-identity .footer-tagline {
+  html[lang] .site-footer .footer-identity .footer-tagline {
     margin: 0;
     max-width: 300px;
     font-size: 12px;
@@ -346,28 +351,28 @@
 
 /* Sixth owner reference pass (#95): 1280px EN field and carousel alignment. */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] .concepts .deck-toolbar {
+  html[lang] .concepts .deck-toolbar {
     /* Removes the former 14px inset; 05C and 05D share the same right edge. */
     margin-right: 0;
   }
 
   /* Label + 48px control forms one consistent ~74px reference row. */
-  html[lang="en"] #brief .form-grid > div:nth-child(1),
-  html[lang="en"] #brief .form-grid > div:nth-child(4),
-  html[lang="en"] #brief .form-grid > div:nth-child(7),
-  html[lang="en"] #brief .form-grid > div:nth-child(9) {
+  html[lang] #brief .form-grid > div:nth-child(1),
+  html[lang] #brief .form-grid > div:nth-child(4),
+  html[lang] #brief .form-grid > div:nth-child(7),
+  html[lang] #brief .form-grid > div:nth-child(9) {
     min-height: 74px;
     height: 74px;
     align-self: start;
   }
-  html[lang="en"] #brief #intent,
-  html[lang="en"] #brief #business,
-  html[lang="en"] #brief #timing {
+  html[lang] #brief #intent,
+  html[lang] #brief #business,
+  html[lang] #brief #timing {
     height: 48px;
     min-height: 48px;
     box-sizing: border-box;
   }
-  html[lang="en"] #brief #idea {
+  html[lang] #brief #idea {
     /* Two 17px text lines + 6px vertical padding on each side = 46px. */
     height: 48px;
     min-height: 48px;
@@ -385,13 +390,13 @@
  * in natural grid flow (75px prior, then -4px on 14 Nov). Align the *actual white controls*, not only wrappers.
  */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  html[lang="en"] .about > div:nth-child(2) {
+  html[lang] .about > div:nth-child(2) {
     padding-top: calc(clamp(105px, 8vw, 136px) + 71px);
   }
-  html[lang="en"] #brief #business,
-  html[lang="en"] #brief #format,
-  html[lang="en"] #brief #guests,
-  html[lang="en"] #brief #timing {
+  html[lang] #brief #business,
+  html[lang] #brief #format,
+  html[lang] #brief #guests,
+  html[lang] #brief #timing {
     height: 48px;
     min-height: 48px;
     max-height: 48px;
@@ -447,7 +452,7 @@
 @media (min-width: 1400px) and (max-width: 1499px) {
   /* 08D: match the painted 48px edges of 08E and 08F. Native select
    * bevels had made an equal-sized CSS box visually ~2px shorter. */
-  html[lang="en"] #brief #intent {
+  html[lang] #brief #intent {
     -webkit-appearance: none;
     appearance: none;
     box-sizing: border-box;
@@ -470,13 +475,13 @@
   /* 08L: new bottom is flush with 08O's measured bottom ~Y3621.
    * Enlarging its white area 33px increases the form grid row by 33px,
    * so counter-offset the submit and Turnstile to retain their positions. */
-  html[lang="en"] #brief #idea {
+  html[lang] #brief #idea {
     height: 173px;
     min-height: 173px;
     box-sizing: border-box;
     resize: vertical;
   }
-  html[lang="en"] #brief #submit-inquiry {
+  html[lang] #brief #submit-inquiry {
     grid-column: 1;
     grid-row: 3;
     justify-self: start;
@@ -487,7 +492,7 @@
     height: 72px;
     transform: translateY(-88px);
   }
-  html[lang="en"] #brief .turnstile-widget {
+  html[lang] #brief .turnstile-widget {
     grid-column: 1;
     grid-row: 3;
     align-self: start;
