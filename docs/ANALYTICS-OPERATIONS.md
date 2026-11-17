@@ -56,21 +56,24 @@ Complete these steps only after #9 privacy review:
    October 2026) and select **Create a Monitor** → **Threshold** → custom SQL.
    Monitors use the Analytics SQL API dialect, so the dataset is addressed as
    `events.analyticsEngine.events_metrics`, and sample weights are applied
-   automatically. Use this query, a threshold of **≥ 2**, the owner's email
-   destination only, and repeat at most hourly:
+   automatically. Custom SQL must return one numeric column named `value`,
+   include an `accountTag` filter, and (in the recommended **Automatic**
+   time-range mode) omit any timestamp filter, because Cloudflare supplies the
+   window itself. No trailing semicolon. Replace `<ACCOUNT_ID>` with the ID on
+   the account home page (kept out of this public repository):
 
    ```sql
-   SELECT SUM(double1) AS relay_failures
+   SELECT SUM(double1) AS value
    FROM events.analyticsEngine.events_metrics
-   WHERE index1 = 'relay_failure'
-     AND timestamp >= NOW() - INTERVAL '15' MINUTE
+   WHERE accountTag = '<ACCOUNT_ID>'
+     AND index1 = 'relay_failure'
    ```
 
-   If the query preview reports a missing account scope, add
-   `AND accountTag = '<account ID>'` (the ID is on the account home page).
-   This threshold favors actionable alerts for a low-volume site. A single
-   failed request will not page anyone; the Worker still returns a clear retry
-   message and direct-email fallback.
+   Trigger when the result is **≥ 1**, average over **1m**, run every
+   **Automatic**, repeat notification after **1h**, and send to the owner's
+   email destination only. Relay failures are rare on this low-volume site, so
+   any failure is worth one email; the hourly repeat limit prevents floods. The
+   Worker still shows visitors a retry message and the direct-email fallback.
 5. Verify the alert path without breaking the live relay: temporarily change
    the monitor's `index1 = 'relay_failure'` to `index1 = 'page_view'` and the
    threshold to **≥ 1**, open the site once, confirm the email arrives, then
