@@ -1235,7 +1235,7 @@ try {
     headerIntrinsic: document.querySelector(".header-cta svg.ui-arrow")?.getAttribute("width"),
     heroIntrinsic: document.querySelector(".hero-actions svg.ui-arrow")?.getAttribute("width"),
   }));
-  assert.equal(italianIcons.count, 12, "Italian CTA links also all use SVG, not iOS emoji glyphs");
+  assert.equal(italianIcons.count, 11, "Italian CTA links also all use SVG, not iOS emoji glyphs");
   assert.equal(italianIcons.noUnicodeEmoji, true);
   assert.equal(italianIcons.headerIntrinsic, "18", "Italian header arrow has explicit icon size even before CSS");
   assert.equal(italianIcons.heroIntrinsic, "18", "Italian hero arrow has explicit icon size even before CSS");

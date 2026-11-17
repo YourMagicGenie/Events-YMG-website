@@ -111,9 +111,8 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
     if (page === html) {
       assert.ok(footer.includes("Venue partnerships &amp; event production</p>"), "English footer tagline drops the city suffix");
       assert.doesNotMatch(footer, /href="#inquire"/, "English footer removes redundant 09C while retaining its email");
-    } else {
-      assert.match(footer, /href="#inquire"/, "Italian footer CTA remains unchanged");
     }
+    assert.doesNotMatch(footer, /href="#inquire"/, "both footers drop the redundant 09C inquiry link and keep the email");
     assert.doesNotMatch(footer, /Frederic David|Privacy notice|Informativa privacy|A Your Magic Genie project|Un progetto Your Magic Genie/);
     assert.ok(note.includes(location), "bottom line carries the VAT number");
     assert.ok(note.includes(privacy), "privacy notice stays reachable from every homepage");
@@ -124,7 +123,7 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
 
 test("all bilingual north-east CTA arrows are thin accessible SVGs, never iPhone emoji glyphs", () => {
   const css = readFileSync(new URL("../dist/assets/legibility.css", import.meta.url), "utf8");
-  for (const [page, expected, locale] of [[html, 11, "EN"], [italianHtml, 12, "IT"]]) {
+  for (const [page, expected, locale] of [[html, 11, "EN"], [italianHtml, 11, "IT"]]) {
     assert.equal((page.match(/<svg class="arrow ui-arrow"/g) || []).length, expected,
       `${locale} must convert every former Unicode arrow to a stable vector`);
     assert.doesNotMatch(page, /↗|&#x2197;|&#8599;/i, `${locale} must not use emoji-prone Unicode arrows`);
@@ -598,13 +597,13 @@ test("four live form control boxes use identical paint geometry, without native 
   assert.match(chevron, /<path[^>]*stroke="#172a28"/);
 });
 
-test("1440px EN inquiry refinements target visible controls, not field wrappers", () => {
+test("1440px EN/IT inquiry refinements target visible controls, not field wrappers", () => {
   const css = readFileSync(new URL("../dist/assets/layout-rhythm.css", import.meta.url), "utf8");
   const scoped = css.slice(css.lastIndexOf("@media (min-width: 1400px) and (max-width: 1499px)"));
-  assert.match(scoped, /html\[lang="en"\] #brief #intent \{/);
+  assert.match(scoped, /html\[lang\] #brief #intent \{/);
   assert.match(scoped, /-webkit-appearance:\s*none/);
   assert.match(scoped, /background-image:\s*url\("\/assets\/select-chevron\.svg"\)/);
-  assert.match(scoped, /html\[lang="en"\] #brief #idea \{\s*height:\s*173px;\s*min-height:\s*173px/);
+  assert.match(scoped, /html\[lang\] #brief #idea \{\s*height:\s*173px;\s*min-height:\s*173px/);
   assert.match(scoped, /transform:\s*translateY\(-88px\)/);
   assert.match(scoped, /transform:\s*translateY\(-3px\)/);
   assert.ok(html.includes('<select id="intent"'), "native inquiry select remains interactive");
