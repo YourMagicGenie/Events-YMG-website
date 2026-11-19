@@ -6,9 +6,9 @@ website, without copying its scientific-site router or sensitive configuration.
 
 Original implementation (separate, private repository):
 
-- `YourMagicGenie/ymg-scientific-website/v2/src/worker.js`
-- `YourMagicGenie/ymg-scientific-website/v2/integrations/google-apps-script/Code.gs`
-- `YourMagicGenie/ymg-scientific-website/v2/scripts/test-assessment-worker.mjs`
+- `YourMagicGenie/ymg-atlas-website/v2/src/worker.js`
+- `YourMagicGenie/ymg-atlas-website/v2/integrations/google-apps-script/Code.gs`
+- `YourMagicGenie/ymg-atlas-website/v2/scripts/test-assessment-worker.mjs`
 
 Use the **existing** Google Apps Script relay deployment if it accepts the
 Events-specific safe subject and body. Do not copy its secret or make a second
