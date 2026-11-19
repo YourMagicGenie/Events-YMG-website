@@ -707,12 +707,12 @@ try {
     assert.equal(carousel.nextDisabled, "false", `${width}px identifies that more slides are available`);
     const expectedTitles = ["The Rooftop Social", "Live at Night", "A Private Occasion", "The Supper Club", "The Tasting Table", "The Corporate Social"];
     const expectedArtAlts = [
-      "Stylized illustration of a candlelit rooftop table beside a coastal skyline at dusk.",
-      "Stylized illustration of a violin under warm stage lights with musical notes nearby.",
-      "Stylized illustration of a celebration table with flowers, cake and candles.",
-      "Stylized illustration of a plated meal on a dining table with candles and foliage.",
-      "Stylized illustration of a wine bottle and two glasses beside a tasting board of small plates and grapes.",
-      "Stylized illustration of a modern city-view lounge with a high table and glasses.",
+      "Illustrative photo of a glass-roofed rooftop terrace with tables set at dusk above a city skyline of domes and towers.",
+      "Illustrative photo of a DJ’s hand over a turntable and mixer in a warm glow.",
+      "Illustrative photo of round tables dressed in coral and gold linens with flowers in a leafy garden.",
+      "Illustrative photo of guests sharing dishes and wine around a long candlelit table.",
+      "Illustrative photo of guests swirling red wine beside boards of cheese, cured meats and olives.",
+      "Illustrative photo of guests in smart attire mingling with sparkling wine at high tables in a warm lounge.",
     ];
     for (const slide of carousel.slides) {
       const number = String(slide.number).padStart(2, "0");
@@ -720,8 +720,8 @@ try {
       assert.equal(slide.accessibleLabel, `${slide.number} of 6: ${slide.title}`, `${width}px gives slide ${number} a semantic name`);
       assert.ok(slide.badge.startsWith(`${number} /`), `${width}px keeps slide ${number}'s number with its category`);
       assert.ok(slide.badgeBounds.bottom <= slide.titleBounds.top + 1, `${width}px slide ${number}'s number does not overlap its title`);
-      assert.equal(slide.image.alt, expectedArtAlts[slide.number - 1], `${width}px slide ${number} exposes its format-specific illustration description`);
-      assert.equal(slide.image.src, `/assets/event-art/${["rooftop-social.svg", "strings-after-dark.svg", "private-occasion.svg", "supper-club.svg", "wine-pairing.svg", "corporate-social.svg"][slide.number - 1]}`, `${width}px slide ${number} uses a local art asset`);
+      assert.equal(slide.image.alt, expectedArtAlts[slide.number - 1], `${width}px slide ${number} exposes its format-specific photo description`);
+      assert.equal(slide.image.src, `/assets/event-photos/${["rooftop-social","live-at-night","private-occasion","supper-club","tasting-table","corporate-social"][slide.number - 1]}-1200.webp`, `${width}px slide ${number} uses a local photo asset`);
       assert.equal(slide.image.objectFit, "cover", `${width}px slide ${number} crops consistently without distortion`);
       assert.ok(Math.abs(slide.art.width / slide.art.height - 1.25) < 0.01, `${width}px slide ${number} keeps the shared 5:4 art frame`);
       assert.equal(slide.artworkText, "", `${width}px slide ${number} avoids duplicated text in the illustration`);
@@ -1164,7 +1164,9 @@ try {
     await action.scrollIntoViewIfNeeded();
     const artImage = card.locator("img.card-art-image");
     await artImage.evaluate(image => image.decode());
-    assert.ok(await artImage.evaluate(image => image.naturalWidth === 1200 && image.naturalHeight === 960), `slide ${index + 1} loads its full-resolution local illustration`);
+    const loadedArt = await artImage.evaluate(image => ({ width: image.naturalWidth, height: image.naturalHeight, path: new URL(image.currentSrc).pathname }));
+    // srcset reports a density-corrected natural size, so check the 5:4 ratio and the served file.
+    assert.ok(loadedArt.width > 0 && Math.abs(loadedArt.width / loadedArt.height - 1.25) < 0.01 && /^\/assets\/event-photos\/[a-z-]+-(?:700|1200)\.webp$/.test(loadedArt.path),`slide ${index + 1} loads a responsive 5:4 local photo: ${JSON.stringify(loadedArt)}`);
     await action.click();
     assert.equal(await mobile.locator("#format").inputValue(), route.format, `slide ${index + 1} preselects ${route.format}`);
     assert.equal(await mobile.locator("#intent").inputValue(), route.intent, `slide ${index + 1} chooses the matching inquiry path`);
@@ -1254,14 +1256,14 @@ try {
   assert.equal(await mobile.locator("html").getAttribute("lang"), "it", "the Italian route declares its language");
   assert.equal(await mobile.getByRole("heading", { level: 1 }).textContent(), "Le grandi serateraramente nascono per caso.");
   const expectedItalianArtAlts = [
-    "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto.",
-    "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo.",
-    "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele.",
-    "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame.",
-    "Illustrazione stilizzata di una bottiglia e due calici di vino accanto a un tagliere con piccoli assaggi e uva.",
-    "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri.",
+    "Foto illustrativa di una terrazza panoramica con copertura in vetro e tavoli apparecchiati al crepuscolo, sopra uno skyline di cupole e torri.",
+    "Foto illustrativa della mano di un DJ su giradischi e mixer, in una calda luce soffusa.",
+    "Foto illustrativa di tavoli rotondi con tovaglie corallo e oro e composizioni floreali in un giardino verde.",
+    "Foto illustrativa di ospiti che condividono piatti e vino attorno a una lunga tavola a lume di candela.",
+    "Foto illustrativa di ospiti che fanno roteare il vino rosso nel calice, accanto a taglieri di formaggi, salumi e olive.",
+    "Foto illustrativa di ospiti in abito elegante che conversano con un calice di bollicine attorno a tavoli alti, in un lounge dalla luce calda.",
   ];
-  assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific illustration descriptions");
+  assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific photo descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
   assert.equal(await mobile.locator(".menu-toggle").getAttribute("aria-label"), "Apri il menu di navigazione");
   await mobile.locator("#intent").selectOption("venue_partnership");
@@ -1377,6 +1379,8 @@ try {
   await touch.route("https://fonts.gstatic.com/**", route => route.abort());
   await touch.goto(baseUrl, { waitUntil: "load" });
   await touch.locator("#concept-deck .art").first().scrollIntoViewIfNeeded();
+  // Let the lazily loaded card photos in view finish decoding, as a visitor would see them before swiping.
+  await touch.locator("#concept-deck .card-art-image").evaluateAll(images => Promise.all(images.slice(0, 2).map(image => image.decode().catch(() => {}))));
   const artBounds = await touch.locator("#concept-deck .art").first().boundingBox();
   const touchSession = await touchContext.newCDPSession(touch);
   const touchY = Math.round(artBounds.y + artBounds.height / 2);
@@ -1391,15 +1395,16 @@ try {
     type: "touchStart",
     touchPoints: [{ x: startX, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
   });
-  for (let step = 1; step <= 6; step++) {
+  // A real swipe travels past half a card (8 x 30px = 240px); shorter drags correctly snap back to card 1.
+  for (let step = 1; step <= 8; step++) {
     await touchSession.send("Input.dispatchTouchEvent", {
       type: "touchMove",
-      touchPoints: [{ x: startX - step * 25, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
+      touchPoints: [{ x: startX - step * 30, y: touchY, radiusX: 4, radiusY: 4, force: 1, id: 1 }],
     });
     await touch.waitForTimeout(25);
   }
   await touchSession.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await touch.waitForTimeout(250);
+  await touch.waitForTimeout(600);
   const touchState = await touch.evaluate(() => {
     const deck = document.querySelector("#concept-deck");
     return {

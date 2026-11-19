@@ -1,19 +1,22 @@
 # Event card art provenance
 
-**Approach:** Six original, locally authored SVG illustrations form one visual system for the event-format carousel. The assets use the YMG Events palette, a shared 5:4 frame and recurring warm linework. They are bespoke service illustrations, not photographs or records of events produced by YMG.
+**Approach (issue #99, 19 November 2026):** Six photographs, one per event format, replace the earlier stylized SVG illustrations in the event-format carousel. Each one shows a different activity, setting and light: a rooftop terrace, a DJ setup, a garden celebration, a shared dinner, a wine tasting and a corporate reception.
 
-**Rights and delivery:** The project authors these vector files in this repository; they contain no third-party media, external fonts, embedded text, or remote image requests. Each file is served locally as a small SVG with a 1200 × 960 viewBox. The HTML uses one responsive 5:4 crop frame with `object-fit: cover`; the vector artwork scales without pixelation. Captions, card numbers and event names remain live page text outside the image. The English and Italian `alt` values describe the specific illustration rather than repeating the card title.
+**Source and rights:** All six photographs were supplied by the site owner on 19 November 2026 for use on this website. The owner holds the usage-rights record for each original. The originals are not stored in this repository. Before adding or swapping a card photo, record its source and licence here.
 
-| File | Format represented | English alternative text | Testo alternativo italiano |
+**Processing:** `tools/build-card-photos.mjs` crops each original to the shared 5:4 card frame around a chosen focal window, applies a small brightness/saturation correction so the set reads together, and writes 1200 × 960 and 700 × 560 WebP files to `dist/assets/event-photos/`. The HTML serves them with `srcset`/`sizes`, lazy loading and fixed `width`/`height` (no layout shift), inside the existing `object-fit: cover` frame. Captions, card numbers and event names remain live page text outside the image.
+
+**Truthfulness:** The ALT text opens with "Illustrative photo of" / "Foto illustrativa di" and describes what is actually in the frame. These images communicate possible formats only. They do not depict or claim a past YMG booking, a YMG venue, a named client or a confirmed partner. The rooftop photograph shows a skyline that is not Genova; its ALT text does not name a city. The DJ photograph shows the manufacturers' names on the equipment; this implies no sponsorship or partnership.
+
+| Files | Format represented | English alternative text | Testo alternativo italiano |
 |---|---|---|---|
-| `rooftop-social.svg` | Rooftop Social | Stylized illustration of a candlelit rooftop table beside a coastal skyline at dusk. | Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto. |
-| `strings-after-dark.svg` | Live at Night | Stylized illustration of a violin under warm stage lights with musical notes nearby. | Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo. |
-| `private-occasion.svg` | A Private Occasion | Stylized illustration of a celebration table with flowers, cake and candles. | Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele. |
-| `supper-club.svg` | Supper Club | Stylized illustration of a plated meal on a dining table with candles and foliage. | Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame. |
-| `wine-pairing.svg` | The Tasting Table (wine pairing) | Stylized illustration of a wine bottle and two glasses beside a tasting board of small plates and grapes. | Illustrazione stilizzata di una bottiglia e due calici di vino accanto a un tagliere con piccoli assaggi e uva. |
-| `corporate-social.svg` | Corporate Social | Stylized illustration of a modern city-view lounge with a high table and glasses. | Illustrazione stilizzata di un lounge moderno con vista sulla città, un tavolo alto e bicchieri. |
+| `rooftop-social-1200.webp`, `rooftop-social-700.webp` | The Rooftop Social | Illustrative photo of a glass-roofed rooftop terrace with tables set at dusk above a city skyline of domes and towers. | Foto illustrativa di una terrazza panoramica con copertura in vetro e tavoli apparecchiati al crepuscolo, sopra uno skyline di cupole e torri. |
+| `live-at-night-1200.webp`, `live-at-night-700.webp` | Live at Night | Illustrative photo of a DJ’s hand over a turntable and mixer in a warm glow. | Foto illustrativa della mano di un DJ su giradischi e mixer, in una calda luce soffusa. |
+| `private-occasion-1200.webp`, `private-occasion-700.webp` | A Private Occasion | Illustrative photo of round tables dressed in coral and gold linens with flowers in a leafy garden. | Foto illustrativa di tavoli rotondi con tovaglie corallo e oro e composizioni floreali in un giardino verde. |
+| `supper-club-1200.webp`, `supper-club-700.webp` | The Supper Club | Illustrative photo of guests sharing dishes and wine around a long candlelit table. | Foto illustrativa di ospiti che condividono piatti e vino attorno a una lunga tavola a lume di candela. |
+| `tasting-table-1200.webp`, `tasting-table-700.webp` | The Tasting Table (wine pairing) | Illustrative photo of guests swirling red wine beside boards of cheese, cured meats and olives. | Foto illustrativa di ospiti che fanno roteare il vino rosso nel calice, accanto a taglieri di formaggi, salumi e olive. |
+| `corporate-social-1200.webp`, `corporate-social-700.webp` | The Corporate Social | Illustrative photo of guests in smart attire mingling with sparkling wine at high tables in a warm lounge. | Foto illustrativa di ospiti in abito elegante che conversano con un calice di bollicine attorno a tavoli alti, in un lounge dalla luce calda. |
 
-These images communicate possible formats only. They do not depict or claim a past YMG booking. The hero photograph remains separately sourced and documented in [ASSET-PROVENANCE.md](ASSET-PROVENANCE.md).
+The hero photograph remains separately sourced and documented in [ASSET-PROVENANCE.md](ASSET-PROVENANCE.md).
 
-
-**12 November 2026 update (issue #74):** The owner replaced the Jazz & Cocktails format with a wine-pairing format. `wine-pairing.svg` was authored in the same palette and frame and replaces `jazz-cocktails.svg`, which is no longer shipped.
+**History:** Until issue #99 the cards used six locally authored SVG illustrations (`dist/assets/event-art/*.svg`). On 12 November 2026 (issue #74) the Jazz & Cocktails format was replaced by wine pairing. The SVGs are no longer shipped; they remain in Git history.
