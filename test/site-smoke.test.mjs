@@ -493,24 +493,26 @@ test("event formats form a six-card carousel without filters or mockup disclaime
 });
 
 
-test("event card illustrations are local, format-specific, responsive and documented", () => {
+test("event card photos are local, format-specific, responsive and documented", () => {
   const assets = [
-    { file: "rooftop-social.svg", en: "Stylized illustration of a candlelit rooftop table beside a coastal skyline at dusk.", it: "Illustrazione stilizzata di un tavolo illuminato da candele su una terrazza con vista sulla costa al tramonto." },
-    { file: "strings-after-dark.svg", en: "Stylized illustration of a violin under warm stage lights with musical notes nearby.", it: "Illustrazione stilizzata di un violino sotto luci ambrate, con note musicali sullo sfondo." },
-    { file: "private-occasion.svg", en: "Stylized illustration of a celebration table with flowers, cake and candles.", it: "Illustrazione stilizzata di un tavolo da festa con fiori, torta e candele." },
-    { file: "supper-club.svg", en: "Stylized illustration of a plated meal on a dining table with candles and foliage.", it: "Illustrazione stilizzata di un piatto servito su una tavola apparecchiata, con candele e fogliame." },
-    { file: "wine-pairing.svg", en: "Stylized illustration of a wine bottle and two glasses beside a tasting board of small plates and grapes.", it: "Illustrazione stilizzata di una bottiglia e due calici di vino accanto a un tagliere con piccoli assaggi e uva." },
-    { file: "corporate-social.svg", en: "Stylized illustration of a modern city-view lounge with a high table and glasses.", it: "Illustrazione stilizzata di un salotto contemporaneo con vista sulla città, un tavolo alto e bicchieri." },
+    { name: "rooftop-social", en: "Illustrative photo of a glass-roofed rooftop terrace with tables set at dusk above a city skyline of domes and towers.", it: "Foto illustrativa di una terrazza panoramica con copertura in vetro e tavoli apparecchiati al crepuscolo, sopra uno skyline di cupole e torri." },
+    { name: "live-at-night", en: "Illustrative photo of a DJ’s hand over a turntable and mixer in a warm glow.", it: "Foto illustrativa della mano di un DJ su giradischi e mixer, in una calda luce soffusa." },
+    { name: "private-occasion", en: "Illustrative photo of round tables dressed in coral and gold linens with flowers in a leafy garden.", it: "Foto illustrativa di tavoli rotondi con tovaglie corallo e oro e composizioni floreali in un giardino verde." },
+    { name: "supper-club", en: "Illustrative photo of guests sharing dishes and wine around a long candlelit table.", it: "Foto illustrativa di ospiti che condividono piatti e vino attorno a una lunga tavola a lume di candela." },
+    { name: "tasting-table", en: "Illustrative photo of guests swirling red wine beside boards of cheese, cured meats and olives.", it: "Foto illustrativa di ospiti che fanno roteare il vino rosso nel calice, accanto a taglieri di formaggi, salumi e olive." },
+    { name: "corporate-social", en: "Illustrative photo of guests in smart attire mingling with sparkling wine at high tables in a warm lounge.", it: "Foto illustrativa di ospiti in abito elegante che conversano con un calice di bollicine attorno a tavoli alti, in un lounge dalla luce calda." },
   ];
   for (const [pageName, page, localizedAlt] of [["English", html, "en"], ["Italian", italianHtml, "it"]]) {
     const cards = [...page.matchAll(/<article class="concept" role="group"[\s\S]*?<div class="art">([\s\S]*?)<\/div>/g)];
-    assert.equal(cards.length, assets.length, `${pageName} has six illustrated cards`);
+    assert.equal(cards.length, assets.length, `${pageName} has six photographed cards`);
     for (const [index, asset] of assets.entries()) {
       const [, art] = cards[index];
       const alt = asset[localizedAlt];
-      assert.match(art, new RegExp(`<img class="card-art-image" src="/assets/event-art/${asset.file}" alt="${alt.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}" width="1200" height="960" decoding="async" loading="lazy">`), `${pageName} card ${index + 1} uses its matching illustration and localized description`);
+      const path = `/assets/event-photos/${asset.name}`;
+      assert.ok(art.includes(`<img class="card-art-image" src="${path}-1200.webp" srcset="${path}-700.webp 700w, ${path}-1200.webp 1200w" sizes="(max-width: 420px) 82vw, 340px" alt="${alt}" width="1200" height="960" decoding="async" loading="lazy">`), `${pageName} card ${index + 1} uses its matching responsive photo and localized description`);
       assert.equal(art.replace(/<img[^>]+>/, "").trim(), "", `${pageName} card ${index + 1} artwork contains no baked-in or duplicated poster copy`);
       assert.doesNotMatch(art, /https?:\/\//, `${pageName} card ${index + 1} has no remote image request`);
+      assert.match(alt, localizedAlt === "en" ? /^Illustrative photo of / : /^Foto illustrativa /, `${pageName} card ${index + 1} presents the photo as illustrative, not as a past YMG event`);
     }
   }
   for (const [pageName, styles] of [["English", html], ["Italian", italianHtml]]) {
@@ -518,15 +520,19 @@ test("event card illustrations are local, format-specific, responsive and docume
     assert.match(styles, /\.concept \.art img\{display:block;width:100%;height:100%;object-fit:cover/, `${pageName} crops the images without distortion`);
     assert.doesNotMatch(styles, /\.art-title|\.art-kicker|\.art-foot|\.type-art|\.games-art/, `${pageName} has no leftover poster-style art rules`);
   }
+  assert.ok(!existsSync(new URL("../dist/assets/event-art/", import.meta.url)), "the retired SVG illustrations are no longer shipped");
   const provenance = readFileSync(new URL("../docs/CARD-ART-PROVENANCE.md", import.meta.url), "utf8");
-  assert.match(provenance, /original, locally authored SVG illustrations/i);
+  assert.match(provenance, /supplied by the site owner/i);
   assert.match(provenance, /do not depict or claim a past YMG booking/i);
   for (const asset of assets) {
-    const source = readFileSync(new URL(`../dist/assets/event-art/${asset.file}`, import.meta.url), "utf8");
-    assert.match(source, /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="1200" height="960" viewBox="0 0 1200 960"/);
-    assert.doesNotMatch(source, /<text\b/, `${asset.file} keeps wording in the HTML rather than the image`);
-    assert.ok(Buffer.byteLength(source) < 12000, `${asset.file} remains compact for delivery`);
-    assert.ok(provenance.includes(asset.file), `${asset.file} has a provenance entry`);
+    for (const [width, height, budget] of [[1200, 960, 240_000], [700, 560, 110_000]]) {
+      const file = `${asset.name}-${width}.webp`;
+      const bytes = readFileSync(new URL(`../dist/assets/event-photos/${file}`, import.meta.url));
+      assert.equal(bytes.toString("ascii", 0, 4), "RIFF", `${file} is a WebP container`);
+      assert.equal(bytes.toString("ascii", 8, 12), "WEBP", `${file} is a WebP image`);
+      assert.ok(bytes.length < budget, `${file} stays within its transfer budget (${bytes.length} bytes)`);
+      assert.ok(provenance.includes(file), `${file} has a provenance entry`);
+    }
   }
 });
 
