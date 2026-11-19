@@ -8,7 +8,7 @@ This repository was initialized on 2026-11-09 from the selected YMG Events Sites
 
 - `dist/`: editable buildless website, privacy notice, assets, robots/sitemap copied from the current Events source.
 - `deploy/`: deployment and recovery notes for the separate production Worker. Its original generated bundle remains in the Sites-managed source as historical provenance. Current releases package `dist/` and `src/` directly; no second editable embedded bundle is maintained.
-- `reference/`: vetted, non-secret implementation patterns borrowed from the [main YMG website](https://github.com/YourMagicGenie/ymg-scientific-website) to accelerate Events-specific direct enquiry delivery. Reference code is **not** wired to production until tested and explicitly integrated.
+- `reference/`: vetted, non-secret implementation patterns borrowed from the [main YMG website](https://github.com/YourMagicGenie/ymg-atlas-website) to accelerate Events-specific direct enquiry delivery. Reference code is **not** wired to production until tested and explicitly integrated.
 
 ## Coding-agent handoff
 

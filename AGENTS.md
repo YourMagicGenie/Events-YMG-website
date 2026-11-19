@@ -23,7 +23,7 @@ future release; do not overwrite the production binding or reattach it to the
 main site's old construction placeholder.
 
 Reuse vetted validation, Turnstile, Google Apps Script relay and test patterns
-from `YourMagicGenie/ymg-scientific-website` where applicable. Do not copy
+from `YourMagicGenie/ymg-atlas-website` where applicable. Do not copy
 secrets, scientific content, domain-specific route redirects or unrelated
 production settings into this public repository. Keep conceptual event
 offerings truthful: do not invent delivered event history or clients.
