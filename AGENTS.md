@@ -30,7 +30,7 @@ offerings truthful: do not invent delivered event history or clients.
 
 ## Owner language and design decisions
 
-Use American **inquiry / inquiries / inquiring** in all visitor-facing English copy, accessible labels, feedback and errors. Keep the current share artwork readable within square crops and match the website green/gold/ivory palette. The owner explicitly restored the original launch rooftop hero on 11 November 2026; do not replace it with another realism edit or split mobile image layout. The owner supplied #74 specifics in the 12 November 2026 copy worksheet; follow that worksheet for homepage, privacy and footer copy.
+Use American **inquiry / inquiries / inquiring** in all visitor-facing English copy, accessible labels, feedback and errors. Keep the current share artwork readable within square crops and match the website green/gold/ivory palette. On 20 November 2026 (#100) the owner chose the real Unsplash candlelit long-table photo as the homepage hero, replacing the AI rooftop image, and asked for the lighter phone overlay (0.86 → 0.57). Keep that photo, its crops and overlay unless the owner picks a replacement from a visual comparison; do not use AI or realism-edited hero images or a split mobile layout. Source, crops and rollback are in `docs/ASSET-PROVENANCE.md`. The owner supplied #74 specifics in the 12 November 2026 copy worksheet; follow that worksheet for homepage, privacy and footer copy.
 
 ## Pull requests and merging (owner standing rule, 12 November 2026)
 
