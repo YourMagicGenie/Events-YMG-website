@@ -17,14 +17,14 @@ const meta = await sharp(source).metadata();
 if (Math.abs(meta.width / meta.height - 1.5) > 0.01) throw new Error("Source must be 3:2");
 const scale = meta.width / 3000;
 // Crops in 3000 x 2000 source pixels.
-const desktopCrop = { left: 0, top: 330, width: 2000, height: 1333 };
 const labelArea = { left: 1300, top: 1120, width: 110, height: 220 };
 const phoneCrop = { left: 300, top: 300, width: 2100, height: 1400 };
 
 const outputs = [
-  { file: "event-hero-1440.webp", width: 1440, crop: desktopCrop, quality: 56 },
-  { file: "event-hero-960.webp", width: 960, crop: desktopCrop, quality: 66 },
-  { file: "event-hero-480.webp", width: 480, crop: desktopCrop, quality: 70 },
+  { file: "event-hero-2400.webp", width: 2400, quality: 56, denoise: true },
+  { file: "event-hero-1440.webp", width: 1440, quality: 76, denoise: true },
+  { file: "event-hero-960.webp", width: 960, quality: 76, denoise: true },
+  { file: "event-hero-480.webp", width: 480, quality: 72, denoise: true },
   { file: "event-hero-mobile-780.webp", width: 780, quality: 70, crop: phoneCrop },
   { file: "event-hero-mobile-480.webp", width: 480, quality: 68, crop: phoneCrop },
 ];
@@ -43,6 +43,9 @@ const master = await sharp(source).composite([{ input: softened, left: area.left
 
 for (const output of outputs) {
   let image = sharp(master);
+  // A 3px median on the full-size original removes sensor grain, which
+  // otherwise doubles the file size, without visibly softening detail.
+  if (output.denoise) image = sharp(await image.median(3).toBuffer());
   if (output.crop) {
     const c = scaled(output.crop);
     image = image.extract(c);

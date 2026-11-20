@@ -16,11 +16,11 @@ The owner chose option B, "The long candlelit table", from a comparison of six r
 
 **Truthfulness:** this is a stock photograph, not a YMG event, venue, client or partner, and not a Genova location. The English and Italian alt text starts "Illustrative photo of" / "Foto illustrativa di" and describes only what is in the frame. The wine bottle's label is softened with a feathered blur so no brand is legible. No other retouching was applied.
 
-**Delivery:** `tools/build-hero-photo.mjs` rebuilds every file from a 3000 × 2000 export of the original, with a light saturation balance (0.95) and the label blur. Desktop files (480, 960, 1440 px) use a 3:2 crop of the left two thirds of the frame, so the table sits right of the copy and the dark chairs sit behind it. Phone files (480, 780 px) use a tighter 3:2 crop centered on the table, so the table fills the narrow portrait hero. File names, `srcset`, sizes and loading priority are unchanged.
+**Delivery:** `tools/build-hero-photo.mjs` rebuilds every file from the full-size 4974 × 3316 original, with a light saturation balance (0.95) and the label blur. Desktop and landscape files (480, 960, 1440 and 2400 px) keep the **full, uncropped frame**, as in the owner-approved comparison mockup, and get a 3px median grain reduction that keeps them sharp and small. The first release (PR #122) cropped them to the left two thirds; the owner rejected that on 20 November 2026 because the zoom made the photo look soft, including on phones in landscape. Phone portrait files (480, 780 px) use a tighter 3:2 crop centered on the table. The 2400 px file serves large and high-density screens; `srcset`, `sizes` and loading priority are otherwise unchanged.
 
 **Phone overlay:** at the owner's request the phone overlay (max-width 540px, in `dist/assets/mobile-hero.css`) is 8 points lighter, from 0.94 → 0.65 to 0.86 → 0.57, so the photo shows through. Tablet and desktop overlays are unchanged.
 
-**Rollback:** revert the #100 commit. It restores the five rooftop WebP files, the alt text and the phone overlay in one step.
+**Rollback:** to return to the uncropped-zoom release, revert the full-frame fix commit. To return to the rooftop hero, revert both #100 commits (PR #122 and the full-frame fix); that restores the five rooftop WebP files, the alt text and the phone overlay, and removes the 2400 px file.
 
 ## Previous hero (11 November 2026)
 
