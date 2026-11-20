@@ -536,13 +536,13 @@ test("event card photos are local, format-specific, responsive and documented", 
   }
 });
 
-test("hero restores the owner-selected event atmosphere with local illustrative imagery", () => {
+test("hero uses the owner-selected, licensed illustrative event photo", () => {
   assert.match(html, /event-hero-1440.webp/);
-  assert.match(html, /Illustrative event scene/);
+  assert.match(html, /Illustrative photo of a long candlelit dinner table/);
   assert.doesNotMatch(html, /Discover the atmosphere|images\.unsplash\.com/);
   const provenance = readFileSync(new URL("../docs/ASSET-PROVENANCE.md", import.meta.url), "utf8");
-  assert.match(provenance, /AI-generated illustrative marketing imagery/);
-  assert.match(provenance, /not documentary evidence/);
+  assert.match(provenance, /Unsplash License/);
+  assert.match(provenance, /not a YMG event/);
 });
 
 test("public positioning is venue-facing, factual, and consistent with metadata", () => {
@@ -692,7 +692,7 @@ test("English and Italian pages publish reciprocal language signals and translat
   assert.match(italian, /Le grandi serate<br><em>raramente nascono per caso\.<\/em>/);
   assert.match(italian, /aria-label="Apri il menu di navigazione"/);
   assert.match(italian, /aria-label="1 di 6: La serata in terrazza"/);
-  assert.match(italian, /alt="Scena illustrativa di un evento con balli, violino e cena su una terrazza sul porto di Genova\."/);
+  assert.match(italian, /alt="Foto illustrativa di una lunga tavola apparecchiata a lume di candela, con dalie, calici e tovaglioli piegati\."/);
   assert.match(italian, /<label for="name">Nome e cognome \*<\/label>/);
   assert.match(italian, /placeholder="Es\. Giulia Rossi"/);
   assert.match(italian, /<option value="Rooftop evenings">Serate in terrazza<\/option>/);

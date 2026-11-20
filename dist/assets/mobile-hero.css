@@ -1,5 +1,5 @@
-/* Original launch hero presentation restored at owner request. */
+/* Hero presentation. Phone overlay lightened 8 points at owner request (#100). */
 .hero-atmosphere img{object-position:60% 48%;filter:brightness(.76)}
 .hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.94) 0%,rgba(9,22,22,.79) 32%,rgba(9,22,22,.24) 68%,rgba(9,22,22,.12) 100%)}
 @media(max-width:850px){.hero-atmosphere img{object-position:70% center}.hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.93),rgba(9,22,22,.58) 60%,rgba(9,22,22,.22))}}
-@media(max-width:540px){.hero-atmosphere img{object-position:68% center}.hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.94),rgba(9,22,22,.65))}}
+@media(max-width:540px){.hero-atmosphere img{object-position:68% center}.hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.86),rgba(9,22,22,.57))}}

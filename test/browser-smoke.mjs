@@ -650,8 +650,8 @@ try {
         secondaryPresent: [...document.querySelectorAll(".hero-actions a")].some(link => /discover the atmosphere/i.test(link.textContent)),
       };
     });
-    assert.equal(heroVisual.alt, "Illustrative event scene with dancing, live violin and dinner on a Genova harbor terrace.", "hero image has meaningful scenic alt text");
-    assert.match(heroVisual.src, /\/assets\/event-hero-1440\.webp$/, "hero uses local event illustration");
+    assert.equal(heroVisual.alt, "Illustrative photo of a long candlelit dinner table set with dahlias, glasses and folded napkins.", "hero image has meaningful scenic alt text");
+    assert.match(heroVisual.src, /\/assets\/event-hero-1440\.webp$/, "hero uses the local event photo");
     assert.match(heroVisual.srcset, /480w.*960w.*1440w/, "hero offers responsive desktop image sizes");
     assert.match(heroVisual.mobileSource, /480w.*780w/, "hero offers a separate mobile crop");
     assert.equal(heroVisual.mobileMedia, "(max-width: 540px)", "mobile image source has a defined breakpoint");
@@ -664,7 +664,7 @@ try {
     } else {
       assert.ok(heroVisual.coversHero, "other viewport photos still cover their full hero background");
     }
-    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= 0.9, "original overlay preserves text contrast");
+    assert.ok(heroVisual.overlayAlpha.length >= 2 && heroVisual.overlayAlpha[0] >= (width <= 540 ? 0.85 : 0.9), "hero overlay preserves text contrast");
     assert.equal(heroVisual.primaryHref, "#inquire", "primary hero CTA keeps its destination");
     assert.equal(heroVisual.secondaryPresent, false, "secondary atmosphere CTA is absent");
 
