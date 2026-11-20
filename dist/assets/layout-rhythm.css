@@ -500,3 +500,21 @@
     transform: translateY(-3px);
   }
 }
+
+/*
+ * 20 Nov 2026 owner refinement — 02B at 1280px (English only).
+ * Keep "rarely happen by accident." together inside the existing 683px
+ * headline width. Retain the measured 263px headline box so the carefully
+ * calibrated 02C paragraph and 02D CTA positions do not shift.
+ * Do not change Italian or narrower/wider viewports.
+ */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  html[lang="en"] .hero h1 {
+    min-height: 263px;
+  }
+  html[lang="en"] .hero h1 em {
+    font-size: 60px;
+    letter-spacing: -3.5px;
+    white-space: nowrap;
+  }
+}
