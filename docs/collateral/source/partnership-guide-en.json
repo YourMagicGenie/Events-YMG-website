@@ -1,0 +1,201 @@
+{
+  "_about": "Editable master copy for the two-page partnership and services guide (#119). Condensed from the owner's YMG-Events-Partnership.docx version 3 (16-17 November 2026). Render with: node tools/render-partnership-guide.mjs en. Fees are the owner's working bands and must stay labelled as indicative. Do not add clients, venues, guarantees, commission or revenue-split rates, tax status or deposit percentages.",
+  "status": "draft",
+  "reviewDate": "20 November 2026",
+  "lang": "en",
+  "title": "YMG Events - Partnerships and private events",
+  "subject": "Venue%20partnership%20with%20YMG%20Events",
+  "qr": "docs/collateral/source/qr-en.svg",
+  "draftLabel": "Draft for owner review",
+  "tagline": "Venue partnerships & event production",
+  "topRight": [
+    "Service and fee guide",
+    "November 2026 · Genova, Italy"
+  ],
+  "hero": {
+    "eyebrow": "Your Magic Genie Group / Genova, Italy",
+    "headline": [
+      "Partnerships and",
+      "private events."
+    ],
+    "lead": "Event coordination and production for venues, businesses and private hosts in Liguria.",
+    "text": "We bring the setting, hospitality and entertainment into one practical plan, then coordinate the people who deliver it. We agree on the work, budget and responsibilities before you commit.",
+    "photoAlt": "Illustrative photo of a long dinner table set with flowers and candles",
+    "photoCaption": "Illustrative photo"
+  },
+  "services": {
+    "title": "Services and fees",
+    "heading": "Choose the right level of support",
+    "lead": "Start with what is already in place and what you want us to take on.",
+    "feeLabel": "Indicative YMG professional fee",
+    "items": [
+      {
+        "kind": "Coordination",
+        "when": "Your event is already planned",
+        "name": "Coordinate an existing event",
+        "text": "You have the venue and main suppliers booked. We bring the arrangements together so timings, arrivals and handovers are clear before guests arrive.",
+        "points": [
+          "One venue and date, with up to four external suppliers",
+          "Planning handover, supplier coordination and a run sheet",
+          "On-site lead for up to six hours, preparation included"
+        ],
+        "fee": "€1,100–€1,600"
+      },
+      {
+        "kind": "Planning",
+        "when": "You need the evening put together",
+        "name": "Plan and manage a private evening",
+        "text": "For a birthday, anniversary or private gathering that needs a plan as well as someone to run it.",
+        "points": [
+          "An agreed brief, budget and schedule, with one site visit",
+          "Supplier coordination and event-day preparation",
+          "Up to eight hours on site to manage the agreed event"
+        ],
+        "fee": "€2,000–€3,000"
+      },
+      {
+        "kind": "Production",
+        "when": "A commissioned evening for your venue",
+        "name": "Produce a venue-led evening",
+        "text": "A restaurant, hotel or hospitality venue commissions a distinctive evening for a defined audience. We develop the concept and lead the delivery.",
+        "points": [
+          "Concept, event schedule and production planning",
+          "Entertainment and supplier management, venue team briefing",
+          "On-site lead; hours and supplier scope set in the proposal"
+        ],
+        "fee": "€2,700–€4,200"
+      },
+      {
+        "kind": "Complex production",
+        "when": "More locations or moving parts",
+        "name": "Plan a more complex event",
+        "text": "Multiple sites or days, arrival and transport arrangements, additional suppliers or specialist crew, or active outings with specialist providers.",
+        "points": [
+          "Logistics and staffing defined before the work is priced",
+          "Working guide €4,500–€6,500",
+          "Larger briefs are estimated individually"
+        ],
+        "fee": "From €4,500"
+      }
+    ],
+    "note": "These fee guides cover our professional work only. Venue, hospitality, entertainment and other supplier costs sit in a separate event budget. The written proposal confirms the fee, tax treatment and included scope."
+  },
+  "budget": {
+    "heading": "What your budget covers",
+    "items": [
+      [
+        "YMG professional fee",
+        "Planning, coordination and event management, including the preparation and on-site time stated in the proposal."
+      ],
+      [
+        "External event costs",
+        "Venue hire, food and drink, performers, equipment, crew, transport, permits and music rights, unless expressly included."
+      ],
+      [
+        "Supplier payments",
+        "The host or venue normally contracts and pays suppliers directly; we set out the arrangement for each one."
+      ]
+    ]
+  },
+  "explore": {
+    "heading": "Explore the idea first",
+    "text": "A free 15–20 minute fit call helps establish the right service. For a feasibility review before commissioning an event, a limited advisory engagement covers 2–4 agreed hours of preparation, discussion and written next steps.",
+    "fee": "€300–€450",
+    "feeLabel": "Typical advisory fee"
+  },
+  "venues": {
+    "title": "Venue partnerships",
+    "heading": "Built around your audience and your space",
+    "lead": "We build the evening around your audience, your space and the way your hospitality team operates.",
+    "items": [
+      [
+        "Start with the guest proposition",
+        "We agree who the event is for, what makes it worth attending and how it fits your venue: a rooftop aperitivo, dinner with live music, a tasting or a company social. These are examples to develop together."
+      ],
+      [
+        "Commission a defined event",
+        "For a house event, the venue commissions YMG against a written event order: the concept, deliverables, fee, dates and the named people responsible for decisions."
+      ],
+      [
+        "Build a series when the format fits",
+        "Repeat dates can use a nonexclusive framework with an event order for each date. Series pricing reflects committed dates and reusable planning; an unconfirmed calendar is quoted event by event."
+      ]
+    ],
+    "agreeHeading": "Agreed in writing before promotion begins",
+    "agree": [
+      [
+        "Money",
+        "Who pays YMG, who approves the budget and who is the event organizer."
+      ],
+      [
+        "Suppliers",
+        "Who contracts entertainment and suppliers, and who provides venue staff, access and hospitality."
+      ],
+      [
+        "Guests",
+        "Who promotes the event, sells tickets, handles guests and refunds, and owns ticket and bar revenue."
+      ],
+      [
+        "Compliance",
+        "Who covers venue suitability, capacity, safety, permits, insurance and music rights."
+      ],
+      [
+        "Changes",
+        "How cancellation, postponement and committed supplier costs are handled."
+      ]
+    ],
+    "economicsHeading": "Keep the economics visible",
+    "economics": "The venue’s event budget covers hospitality and production costs alongside YMG’s fee; if ticket income is part of the plan, we review the assumptions together. Attendance and revenue are not guaranteed. Any revenue share has an agreed calculation, deductions, settlement date and supporting records. Any separate referral commission is disclosed, including who pays it."
+  },
+  "delivery": {
+    "title": "Delivery and budgets",
+    "heading": "Clear decisions, coordinated delivery",
+    "items": [
+      [
+        "Before the event",
+        "We confirm the brief, responsibilities and key dates, prepare the schedule and supplier handovers, then check access, setup, guest arrival, service timings and any weather alternative."
+      ],
+      [
+        "During and after",
+        "Your on-site lead coordinates the agreed suppliers and venue contacts, follows the run sheet and manages changes within the agreed authority. A short debrief records open actions."
+      ],
+      [
+        "How we manage changes",
+        "The proposal names the budget approver, payment milestones, any booking payment, cancellation terms and quote validity. Added work and cost are agreed in writing before they are incurred."
+      ]
+    ],
+    "quoteHeading": "What changes the quote",
+    "quote": "Guest numbers, supplier load, setup windows, access, travel and on-site hours. Ligurian locations are assessed on their actual logistics. Guest communication, ticketing, photography and promotional work are included only when specified."
+  },
+  "contact": {
+    "eyebrow": "Your next step",
+    "heading": "Tell us what you are planning",
+    "lead": "A short brief is enough to begin. We will help identify the level of support that fits your event.",
+    "paths": [
+      [
+        "For private hosts and businesses",
+        "Share the occasion, what you have already booked and the work you would like to hand over. After the fit call, we recommend a service and prepare a defined proposal."
+      ],
+      [
+        "For venues",
+        "Tell us about your space, audience and proposed date, with your hospitality offer and commercial objective. We can assess a single evening or discuss a committed series."
+      ]
+    ],
+    "checklistHeading": "Include in your inquiry",
+    "checklist": [
+      "The occasion or idea, preferred date and approximate guest count",
+      "The venue or preferred area, and any suppliers already booked",
+      "Your total budget, including an allowance for YMG’s fee",
+      "What you want YMG to manage, and any access or timing constraints"
+    ],
+    "checklistNote": "Not every detail needs to be settled before we speak.",
+    "founderEyebrow": "Your local point of contact",
+    "founderName": "Dante David",
+    "founderBio": "Based in Genova and originally from the USA, Dante is the founder of YMG Events. His experience spans community gatherings, music events and international experiences.",
+    "founderAlt": "Portrait of Dante David, founder of YMG Events",
+    "fitCall": "Free initial fit call · 15–20 minutes",
+    "scan": "Scan to email us"
+  },
+  "footer": "YMG Events · Genova, Italy · P.IVA 03044510992",
+  "disclaimer": "This overview is not a quotation. Each engagement is subject to an agreed written proposal."
+}
