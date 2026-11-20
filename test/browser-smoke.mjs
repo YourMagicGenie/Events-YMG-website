@@ -291,6 +291,27 @@ try {
 
     if (width === 1280) {
       await page.evaluate(async () => { await document.fonts.ready; });
+      // 02B: the entire second English line, including "accident.", fits
+      // the original headline width; no glyphs run into the photo.
+      const headlineFit = await page.evaluate(() => {
+        const heading = document.querySelector(".hero h1");
+        const italic = heading.querySelector("em");
+        const range = document.createRange();
+        range.selectNodeContents(italic);
+        return {
+          lineFragments: range.getClientRects().length,
+          textWidth: range.getBoundingClientRect().width,
+          headlineWidth: heading.getBoundingClientRect().width,
+          headlineHeight: heading.getBoundingClientRect().height,
+        };
+      });
+      assert.equal(headlineFit.lineFragments, 1,
+        `02B italic text should occupy one line at 1280px: ${JSON.stringify(headlineFit)}`);
+      assert.ok(headlineFit.textWidth <= headlineFit.headlineWidth + 1,
+        `02B full italic sentence must fit the 683px headline box: ${JSON.stringify(headlineFit)}`);
+      assert.ok(Math.abs(headlineFit.headlineHeight - 263) <= 5,
+        `02B should preserve the existing 263px box and following hero placements: ${JSON.stringify(headlineFit)}`);
+
       const heroPosition = await page.evaluate(() => {
         const bounds = selector => {
           const rect = document.querySelector(selector).getBoundingClientRect();
