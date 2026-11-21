@@ -54,9 +54,9 @@ Each comment was matched to the text under its position on the 17 November layou
 | Planning, last bullet | "Organizzatore in loco per otto ore" | Applied |
 | Fee label | "Tariffa YMG indicativa" | Applied on every fee |
 
-Three Italian points to confirm:
+Italian points (the hours are decided; the other two still need confirming):
 - **Hero text.** The suggested sentence replaced the old first sentence, which also said that YMG coordinates the people who deliver the plan. That clause was kept, now joined with "e coordiniamo chi lo mette in pratica".
-- **Hours.** "per sei/otto ore" follows your wording. The English and v3 say "up to" six or eight hours, which would be "fino a sei/otto ore".
+- **Hours, decided 21 November 2026.** The owner chose to keep "per sei/otto ore" in Italian. The English keeps "up to".
 - **Text the 17 November draft didn't have.** The Italian now follows the fuller English structure: budget, advisory option, change control and inquiry checklist. All of that text is new and has not been reviewed yet.
 
 ## How v3 was condensed
