@@ -96,7 +96,7 @@ a{color:inherit;text-decoration:none}
 .svc ul{list-style:none;margin:5pt 0 6pt;font-size:7.4pt;line-height:1.45;color:${C.ink}}
 .svc li{padding-left:9pt;position:relative;margin-bottom:1.5pt}.svc li:before{content:"";position:absolute;left:0;top:4.6pt;width:4.5pt;height:.8pt;background:${C.gold}}
 .fee{margin-top:auto;border-top:.6pt solid ${C.line};padding-top:7pt;display:flex;align-items:baseline;justify-content:space-between;gap:8pt}
-.fee strong{font:400 15pt/1 'Playfair Display',serif;color:${C.ink};letter-spacing:-.2pt}
+.fee strong{font:400 15pt/1 'Playfair Display',serif;color:${C.ink};letter-spacing:-.2pt;white-space:nowrap}
 .fee span{font-size:5.9pt;letter-spacing:.5pt;text-transform:uppercase;color:${C.muted};text-align:right}
 .note{font-size:7.3pt;color:${C.muted};margin-top:7pt;line-height:1.45}
 .lower{display:grid;grid-template-columns:1.8fr 1fr;gap:12pt;margin-top:10pt}
@@ -148,7 +148,7 @@ footer b{color:${C.ink}}
     <div class="copy"><div class="eyebrow">${esc(c.hero.eyebrow)}</div><h1>${esc(c.hero.headline[0])}<br><i>${esc(c.hero.headline[1])}</i></h1>
     <p class="l">${esc(c.hero.lead)}</p><p>${esc(c.hero.text)}</p></div></div>
   <div class="sec"><span class="num">01</span><h2>${esc(s.heading)}</h2><span class="eyebrow">${esc(s.title)}</span></div>
-  <p class="lead">${esc(s.lead)}</p>
+  ${s.lead ? `<p class="lead">${esc(s.lead)}</p>` : ""}
   <div class="svcs">${cards}</div>
   <p class="note">${esc(s.note)}</p>
   <div class="lower">

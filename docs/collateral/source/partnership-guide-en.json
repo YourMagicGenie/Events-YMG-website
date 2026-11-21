@@ -1,7 +1,7 @@
 {
   "_about": "Editable master copy for the two-page partnership and services guide (#119). Condensed from the owner's YMG-Events-Partnership.docx version 3 (16-17 November 2026). Render with: node tools/render-partnership-guide.mjs en. Fees are the owner's working bands and must stay labelled as indicative. Do not add clients, venues, guarantees, commission or revenue-split rates, tax status or deposit percentages.",
   "status": "draft",
-  "reviewDate": "20 November 2026",
+  "reviewDate": "21 November 2026",
   "lang": "en",
   "title": "YMG Events - Partnerships and private events",
   "subject": "Venue%20partnership%20with%20YMG%20Events",
@@ -25,8 +25,7 @@
   },
   "services": {
     "title": "Services and fees",
-    "heading": "Choose the right level of support",
-    "lead": "Start with what is already in place and what you want us to take on.",
+    "heading": "Choose the level of support needed for your event",
     "feeLabel": "Indicative YMG professional fee",
     "items": [
       {
@@ -47,9 +46,9 @@
         "name": "Plan and manage a private evening",
         "text": "For a birthday, anniversary or private gathering that needs a plan as well as someone to run it.",
         "points": [
-          "An agreed brief, budget and schedule, with one site visit",
+          "An agreed proposal, budget and schedule, with one site visit",
           "Supplier coordination and event-day preparation",
-          "Up to eight hours on site to manage the agreed event"
+          "On-site lead for up to eight hours"
         ],
         "fee": "€2,000–€3,000"
       },
@@ -153,7 +152,7 @@
     "items": [
       [
         "Before the event",
-        "We confirm the brief, responsibilities and key dates, prepare the schedule and supplier handovers, then check access, setup, guest arrival, service timings and any weather alternative."
+        "We confirm the proposal, responsibilities and key dates, prepare the schedule and supplier handovers, then check access, setup, guest arrival, service timings and any weather alternative."
       ],
       [
         "During and after",
