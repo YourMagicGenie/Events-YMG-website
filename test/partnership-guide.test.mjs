@@ -28,7 +28,7 @@ const guides = {
 
 for (const [lang, g] of Object.entries(guides)) {
   const c = copy[lang];
-  const text = JSON.stringify(c);
+  const text = JSON.stringify({ ...c, subject: undefined }); // visible copy; the email subject is URL-encoded
   const out = c.out.replace(".draft.pdf", status === "approved" ? ".pdf" : ".draft.pdf");
 
   test(`${lang} partnership guide keeps the owner's indicative fees and commercial limits`, () => {
@@ -55,7 +55,7 @@ for (const [lang, g] of Object.entries(guides)) {
       assert.ok(Math.abs(w - 595.28) < 1 && Math.abs(h - 841.89) < 1, `A4 page size, got ${w}×${h}`);
     }
     assert.ok(pdf.length < 400_000, `stays small enough for email and WhatsApp (${pdf.length} bytes)`);
-    assert.ok(raw.includes("/URI (mailto:hello@ymgconsultingservices.com)"), "email address and QR code are clickable");
+    assert.ok(raw.includes(`/URI (mailto:hello@ymgconsultingservices.com?subject=${c.subject})`), "email address and QR code open a prefilled email");
     assert.ok(raw.includes("/URI (https://events.ymgconsultingservices.com/)"), "website link is clickable");
     assert.ok(/\/BaseFont \/[A-Z]{6}\+DMSans/.test(raw) && /\/BaseFont \/[A-Z]{6}\+PlayfairDisplay-Regular/.test(raw), "DM Sans and Playfair Display are embedded");
     assert.ok(!raw.includes("/Type3"), "no Type 3 outline fonts (static DM Sans instances are used)");

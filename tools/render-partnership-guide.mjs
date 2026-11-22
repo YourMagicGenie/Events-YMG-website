@@ -1,11 +1,12 @@
 // Renders the two-page partnership and services guide (#119) from one template.
-// Usage: node tools/render-partnership-guide.mjs [en|it]   (writes review drafts; no published file changes)
+// Usage: node tools/render-partnership-guide.mjs [en|it]
+// Writes docs/collateral/partnership-guide-<lang>.pdf and, once the copy status is "approved", the published /downloads/ file.
 // Copy: docs/collateral/source/partnership-guide-copy.mjs. Uses only the site's self-hosted fonts and the existing QR artwork.
 import { chromium } from "playwright";
-import { readFile } from "node:fs/promises";
+import { copyFile, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { copy } from "../docs/collateral/source/partnership-guide-copy.mjs";
+import { copy, status } from "../docs/collateral/source/partnership-guide-copy.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fonts = path.join(root, "dist/assets/fonts");
@@ -119,8 +120,8 @@ ${foot(1)}</section>
 <p class="note">${esc(c.quoteNote)}</p>
 <div class="founder"><img src="${images.founder}" alt="${esc(c.founderAlt)}"><div><div class="eyebrow" style="color:#743037">${esc(c.founderTitle)}</div><h3>${esc(c.founderName)}</h3><p>${esc(c.founderBio)}</p></div></div>
 <section class="contact"><div><div class="eyebrow">${esc(c.contactTitle)}</div><h2>${esc(c.contactHeadline)}</h2><p>${esc(c.contactText)}</p>
-<p class="mail">${esc(c.write)} <a href="mailto:${email}"><b>${email}</b></a> · <a href="${site}">events.ymgconsultingservices.com</a></p></div>
-<div class="qrbox"><a class="qr" href="mailto:${email}">${qrSvg}</a><small>${esc(c.scan)}</small></div></section>
+<p class="mail">${esc(c.write)} <a href="mailto:${email}?subject=${c.subject}"><b>${email}</b></a> · <a href="${site}">events.ymgconsultingservices.com</a></p></div>
+<div class="qrbox"><a class="qr" href="mailto:${email}?subject=${c.subject}">${qrSvg}</a><small>${esc(c.scan)}</small></div></section>
 ${foot(2)}</section>
 </body></html>`;
 }
@@ -146,7 +147,8 @@ try {
     await tab.pdf({ path: path.join(root, c.out), format: "A4", printBackground: true, tagged: true });
     await tab.screenshot({ path: path.join(root, c.out.replace(/\.pdf$/, ".png")), fullPage: true });
     await tab.close();
-    process.stdout.write(`Rendered ${c.out} (free space per page: ${gaps.map(g => g.toFixed(0) + "px").join(", ")})\n`);
+    if (status === "approved") await copyFile(path.join(root, c.out), path.join(root, c.served));
+    process.stdout.write(`Rendered ${c.out}${status === "approved" ? ` and ${c.served}` : ""} (free space per page: ${gaps.map(g => g.toFixed(0) + "px").join(", ")})\n`);
   }
 } finally {
   await browser.close();

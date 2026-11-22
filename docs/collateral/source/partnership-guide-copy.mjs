@@ -1,14 +1,16 @@
 // Editable copy for the two-page partnership and services guide (#119), English and Italian.
 // This is the owner-reviewed 17 November 2026 text with only the owner's marked edits applied.
 // Render with: node tools/render-partnership-guide.mjs [en|it]
-// Set status to "approved" only after the owner approves both languages.
-export const status = "draft";
+// The owner approved both languages for publication on 22 November 2026.
+export const status = "approved";
 
 export const copy = {
   en: {
     lang: "en",
     title: "YMG Events - Partnerships and private events",
-    out: "docs/collateral/partnership-guide-en.draft.pdf",
+    out: "docs/collateral/partnership-guide-en.pdf",
+    served: "dist/downloads/ymg-events-venue-partnerships-en.pdf",
+    subject: "Venue%20partnership%20with%20YMG%20Events",
     qr: "docs/collateral/source/qr-en.svg",
     topRight: ["Service and fee guide", "Genova, Italy"],
     eyebrow: "Event coordination and production",
@@ -62,7 +64,9 @@ export const copy = {
   it: {
     lang: "it",
     title: "YMG Events - Collaborazioni ed eventi privati",
-    out: "docs/collateral/partnership-guide-it.draft.pdf",
+    out: "docs/collateral/partnership-guide-it.pdf",
+    served: "dist/downloads/ymg-events-collaborazioni-location-it.pdf",
+    subject: "Collaborazione%20con%20YMG%20Events",
     qr: "docs/collateral/source/qr-it.svg",
     topRight: ["Servizi e tariffe", "Genova, Italia"],
     eyebrow: "Organizzazione e realizzazione eventi",

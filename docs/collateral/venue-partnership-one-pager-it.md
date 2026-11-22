@@ -1,5 +1,7 @@
 # YMG Events - Collaborazioni con location
 
+> **Archiviata il 22 novembre 2026.** Il download italiano ora offre la guida di due pagine; vedi [partnership-guide.md](./partnership-guide.md).
+
 **Versione:** 1.1 · 12 novembre 2026  
 **Pubblico:** location e operatori hospitality di Genova  
 **PDF:** [venue-partnership-one-pager-it.pdf](./venue-partnership-one-pager-it.pdf) (una pagina A4)

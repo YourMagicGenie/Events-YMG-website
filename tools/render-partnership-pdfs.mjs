@@ -155,9 +155,9 @@ try {
     const gap = await tab.evaluate(() => document.querySelector("footer").getBoundingClientRect().top - document.querySelector(".contact").getBoundingClientRect().bottom);
     if (gap < 8) throw new Error(`${c.lang} one-pager content collides with the footer (${gap.toFixed(1)}px)`);
     await tab.pdf({ path: path.join(root, c.master), format: "A4", printBackground: true, tagged: true });
-    await copyFile(path.join(root, c.master), path.join(root, c.served));
+    // Retired 22 November 2026: /downloads/ now serves the two-page guide (tools/render-partnership-guide.mjs).
     await tab.close();
-    process.stdout.write(`Rendered ${c.master} and ${c.served}\n`);
+    process.stdout.write(`Rendered ${c.master} (archive only; not published)\n`);
   }
 } finally {
   await browser.close();

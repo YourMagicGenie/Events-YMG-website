@@ -1,15 +1,17 @@
 # YMG Events - Partnership and services guide (#119)
 
-**Status:** English and Italian **drafts for owner review** (21 November 2026). Italian terminology is still to be coordinated with #102.
+**Status:** English and Italian guides **approved by the owner and published** (22 November 2026). They replace the one-page PDFs at the same URLs. The Italian terminology check for #102 is still open.
 
-**What these drafts are.** They are the owner-reviewed 17 November 2026 drafts, with the same text and layout. The only changes are the owner's marked edits, listed below. The owner's comments are in `partnership-guide-en_2.draft.pdf` and `partnership-guide-it.draft.pdf`.
+**What these guides are.** They are the owner-reviewed 17 November 2026 drafts, with the same text and layout. The only changes are the owner's marked edits, listed below. The owner's comments are in `partnership-guide-en_2.draft.pdf` and `partnership-guide-it.draft.pdf`.
 
 **Files:**
-- Drafts: [partnership-guide-en.draft.pdf](./partnership-guide-en.draft.pdf) ([preview](./partnership-guide-en.draft.png)) · [partnership-guide-it.draft.pdf](./partnership-guide-it.draft.pdf) ([preview](./partnership-guide-it.draft.png))
+- Masters: [partnership-guide-en.pdf](./partnership-guide-en.pdf) ([preview](./partnership-guide-en.png)) · [partnership-guide-it.pdf](./partnership-guide-it.pdf) ([preview](./partnership-guide-it.png))
 - Editable copy, both languages: [source/partnership-guide-copy.mjs](./source/partnership-guide-copy.mjs)
 - Renderer: [`tools/render-partnership-guide.mjs`](../../tools/render-partnership-guide.mjs). It uses the same Playwright template approach as `tools/render-partnership-pdfs.mjs`.
 
-The published URLs are unchanged until approval and still serve the one-page PDFs: `/downloads/ymg-events-venue-partnerships-en.pdf` and `/downloads/ymg-events-collaborazioni-location-it.pdf`.
+**Published copies** (byte-identical to the masters): `/downloads/ymg-events-venue-partnerships-en.pdf` (English page) and `/downloads/ymg-events-collaborazioni-location-it.pdf` (Italian page). The URLs and download buttons are unchanged.
+
+The one-page PDFs (`venue-partnership-one-pager-*`) are kept as an archive only. `tools/render-partnership-pdfs.mjs` no longer writes to `/downloads/`.
 
 ## Changes from the 17 November drafts
 
@@ -65,13 +67,11 @@ These are not text changes:
 node tools/render-partnership-guide.mjs
 ```
 
-This renders both drafts and PNG previews, and fails if content would run into the contact panel or footer. `test/partnership-guide.test.mjs` checks both languages:
+This renders both guides and PNG previews. While `status` is `"approved"`, it also copies each guide to its `/downloads/` URL. It and fails if content would run into the contact panel or footer. `test/partnership-guide.test.mjs` checks both languages:
 - the fee bands, the indicative labels, the no-guarantee and "not a quotation" wording, and that no %, deposit or similar terms appear;
 - two A4 pages, embedded TrueType fonts with extractable text, the email and website links, and a size under 400 KB;
-- the published URLs keep the one-pagers until `status` in the copy file is `"approved"`.
+- while approved, the published URLs serve exactly the masters. `test/site-smoke.test.mjs` also checks the language-specific download buttons and the prefilled email subject.
 
-## After approval
+## Publication (22 November 2026)
 
-1. Set `status` to `"approved"`. Render to the final file names and copy those files to the two `/downloads/` URLs.
-2. Update the site-smoke expectations, which currently tie those URLs to the one-pager masters, and check the language-toggle downloads.
-3. Merge only on green required checks, then verify the Cloudflare Workers build and the live downloads.
+The owner approved both languages and asked for them to go live. Each PDF's email link and QR code open an email with a prefilled subject ("Venue partnership with YMG Events" / "Collaborazione con YMG Events"), as the one-pagers did; this is not visible on the page. For later changes: edit the copy, re-render, check the PDFs, then merge on green checks and verify the Cloudflare build and live downloads.
