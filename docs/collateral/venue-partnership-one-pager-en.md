@@ -1,5 +1,7 @@
 # YMG Events - Venue partnerships
 
+> **Archived 22 November 2026.** The English download now serves the two-page guide; see [partnership-guide.md](./partnership-guide.md).
+
 **Version:** 1.0 · 12 November 2026
 **Audience:** Genova venues and hospitality operators
 **PDF:** [venue-partnership-one-pager-en.pdf](./venue-partnership-one-pager-en.pdf) (one A4 page), published at `dist/downloads/ymg-events-venue-partnerships-en.pdf`

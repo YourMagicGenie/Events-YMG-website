@@ -798,19 +798,19 @@ test("format cards present formats, while scheduled-event content remains absent
 });
 
 
-test("venue outreach one-pagers are small, factual and linked in the visitor's language", () => {
+test("partnership guides are small, factual and linked in the visitor's language", () => {
   const variants = [
-    { page: html, master: "venue-partnership-one-pager-en", served: "ymg-events-venue-partnerships-en.pdf", subject: "subject=Venue%20partnership%20with%20YMG%20Events", claims: ["hospitality", "responsibilities", "sales and attendance are not guaranteed", "There is no standard revenue split"], hreflang: "en" },
-    { page: italianHtml, master: "venue-partnership-one-pager-it", served: "ymg-events-collaborazioni-location-it.pdf", subject: "subject=Collaborazione%20con%20YMG%20Events", claims: ["ospitalità", "responsabilità", "vendite e affluenza non sono garantite", "Non esiste una ripartizione standard"], hreflang: "it" },
+    { page: html, master: "partnership-guide-en", served: "ymg-events-venue-partnerships-en.pdf", subject: "subject=Venue%20partnership%20with%20YMG%20Events", claims: ["hospitality", "responsibilities", "Attendance and revenue are not guaranteed", "Indicative YMG professional fee", "This guide is not a quotation"], hreflang: "en" },
+    { page: italianHtml, master: "partnership-guide-it", served: "ymg-events-collaborazioni-location-it.pdf", subject: "subject=Collaborazione%20con%20YMG%20Events", claims: ["ospitalità", "responsabilità", "Affluenza e incassi non sono garantiti", "Tariffa YMG indicativa", "Questa guida non è un preventivo"], hreflang: "it" },
   ];
+  const source = readFileSync(new URL("../docs/collateral/source/partnership-guide-copy.mjs", import.meta.url), "utf8");
   for (const { page, master, served, subject, claims, hreflang } of variants) {
     const pdf = readFileSync(new URL(`../docs/collateral/${master}.pdf`, import.meta.url));
-    const source = readFileSync(new URL(`../docs/collateral/${master}.md`, import.meta.url), "utf8");
     const published = readFileSync(new URL(`../dist/downloads/${served}`, import.meta.url));
     assert.ok(published.equals(pdf), `${served} is identical to the approved master`);
     const pdfText = pdf.toString("latin1");
-    assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")), "one-pager is a PDF");
-    assert.ok(pdf.length < 250_000, "PDF remains small for email and WhatsApp");
+    assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")), "guide is a PDF");
+    assert.ok(pdf.length < 400_000, "PDF remains small for email and WhatsApp");
     assert.ok(pdfText.includes("mailto:hello@ymgconsultingservices.com"), "email contact is embedded as a clickable link");
     assert.ok(pdfText.includes(subject), "QR email subject is prefilled with the event collaboration");
     for (const claim of claims) assert.ok(source.includes(claim), `source copy preserves factual offer and commercial limits: ${claim}`);
