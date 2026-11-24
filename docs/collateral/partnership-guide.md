@@ -57,7 +57,24 @@ A few small typing fixes were made in the owner's suggested Italian wording: the
 | La proposta scritta conferma compenso, trattamento fiscale e attività incluse. | La proposta scritta conferma tariffa, trattamento fiscale e attività incluse. |
 | Confermiamo brief, responsabilità e date, … | Confermiamo proposta, responsabilità e date, … |
 
-**Not changed:** one English line still says *brief*: "Larger briefs estimated individually".
+**Editorial pass, 24 November 2026 (#102):** the owner approved these edits from the Italian review list (`docs/editorial/ITALIAN-REVIEW.md`). The revenue-share box still fits on two lines, and both pages pass the overflow check.
+
+| Before | After |
+|---|---|
+| Spazio, ospitalità e intrattenimento trovano realizzazione in un piano concreto. | Spazio, ospitalità e intrattenimento diventano un piano concreto. |
+| La serata è da organizzare interamente | La serata è tutta da organizzare |
+| Organizzatore in loco per sei / otto ore | Organizzatore sul posto per sei / otto ore |
+| …una consulenza limitata di 2–4 ore… | …una consulenza breve di 2–4 ore… |
+| …rientrano in un budget dell’evento separato. | …rientrano in un budget separato dell’evento. |
+| Economia | Costi e incassi |
+| Chi contrattualizza intrattenimento e fornitori, … | Chi firma i contratti con intrattenimento e fornitori, … |
+| Un’eventuale ripartizione dei ricavi ha un calcolo, delle detrazioni e una data di saldo concordati; qualsiasi commissione di segnalazione è dichiarata, … | In caso di ripartizione dei ricavi, metodo di calcolo, detrazioni e data di saldo si concordano prima; qualsiasi commissione di segnalazione viene dichiarata, … |
+| …consegne ai fornitori… | …indicazioni ai fornitori… |
+| …l’elenco delle azioni aperte. | …l’elenco delle questioni ancora aperte. |
+| …si concordano per iscritto prima di sostenerli. | …si concordano per iscritto prima di procedere. |
+| (EN) Larger briefs estimated individually | Larger projects estimated individually |
+
+The Italian eyebrow stays "Organizzazione e realizzazione eventi". Instead, the site now uses *realizzazione* to match it.
 
 ## Other differences from 17 November
 

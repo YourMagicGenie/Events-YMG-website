@@ -45,3 +45,28 @@ This is an editorial pass by Claude, **not a review by a native Italian speaker*
 | Privacy §3 | — | email di risposta; servizio autenticato Google Apps Script invia | indirizzo email per la risposta; servizio Google Apps Script autenticato inoltra | Word order and precision |
 
 Kept on purpose: the owner-approved headline, *Contatti* as the header CTA, *Live di sera*, *format*, *DJ set*, *location* and *budget* (all normal in Italian event marketing), and the Italian-only footer inquiry link (a test pins it; the EN removal was an EN-only decision). Form option `value` attributes and API identifiers are unchanged.
+
+# Italian editorial pass (#102) — 24 November 2026
+
+Claude proposed the edits below from a reading of the whole Italian site, the form states and the guide. The owner approved each one before it was applied. This is still **not a review by a native Italian speaker**. The full proposal list and the guide's before/after table are in `docs/collateral/partnership-guide.md`.
+
+| Where | Before | After |
+|---|---|---|
+| Hero eyebrow | Produzione eventi · Genova, Italia | Realizzazione eventi · Genova, Italia (matches the guide) |
+| Footer tagline | …e produzione eventi | …e realizzazione eventi |
+| Rooftop card | …colonna sonora su misura per i tuoi gusti | …colonna sonora che rispecchia i tuoi gusti |
+| Rooftop CTA | Esplora una serata in terrazza | Organizza una serata in terrazza |
+| Wine card | Vini selezionati abbinati… | Vini selezionati, abbinati… |
+| Partnership 01 | …capace di portarlo da te | …che lo porti da te |
+| Founder heading | Conosci Dante David. | Ti presentiamo Dante David. |
+| Meta description | Attività, feste ed eventi a Genova. | Feste, serate ed eventi a Genova. |
+| Venue message label | Raccontaci della location… | Parlaci della tua location… |
+| Company field | Azienda o gruppo (label, placeholder, help) | Azienda o team |
+| No-JS clear button | Rimuovi il formato selezionato | Rimuovi il format selezionato |
+| 404 eyebrow | Questo percorso è terminato | Qui la strada si interrompe |
+| Privacy §3 | formato scelto | format scelto |
+| Privacy §3 | Evita dati sensibili e… | Evita di inserire dati sensibili o… |
+| Privacy §3 | La conferma del modulo indica l’accettazione per l’elaborazione… | Il messaggio di conferma indica che la richiesta è stata presa in carico, non che sia già arrivata in casella. |
+| Privacy §4 | Google fornisce posta e servizio di consegna. | Google fornisce la posta elettronica e il servizio di inoltro. |
+
+Declined or not marked: a shorter disabled-field placeholder (too long to read in the field), a rewording of the Turnstile "expired" message, "Data o periodo indicativo", and adding "…e coordiniamo chi lo realizza" to the guide subtitle. Form option values and API identifiers are unchanged. The privacy date stays 14 November 2026, because these edits reword the notice without changing what it says.

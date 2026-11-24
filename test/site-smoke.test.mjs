@@ -97,7 +97,7 @@ test("English founder's full two-paragraph biography and message field are prese
 test("bilingual footer gives visitors clear business contact, privacy and Atlas navigation", () => {
   const footerCases = [
     { page: html, privacy: '<a href="/privacy">Privacy notice</a>', location: "YMG Events · Genova, Italy · P.IVA 03044510992", tagline: "Venue partnerships" },
-    { page: italianHtml, privacy: '<a href="/it/privacy">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location e produzione eventi" },
+    { page: italianHtml, privacy: '<a href="/it/privacy">Informativa privacy</a>', location: "YMG Events · Genova, Italia · P.IVA 03044510992", tagline: "Collaborazioni con location e realizzazione eventi" },
   ];
 
   for (const { page, privacy, location, tagline } of footerCases) {
@@ -359,7 +359,7 @@ test("brand icons and bilingual social previews use documented local assets", ()
       page: italianHtml,
       image: "social-card-it-v3.png",
       title: "YMG Events — Eventi a Genova",
-      description: "Attività, feste ed eventi a Genova. Raccontaci cosa hai in mente.",
+      description: "Feste, serate ed eventi a Genova. Raccontaci cosa hai in mente.",
       alt: "YMG Events — Eventi a Genova.",
     },
   ];

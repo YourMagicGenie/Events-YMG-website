@@ -1320,7 +1320,7 @@ try {
   assert.ok((await mobile.locator("#form-feedback").textContent()).includes("L’invio online non è momentaneamente disponibile"), "resolving field errors restores the service status that preceded validation");
   assert.equal(await mobile.locator("#submit-inquiry").isDisabled(), true, "validation checks do not send or enable the inquiry");
 
-  const ItalianRooftopButton = mobile.getByRole("button", { name: "Esplora una serata in terrazza" });
+  const ItalianRooftopButton = mobile.getByRole("button", { name: "Organizza una serata in terrazza" });
   await ItalianRooftopButton.scrollIntoViewIfNeeded();
   await ItalianRooftopButton.click();
   assert.equal(await mobile.locator("#format").inputValue(), "Rooftop evenings", "Italian card text keeps the accepted backend value");
