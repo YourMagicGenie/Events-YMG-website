@@ -80,7 +80,7 @@ export const copy = {
       ["Produzione complessa", "Più luoghi o più elementi da gestire", "Più sedi o più giornate, trasporti, fornitori aggiuntivi o personale specializzato. Logistica e staff si definiscono prima del preventivo.", ["Attività all’aperto con operatori specializzati", "Indicativamente 4.500–6.500 €", "Progetti più ampi su preventivo dedicato"], "Da 4.500 €"],
     ],
     feeLabel: "Tariffa YMG indicativa",
-    feeNote: "Il compenso copre solo il lavoro professionale di YMG. Location, ospitalità, intrattenimento e altri fornitori rientrano in un budget dell’evento separato. La proposta scritta conferma compenso, trattamento fiscale e attività incluse.",
+    feeNote: "La tariffa copre solo il lavoro professionale di YMG. Location, ospitalità, intrattenimento e altri fornitori rientrano in un budget dell’evento separato. La proposta scritta conferma tariffa, trattamento fiscale e attività incluse.",
     exploreTitle: "Hai dei dubbi?",
     explore: "Una chiamata conoscitiva gratuita di 15–20 minuti aiuta a scegliere il servizio giusto. Per valutare la fattibilità prima di impegnarti, una consulenza limitata di 2–4 ore costa in genere 300–450 €.",
     venueTitle: "Collaborazioni con location",
@@ -98,7 +98,7 @@ export const copy = {
     economics: "Affluenza e incassi non sono garantiti. Un’eventuale ripartizione dei ricavi ha un calcolo, delle detrazioni e una data di saldo concordati; qualsiasi commissione di segnalazione è dichiarata, indicando chi la paga.",
     processTitle: "Come lavoriamo",
     process: [
-      ["Prima", "Confermiamo brief, responsabilità e date, poi prepariamo programma, consegne ai fornitori e controlli finali."],
+      ["Prima", "Confermiamo proposta, responsabilità e date, poi prepariamo programma, consegne ai fornitori e controlli finali."],
       ["Il giorno dell’evento", "Il referente sul posto coordina fornitori e contatti della location e segue la scaletta."],
       ["Dopo", "Un breve confronto finale e l’elenco delle azioni aperte. L’eventuale rendiconto è definito nella proposta."],
       ["Modifiche", "Ore, sopralluoghi, fornitori o luoghi in più si concordano per iscritto prima di sostenerli."],

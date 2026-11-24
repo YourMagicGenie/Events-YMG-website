@@ -43,6 +43,7 @@ for (const [lang, g] of Object.entries(guides)) {
     assert.ok(c.economics.includes(g.noGuarantee), "no attendance or revenue guarantee");
     assert.ok(!text.includes("%"), "no percentage terms (commission, revenue split or deposit rates) are stated");
     assert.ok(!g.deposit.test(text), "no deposit term is invented");
+    if (lang === "it") assert.ok(!/compens/i.test(text), "the fee note uses the owner's \"tariffa\", like the fee labels (#102)");
   });
 
   test(`${lang} partnership guide PDF is two A4 pages with embedded fonts, extractable text and working links`, () => {
