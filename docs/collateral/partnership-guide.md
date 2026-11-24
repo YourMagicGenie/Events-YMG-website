@@ -49,7 +49,15 @@ The one-page PDFs (`venue-partnership-one-pager-*`) are kept as an archive only.
 
 A few small typing fixes were made in the owner's suggested Italian wording: the accents (*ospitalità*, *più*, *già*), the spelling of *anniversario* and *interamente*, and no comma before "e" in "Spazio, ospitalità e…" and "budget e programmazione". On 21 November 2026 the owner decided to keep "per sei/otto ore" in Italian and "up to" in English.
 
-**Not changed:** the Italian fee note under the service cards still says *compenso*, because only the header and fee labels were marked. One English line still says *brief*: "Larger briefs estimated individually".
+**Follow-up, 24 November 2026 (#102):** the owner approved matching the Italian fee note to the fee labels, and the Italian process line to the English "proposal" edit:
+
+| Before | After |
+|---|---|
+| Il compenso copre solo il lavoro professionale di YMG. | La tariffa copre solo il lavoro professionale di YMG. |
+| La proposta scritta conferma compenso, trattamento fiscale e attività incluse. | La proposta scritta conferma tariffa, trattamento fiscale e attività incluse. |
+| Confermiamo brief, responsabilità e date, … | Confermiamo proposta, responsabilità e date, … |
+
+**Not changed:** one English line still says *brief*: "Larger briefs estimated individually".
 
 ## Other differences from 17 November
 
