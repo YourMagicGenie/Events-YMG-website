@@ -1,7 +1,7 @@
 // Adapted from the validated YMG Consulting Services intake Worker.
 // Production can reuse Science through a private service binding; no secret copies.
-import { recordEventsMetric } from "./event-metrics.js";
-import { hasScienceIntake, scienceConfiguration, submitThroughScience } from "./science-intake.js";
+import { eventsMetricsEnabled, recordEventsMetric } from "./event-metrics.js";
+import { hasScienceIntake, scienceConfiguration, submitThroughScience, upstreamErrorCategory } from "./science-intake.js";
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const MAX_BODY_BYTES = 48_000;
 const FORMAT_CHOICES = new Set([
@@ -95,25 +95,50 @@ function relayReady(env) {
   }
 }
 
+function intakeConfigured(env) {
+  return Boolean(hasScienceIntake(env) || (env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY && relayReady(env)));
+}
+
+function limiterConfigured(env) {
+  return typeof env.EVENTS_SUBMISSION_LIMITER?.limit === "function";
+}
+
 function configured(env) {
-  return Boolean((hasScienceIntake(env) || (env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY && relayReady(env))) &&
-    typeof env.EVENTS_SUBMISSION_LIMITER?.limit === "function");
+  return intakeConfigured(env) && limiterConfigured(env);
+}
+
+/** Resolves to { config } or { category } naming the dependency that stops the form. */
+async function intakeReadiness(request, env) {
+  if (!intakeConfigured(env)) return { category: "config_unavailable" };
+  if (hasScienceIntake(env)) return scienceConfiguration(request, env);
+  return { config: { ready: true, siteKey: env.TURNSTILE_SITE_KEY } };
+}
+
+// Read-only dependency status for the hourly external check (#129). It names
+// which dependency failed but carries no keys, secrets, URLs or visitor data,
+// and writes no analytics, so the check never inflates the alert count.
+async function healthResponse(request, env) {
+  const intake = intakeConfigured(env) ? (await intakeReadiness(request, env)).category || "ok" : "not_configured";
+  const limiter = limiterConfigured(env) ? "ok" : "missing";
+  const metrics = eventsMetricsEnabled(env) ? "ok" : env?.EVENTS_METRICS_ENABLED === "true" ? "unavailable" : "disabled";
+  const ok = intake === "ok" && limiter === "ok" && metrics !== "unavailable";
+  return json(ok ? 200 : 503, { ok, checks: { intake, limiter, metrics } });
 }
 
 export async function handleEventsApi(request, env, fetcher = fetch) {
   const url = new URL(request.url);
+  if (url.pathname === "/api/events/health") {
+    if (request.method !== "GET") return json(405, { ok: false });
+    return healthResponse(request, env);
+  }
   if (url.pathname === "/api/events/config") {
     if (request.method !== "GET") return json(405, { ready: false });
-    if (hasScienceIntake(env)) {
-      if (!configured(env)) return json(503, { ready: false });
-      try {
-        const config = await scienceConfiguration(request, env);
-        return config ? json(200, config) : json(503, { ready: false });
-      } catch { return json(503, { ready: false }); }
-    }
-    return configured(env)
-      ? json(200, { ready: true, siteKey: env.TURNSTILE_SITE_KEY })
-      : json(503, { ready: false });
+    const readiness = limiterConfigured(env) ? await intakeReadiness(request, env) : { category: "config_unavailable" };
+    if (readiness.config) return json(200, readiness.config);
+    // A visitor whose form cannot load never reaches an inquiry attempt, so the
+    // readiness failure is recorded on its own, with no form dimensions.
+    recordEventsMetric(env, "intake_not_ready", { locale: "en", category: readiness.category });
+    return json(503, { ready: false });
   }
   if (!["/api/events/inquiry", "/api/events/enquiry"].includes(url.pathname)) return json(404, { ok: false });
   if (request.method !== "POST") return json(405, { ok: false, error: "Method not allowed." });
@@ -161,48 +186,67 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     format,
   };
   recordEventsMetric(env, "inquiry_attempt", metricDimensions);
+  // Exactly one outcome point follows the attempt: an expected visitor-side
+  // rejection (inquiry_failure), a dependency outage (inquiry_outage, which the
+  // alert counts) or relay_accepted.
+  const rejected = category => recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category });
+  const outage = category => recordEventsMetric(env, "inquiry_outage", { ...metricDimensions, category });
 
   if (!configured(env)) {
-    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    outage("config_unavailable");
     return json(503, { ok: false, error: "Online submission is unavailable." });
   }
 
   const remoteIp = request.headers.get("cf-connecting-ip");
   if (!remoteIp) {
-    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    outage("config_unavailable");
     return json(503, { ok: false, error: "Online submission is unavailable." });
   }
   try {
     const rateLimit = await env.EVENTS_SUBMISSION_LIMITER.limit({ key: remoteIp });
     if (!rateLimit?.success) {
-      recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "rate_limited" });
+      rejected("rate_limited");
       return json(429, { ok: false, error: "Please wait a little before sending another inquiry, or contact us directly." }, {
         "retry-after": "60",
       });
     }
   } catch {
     // Fail closed if abuse protection is unavailable; do not log client data.
-    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
+    outage("limiter_unavailable");
     return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
   }
 
   if (hasScienceIntake(env)) {
+    let result;
     try {
-      const result = await submitThroughScience(request, env, {
+      result = await submitThroughScience(request, env, {
         name, email, intent: INQUIRY_TYPES.get(intent), source: INQUIRY_SOURCES.get(source),
         business, format, guests, timing, budget, idea, token, locale: metricDimensions.locale,
       });
-      if (result.accepted) {
-        recordEventsMetric(env, "relay_accepted", metricDimensions);
-        return json(202, { ok: true });
-      }
-      const status = result.status === 403 ? 403 : result.status === 400 ? 400 : 503;
-      recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: status === 403 ? "turnstile_rejected" : "relay_failure" });
-      return json(status, { ok: false, error: status === 403 ? "Spam protection could not verify this request." : "We could not confirm delivery. Please try again or email us directly." });
-    } catch {
-      recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "service_unavailable" });
-      return json(503, { ok: false, error: "Online submission is temporarily unavailable." });
+    } catch (error) {
+      result = { accepted: false, status: 0, category: upstreamErrorCategory(error) };
     }
+    if (result.accepted) {
+      recordEventsMetric(env, "relay_accepted", metricDimensions);
+      return json(202, { ok: true });
+    }
+    if (result.status === 403) {
+      rejected("turnstile_rejected");
+      return json(403, { ok: false, error: "Spam protection could not verify this request." });
+    }
+    if (result.status === 400) {
+      rejected("intake_rejected");
+      return json(400, { ok: false, error: "We could not confirm delivery. Please try again or email us directly." });
+    }
+    if (result.status === 429) {
+      rejected("rate_limited");
+      return json(429, { ok: false, error: "Please wait a little before sending another inquiry, or contact us directly." }, {
+        "retry-after": "60",
+      });
+    }
+    // Upstream 5xx, an unexpected success shape, a timeout or a binding error.
+    outage(result.category || "upstream_error");
+    return json(503, { ok: false, error: "We could not confirm delivery. Please try again or email us directly." });
   }
 
   const verifyParams = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token });
@@ -218,11 +262,11 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     if (!response.ok) throw new Error("Turnstile unreachable");
     challenge = await response.json();
   } catch {
-    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "turnstile_unavailable" });
+    outage("turnstile_unavailable");
     return json(503, { ok: false, error: "Spam protection is temporarily unavailable." });
   }
   if (!challenge.success || challenge.hostname !== url.hostname || challenge.action !== "events_inquiry") {
-    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "turnstile_rejected" });
+    rejected("turnstile_rejected");
     return json(403, { ok: false, error: "Spam protection could not verify this request." });
   }
 
@@ -238,6 +282,7 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
     `Event format: ${format}`, `Guest count: ${guests}`, `Timing: ${show(timing)}`,
     `Indicative budget: ${show(budget)}`, "", "Venue or occasion details:", show(idea),
   ].join("\n");
+  let relayCategory = null;
   try {
     const response = await fetcher(env.GOOGLE_RELAY_URL, {
       method: "POST",
@@ -251,12 +296,14 @@ export async function handleEventsApi(request, env, fetcher = fetch) {
       redirect: "follow",
       signal: AbortSignal.timeout(20000),
     });
-    const result = response.ok ? await response.json() : null;
-    if (!result || result.ok !== true) throw new Error("Relay rejected inquiry");
-  } catch {
+    const result = response.ok ? await response.json().catch(() => null) : null;
+    if (!result || result.ok !== true) relayCategory = "upstream_error";
+  } catch (error) {
+    relayCategory = upstreamErrorCategory(error);
+  }
+  if (relayCategory) {
     // Do not log inquiry content, email addresses, or relay credentials.
-    recordEventsMetric(env, "inquiry_failure", { ...metricDimensions, category: "relay_failure" });
-    recordEventsMetric(env, "relay_failure", { ...metricDimensions, category: "relay_failure" });
+    outage(relayCategory);
     return json(503, { ok: false, error: "We could not send your inquiry. Please try again or email us directly." });
   }
   // This confirms relay acceptance only; it is not a mailbox delivery receipt.

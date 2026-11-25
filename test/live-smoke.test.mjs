@@ -11,6 +11,7 @@ const fakeSite = (overrides = {}) => async (url, options = {}) => {
   const { pathname } = new URL(url);
   if (overrides[pathname]) return overrides[pathname](options);
   if (pathname === '/api/events/config') return Response.json({ ready: true, siteKey: 'test-key', action: 'events_inquiry' }, { headers: secure });
+  if (pathname === '/api/events/health') return Response.json({ ok: true, checks: { intake: 'ok', limiter: 'ok', metrics: 'ok' } }, { headers: secure });
   const file = pathname.endsWith('/') ? `${pathname.slice(1)}index.html` : /\/[^./]+$/.test(pathname) ? `${pathname.slice(1)}.html` : pathname.slice(1);
   const target = new URL(file, dist);
   const found = !pathname.startsWith('/api/') && existsSync(target) && statSync(target).isFile();
@@ -56,4 +57,11 @@ test('missing security headers and soft 404s fail the smoke', async () => {
 test('the production deploy command runs the bounded live smoke after upload', () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(pkg.scripts['deploy:auto'], 'wrangler deploy --config wrangler.production.json && node test/live-smoke.mjs --origin https://events.ymgconsultingservices.com/ --wait 240');
+});
+
+test('post-deploy smoke requires the health report the hourly check reads (#129)', async () => {
+  const degraded = () => Response.json({ ok: false, checks: { intake: 'ok', limiter: 'ok', metrics: 'unavailable' } }, { status: 503, headers: secure });
+  await assert.rejects(run({ fetcher: fakeSite({ '/api/events/health': degraded }) }), /failed: metrics=unavailable/);
+  const disabled = () => Response.json({ ready: false }, { status: 503, headers: secure });
+  await run({ fetcher: fakeSite({ '/api/events/config': disabled, '/api/events/health': degraded }), allowIntakeDisabled: true });
 });

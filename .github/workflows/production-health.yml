@@ -1,0 +1,33 @@
+name: Production health
+
+# Independent hourly check of the live inquiry path (#129). It runs outside
+# Cloudflare, so it still alerts when the Analytics Engine monitor cannot
+# (metrics unbound, intake misconfigured or the Science binding down). GitHub
+# emails a failed scheduled run to the person who last changed this cron.
+# Read-only: it calls /api/events/health and never submits the form.
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: events-production-health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: test/live-health.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check intake, submission limiter and metrics
+        run: node test/live-health.mjs --origin https://events.ymgconsultingservices.com/ --wait 120
