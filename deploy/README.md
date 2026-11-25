@@ -28,16 +28,35 @@ The first staged build was tested at the version URL for `6f991d2a-a714-4587-ba3
 - Active version `7ac94e2c-a6c7-43a0-8310-93625da9529a`, deployment `d5ba90c7-2392-4ad8-928a-f77b52433bf8`, 100% traffic at 07:24 UTC.
 - Public smoke passed; served PDF SHA-256 equals the approved master. Enquiry config returns 503 / `ready:false`, accurately reflecting missing runtime settings. No test enquiry was sent. Metrics remain disabled.
 
-## Recovery
+## Release verification and rollback
 
-Known previous production version: `ce4f6609-d90c-410e-8ee7-9c20d7f289d7` (original launch bundle). Its prior deployment remains listed. A recovery changes live traffic; pause automatic builds before recovery so a subsequent merge does not immediately redeploy the candidate.
-
-With an authenticated authorized CLI:
+Before merging, record the current production version as the rollback target:
 
 ```sh
-npx wrangler rollback ce4f6609-d90c-410e-8ee7-9c20d7f289d7 --config wrangler.production.json
+npx wrangler deployments list --config wrangler.production.json
 ```
 
-Command syntax was verified using pinned Wrangler help; **rollback has not been exercised against production**. It restores the old UI/mail-app flow, not external resource state. Record the incident, verify the public site and release a checked corrective commit before resuming automatic publishing. Do not change unrelated YMG Workers, routes or mail DNS.
+`npm run deploy:auto` uploads the Worker and then runs the read-only live smoke (`test/live-smoke.mjs`) against `https://events.ymgconsultingservices.com/`, retrying for up to 240 seconds while the edge picks up the new version. It checks:
+
+- the EN/IT home, privacy, robots, sitemap and key assets return 200 with security headers, and real 404s for unknown EN/IT pages and API paths;
+- `/` links the English guide and `/it/` the Italian guide, and both served PDFs are byte-identical to this release's `dist/downloads/`;
+- `/api/events/config` answers HTTP 200 with `ready: true` and a site key (`--allow-intake-disabled` exists only for previews without form secrets);
+- `HEAD /` returns 200 with no body.
+
+If any check still fails when the wait runs out, the command exits non-zero, so the Cloudflare build is marked **failed** (visible in Workers & Pages → ymg-events-website → Deployments and on the merge commit's Cloudflare status). The new version is already serving at that point: inspect the failure in the build log and either roll back or ship a corrective PR. Run the same check by hand with:
+
+```sh
+node test/live-smoke.mjs --origin https://events.ymgconsultingservices.com/ --wait 60
+```
+
+The smoke never submits the form. Mail delivery and Reply-To are a separate, controlled acceptance check (see [analytics operations](../docs/ANALYTICS-OPERATIONS.md) and #129).
+
+To roll back, pause automatic builds first so the next merge does not redeploy the candidate, then:
+
+```sh
+npx wrangler rollback <previous-version-id> --config wrangler.production.json
+```
+
+A rollback restores Worker code and assets only, not external resource state. Verify the public site with the smoke, record the incident, and release a checked corrective commit before resuming automatic publishing. Do not change unrelated YMG Workers, routes or mail DNS.
 
 See [configuration and DnD comparison](../docs/CLOUDFLARE-AUTO-PUBLISH.md).

@@ -1,38 +1,111 @@
+// Read-only release smoke for a deployed Events site (#131).
+// It never submits the form and does not test mailbox delivery.
+//
+//   node test/live-smoke.mjs --origin https://events.ymgconsultingservices.com/ [--wait 180] [--allow-intake-disabled]
+//
+// --wait N retries the whole check for up to N seconds, so a run started right
+// after `wrangler deploy` tolerates edge propagation but still fails if the
+// finished deployment never serves this checkout's files.
+// --allow-intake-disabled is only for previews that intentionally have no form
+// secrets; production must answer HTTP 200 with `ready: true`.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-const argument = process.argv.indexOf('--origin');
-if (argument < 0 || !process.argv[argument + 1]) throw new Error('Pass --origin https://<approved-host> explicitly. This check reads that host.');
-const origin = new URL(process.argv[argument + 1]);
-assert.equal(origin.protocol, 'https:');
-assert.equal(origin.pathname, '/');
-const read = (path, options = {}) => fetch(new URL(path, origin), { signal: AbortSignal.timeout(25000), ...options });
-const routes = [['/', 200], ['/it/', 200], ['/privacy', 200], ['/it/privacy', 200], ['/robots.txt', 200], ['/sitemap.xml', 200], ['/assets/dante-david-480.webp', 200], ['/assets/event-hero-480.webp', 200], ['/assets/fonts/dm-sans-latin.woff2', 200], ['/downloads/ymg-events-collaborazioni-location-it.pdf', 200], ['/not-a-real-events-page', 404], ['/api/not-a-real-endpoint', 404]];
-for (let i = 0; i < routes.length; i += 4) {
-  await Promise.all(routes.slice(i, i + 4).map(async ([path, status]) => {
-    const response = await read(path);
-    assert.equal(response.status, status, path);
-    assert.equal(response.headers.get('x-content-type-options'), 'nosniff', path);
-    assert.equal(response.headers.get('x-frame-options'), 'DENY', path);
-    if (path === '/' || path === '/it/') {
-      const html = await response.text();
-      for (const expected of ['partnership-download', 'dante-david-960.webp', '03044510992']) assert.ok(html.includes(expected), `${path}: ${expected}`);
-      assert.ok(response.headers.get('content-security-policy'), path);
-      assert.ok(!html.includes('images.unsplash.com'), path);
-    } else if (path.endsWith('.pdf')) {
-      assert.match(response.headers.get('content-type'), /application\/pdf/);
-      const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-      const approved = readFileSync(new URL('../docs/collateral/venue-partnership-one-pager-it.pdf', import.meta.url));
-      assert.equal(hash(Buffer.from(await response.arrayBuffer())), hash(approved), 'live PDF matches approved master');
-    }
-    console.log(`${response.status} ${path}`);
-  }));
+import { fileURLToPath } from 'node:url';
+
+const siteRoot = new URL('../dist/', import.meta.url);
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+
+// Each homepage must link its own guide; each guide must match the bytes this
+// release deploys from dist/.
+export const guides = [
+  { page: '/', path: '/downloads/ymg-events-venue-partnerships-en.pdf' },
+  { page: '/it/', path: '/downloads/ymg-events-collaborazioni-location-it.pdf' },
+];
+
+const routes = [
+  ['/', 200], ['/it/', 200], ['/privacy', 200], ['/it/privacy', 200],
+  ['/robots.txt', 200], ['/sitemap.xml', 200],
+  ['/assets/dante-david-480.webp', 200], ['/assets/event-hero-480.webp', 200], ['/assets/fonts/dm-sans-latin.woff2', 200],
+  ...guides.map(guide => [guide.path, 200]),
+  ['/not-a-real-events-page', 404], ['/it/not-a-real-events-page', 404], ['/api/not-a-real-endpoint', 404],
+];
+
+export async function runLiveSmoke({ origin, fetcher = fetch, allowIntakeDisabled = false, log = console.log }) {
+  const base = new URL(origin);
+  assert.equal(base.protocol, 'https:', 'origin must be https');
+  assert.equal(base.pathname, '/', 'origin must be a bare host');
+  const read = (path, options = {}) => fetcher(new URL(path, base), { signal: AbortSignal.timeout(25000), cache: 'no-store', ...options });
+
+  for (let i = 0; i < routes.length; i += 4) {
+    await Promise.all(routes.slice(i, i + 4).map(async ([path, status]) => {
+      const response = await read(path);
+      assert.equal(response.status, status, `${path}: HTTP ${response.status}, expected ${status}`);
+      assert.equal(response.headers.get('x-content-type-options'), 'nosniff', `${path}: nosniff header`);
+      assert.equal(response.headers.get('x-frame-options'), 'DENY', `${path}: frame header`);
+      if (path === '/' || path === '/it/') {
+        const html = await response.text();
+        for (const expected of ['partnership-download', 'dante-david-960.webp', '03044510992']) assert.ok(html.includes(expected), `${path}: missing ${expected}`);
+        const ownGuide = guides.find(guide => guide.page === path).path;
+        assert.ok(html.includes(`href="${ownGuide}"`), `${path}: does not link its own guide ${ownGuide}`);
+        for (const other of guides.filter(guide => guide.page !== path)) assert.ok(!html.includes(`href="${other.path}"`), `${path}: links the other language's guide`);
+        assert.ok(response.headers.get('content-security-policy'), `${path}: content security policy`);
+        assert.ok(!html.includes('images.unsplash.com'), `${path}: hotlinked image`);
+      } else if (path.endsWith('.pdf')) {
+        assert.match(response.headers.get('content-type') ?? '', /application\/pdf/, `${path}: content type`);
+        const expected = readFileSync(new URL(path.slice(1), siteRoot));
+        assert.equal(hash(Buffer.from(await response.arrayBuffer())), hash(expected), `${path}: live bytes differ from this release's dist${path}`);
+      } else {
+        await response.arrayBuffer();
+      }
+      log(`${response.status} ${path}`);
+    }));
+  }
+
+  const config = await read('/api/events/config', { headers: { Accept: 'application/json' } });
+  let body = null;
+  try { body = await config.json(); } catch { /* reported below */ }
+  if (allowIntakeDisabled && config.status === 503 && body?.ready === false) {
+    log('Inquiry intake is disabled, as allowed for this preview.');
+  } else {
+    assert.equal(config.status, 200, `/api/events/config: HTTP ${config.status}; production intake must be ready`);
+    assert.equal(body?.ready, true, '/api/events/config: ready is not true');
+    assert.ok(body?.siteKey, '/api/events/config: no Turnstile site key');
+    log('Inquiry intake ready: true (mailbox delivery is not tested here).');
+  }
+
+  const head = await read('/', { method: 'HEAD' });
+  assert.equal(head.status, 200, 'HEAD /');
+  assert.equal((await head.text()).length, 0, 'HEAD / has no body');
 }
-const config = await read('/api/events/config');
-const body = await config.json();
-assert.ok((config.status === 503 && body.ready === false) || (config.status === 200 && body.ready === true), 'configuration responds honestly');
-console.log(`Inquiry configured: ${body.ready}; this does not test mailbox delivery.`);
-const head = await read('/', { method: 'HEAD' });
-assert.equal(head.status, 200);
-assert.equal((await head.text()).length, 0);
-console.log('Live read-only smoke passed; no form submissions were made.');
+
+async function main() {
+  const option = name => {
+    const index = process.argv.indexOf(name);
+    return index < 0 ? undefined : process.argv[index + 1];
+  };
+  const origin = option('--origin');
+  if (!origin) throw new Error('Pass --origin https://<approved-host> explicitly. This check reads that host.');
+  const waitSeconds = Number(option('--wait') ?? 0);
+  if (!Number.isFinite(waitSeconds) || waitSeconds < 0 || waitSeconds > 900) throw new Error('--wait must be 0–900 seconds.');
+  const allowIntakeDisabled = process.argv.includes('--allow-intake-disabled');
+  const deadline = Date.now() + waitSeconds * 1000;
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await runLiveSmoke({ origin, allowIntakeDisabled });
+      console.log(`LIVE SMOKE PASSED for ${origin} (attempt ${attempt}); no form submissions were made.`);
+      return;
+    } catch (error) {
+      const retry = Date.now() + 15000 <= deadline;
+      console.error(`Attempt ${attempt} failed: ${error.message}${retry ? ' — retrying in 15 s' : ''}`);
+      if (!retry) {
+        console.error(`LIVE SMOKE FAILED for ${origin}. The deployment is live; check it and roll back if needed (docs/CLOUDFLARE-AUTO-PUBLISH.md).`);
+        process.exitCode = 1;
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 15000));
+    }
+  }
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) await main();

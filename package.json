@@ -9,7 +9,7 @@
     "test:e2e:full": "node test/browser-smoke.mjs --full-matrix",
     "audit:performance": "node test/performance-audit.mjs",
     "build": "npm test",
-    "deploy:auto": "wrangler deploy --config wrangler.production.json",
+    "deploy:auto": "wrangler deploy --config wrangler.production.json && node test/live-smoke.mjs --origin https://events.ymgconsultingservices.com/ --wait 240",
     "deploy:preview": "wrangler deploy --config wrangler.json",
     "test:live": "node test/live-smoke.mjs"
   },
