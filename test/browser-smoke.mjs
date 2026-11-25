@@ -24,6 +24,19 @@ const mimeTypes = {
   ".webp": "image/webp",
 };
 
+// #132: fallback statuses carry a plain, tappable mailto link with no prefilled data.
+async function assertMailFallback(page, label) {
+  const links = page.locator("#form-feedback a");
+  assert.equal(await links.count(), 1, `${label}: the status has exactly one email link`);
+  const link = links.first();
+  assert.equal(await link.getAttribute("href"), "mailto:hello@ymgconsultingservices.com", `${label}: the link has no prefilled subject, body or visitor data`);
+  assert.equal(await link.textContent(), "hello@ymgconsultingservices.com", `${label}: the link names the address`);
+  assert.equal(await page.locator("#form-feedback").getAttribute("data-state"), "error", `${label}: the fallback is shown as a visible error`);
+  assert.ok(await link.isVisible(), `${label}: the email link is visible beside the status`);
+  await link.focus();
+  assert.equal(await page.evaluate(() => document.activeElement?.matches("#form-feedback a")), true, `${label}: the email link takes keyboard focus`);
+}
+
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
@@ -1125,6 +1138,7 @@ try {
   const errored = await verificationGeometry();
   assert.equal(errored.verified, "false", "Turnstile errors also expose challenge UI");
   assert.equal(errored.submitDisabled, true);
+  await assertMailFallback(verification, "EN Turnstile error");
   await verification.locator("#intent").selectOption("private_celebration");
   await verification.locator("#name").fill("Test Sender");
   await verification.locator("#email").fill("sender@example.com");
@@ -1138,6 +1152,17 @@ try {
   assert.equal(afterSubmit.height, initial.height, "reset leaves a stable footprint");
   assert.equal(await verification.locator("#form-feedback").getAttribute("data-state"), "success",
     "the successful inquiry has an accessible visible success notification");
+  assert.equal(await verification.locator("#form-feedback a").count(), 0, "success needs no email fallback link");
+  await verification.unroute("**/api/events/inquiry");
+  await verification.route("**/api/events/inquiry", route => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ ok: false }) }));
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-retry"));
+  await verification.locator("#submit-inquiry").click();
+  await verification.waitForFunction(() => window.__verification.resets === 2);
+  assert.ok((await verification.locator("#form-feedback").textContent()).startsWith("We couldn’t confirm whether your inquiry was received."), "a failed send keeps its existing status copy");
+  await assertMailFallback(verification, "EN failed send");
+  assert.equal(await verification.locator("#name").inputValue(), "Test Sender", "a failed send keeps the visitor's entries for a retry");
+  await verification.evaluate(() => window.__verification.callbacks.callback("token-after-failure"));
+  assert.equal(await verification.locator("#submit-inquiry").isDisabled(), false, "a fresh verification re-enables retry after a failed send");
   await verification.close();
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -1286,6 +1311,7 @@ try {
   ];
   assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific photo descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
+  await assertMailFallback(mobile, "IT service unavailable");
   assert.equal(await mobile.locator(".menu-toggle").getAttribute("aria-label"), "Apri il menu di navigazione");
   await mobile.locator("#intent").selectOption("venue_partnership");
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue path makes the business field required");
@@ -1318,6 +1344,7 @@ try {
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), false, "private path makes the business field optional");
   assert.equal(await mobile.locator("#business").getAttribute("aria-invalid"), null, "making the business field optional clears its stale error state");
   assert.ok((await mobile.locator("#form-feedback").textContent()).includes("L’invio online non è momentaneamente disponibile"), "resolving field errors restores the service status that preceded validation");
+  await assertMailFallback(mobile, "IT status restored after validation");
   assert.equal(await mobile.locator("#submit-inquiry").isDisabled(), true, "validation checks do not send or enable the inquiry");
 
   const ItalianRooftopButton = mobile.getByRole("button", { name: "Organizza una serata in terrazza" });
@@ -1645,6 +1672,21 @@ try {
   await privacy.keyboard.press("Enter");
   assert.equal(await privacy.evaluate(() => document.activeElement.id), "main-content", "the skip link moves keyboard focus to the recovery message");
   await privacy.close();
+
+  const noScriptContext = await browser.newContext({ viewport: { width: 390, height: 844 }, javaScriptEnabled: false });
+  const noScript = await noScriptContext.newPage();
+  await noScript.route("https://fonts.googleapis.com/**", route => route.abort());
+  await noScript.route("https://fonts.gstatic.com/**", route => route.abort());
+  for (const [path, copy] of [["/", "Online inquiries need JavaScript."], ["/it/", "Per inviare la richiesta online serve JavaScript."]]) {
+    await noScript.goto(`${baseUrl}${path}`, { waitUntil: "load" });
+    const note = noScript.locator(".form-noscript");
+    assert.ok(await note.isVisible(), `${path}: without JavaScript the form shows a contact path`);
+    assert.ok((await note.textContent()).startsWith(copy), `${path}: the script-disabled note is localized`);
+    assert.equal(await note.locator("a").getAttribute("href"), "mailto:hello@ymgconsultingservices.com");
+    const layout = await noScript.evaluate(() => ({ doc: document.documentElement.scrollWidth, vw: window.innerWidth }));
+    assert.ok(layout.doc <= layout.vw, `${path}: the script-disabled note fits the mobile viewport`);
+  }
+  await noScriptContext.close();
 
   const runType = fullMatrix ? "Full responsive matrix" : "Focused responsive smoke";
   console.log(`${runType} passed at ${widths.join(", ")} CSS-pixel widths; screenshots saved to ${screenshotRoot}`);
