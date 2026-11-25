@@ -125,6 +125,9 @@ const pathCopy = messages.turnstileLanguage === "it" ? {
 
 let previousIntent = "";
 let selectedFromConcept = false;
+// The format starts neutral (#133). A type-specific default is applied only
+// until the visitor picks, clears or prefills a format themselves.
+let formatChosen = false;
 const updateInquiryPath = () => {
   const selected = intent?.value || "";
   if (previousIntent && previousIntent !== selected) business.value = "";
@@ -155,15 +158,13 @@ const updateInquiryPath = () => {
     ideaLabel.textContent = pathCopy.privateIdeaLabel;
     idea.placeholder = pathCopy.privateIdeaPlaceholder;
   }
-  if (selected && (!previousIntent || format.value === pathCopy.defaults[previousIntent])) {
-    format.value = pathCopy.defaults[selected];
-  }
+  if (selected && !formatChosen) format.value = pathCopy.defaults[selected];
   previousIntent = selected;
 };
 
 const renderFormatContext = () => {
   const selectedFormat = format?.value || "";
-  const defaultFormat = pathCopy.defaults[intent?.value] || pathCopy.defaults.venue_partnership;
+  const defaultFormat = formatChosen ? "" : pathCopy.defaults[intent?.value] || "";
   const isSpecificChoice = selectedFormat && selectedFormat !== defaultFormat;
   const showContext = Boolean(selectedFormat) && (selectedFromConcept || isSpecificChoice);
   formatContext.hidden = !showContext;
@@ -183,6 +184,7 @@ renderFormatContext();
 if (clearFormat) clearFormat.textContent = messages.clearFormat;
 
 format?.addEventListener("change", () => {
+  formatChosen = true;
   selectedFromConcept = false;
   renderFormatContext();
 });
@@ -200,6 +202,7 @@ document.querySelectorAll("[data-concept]").forEach(button => {
       intent.dispatchEvent(new Event("change", { bubbles: true }));
     }
     format.value = button.dataset.concept;
+    formatChosen = true;
     selectedFromConcept = true;
     renderFormatContext();
     document.getElementById("inquire").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
