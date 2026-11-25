@@ -757,7 +757,8 @@ test("event format context is bilingual, explicit, clearable and sent through th
     assert.match(page, /<div class="format-context" id="format-context" hidden>/);
     assert.match(page, /id="format-context-status" role="status" aria-live="polite" aria-atomic="true"/);
     assert.match(page, /<button type="button" id="clear-format">/);
-    assert.match(page, /option value="">/);
+    assert.match(page, /<select id="format" name="format"><option(?: value="Let’s explore a partnership")?>[^<]*<\/option><option value="" selected>/, "the neutral format is the initial selection (#133)");
+    assert.equal((page.match(/<select id="format"[^]*?<\/select>/)[0].match(/ selected/g) || []).length, 1, "only the neutral format is preselected");
     assert.match(page, /\.format-context button\{min-height:44px/);
   }
   assert.match(messages, /selectedFormatPrefix: "Selected event format:"/);

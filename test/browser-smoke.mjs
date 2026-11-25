@@ -25,6 +25,14 @@ const mimeTypes = {
 };
 
 // #132: fallback statuses carry a plain, tappable mailto link with no prefilled data.
+// #133: the visible format and the submitted format always agree.
+async function formatState(page) {
+  return page.evaluate(() => {
+    const select = document.querySelector("#format");
+    return { value: select.value, label: select.selectedOptions[0]?.textContent.trim(), sent: new FormData(document.querySelector("#brief")).get("format"), intent: document.querySelector("#intent").value };
+  });
+}
+
 async function assertMailFallback(page, label) {
   const links = page.locator("#form-feedback a");
   assert.equal(await links.count(), 1, `${label}: the status has exactly one email link`);
@@ -1245,6 +1253,30 @@ try {
     assert.equal(await mobile.locator("#brief").evaluate(form => new FormData(form).get("format")), "", `clearing slide ${index + 1} sends an empty format for path-aware generic fallback`);
   }
   await mobile.goto(baseUrl, { waitUntil: "load" });
+  const neutralEnglish = { value: "", label: "Any format — I’m open to ideas", sent: "", intent: "" };
+  assert.deepEqual(await formatState(mobile), neutralEnglish, "the form starts with a neutral event format, not a partnership one");
+  await mobile.getByRole("link", { name: "Tell us what you’re planning" }).click();
+  assert.deepEqual(await formatState(mobile), neutralEnglish, "the generic CTA keeps the format neutral");
+  for (const [intentValue, expected] of [["corporate_event", "Corporate Social"], ["private_celebration", "Private celebrations"], ["venue_partnership", "Let’s explore a partnership"]]) {
+    await mobile.locator("#intent").selectOption(intentValue);
+    const state = await formatState(mobile);
+    assert.equal(state.value, expected, `${intentValue} applies its default while no format was chosen`);
+    assert.equal(state.sent, expected, `${intentValue}: the submitted format matches the visible one`);
+  }
+  await mobile.goto(baseUrl, { waitUntil: "load" });
+  await mobile.locator("#format").selectOption("Wine pairing");
+  await mobile.locator("#intent").selectOption("corporate_event");
+  assert.equal((await formatState(mobile)).sent, "Wine pairing", "a format chosen before the inquiry type is kept");
+  await mobile.locator("#intent").selectOption("private_celebration");
+  assert.equal((await formatState(mobile)).sent, "Wine pairing", "an explicit format survives inquiry-type changes");
+  await mobile.locator("#clear-format").click();
+  await mobile.locator("#intent").selectOption("venue_partnership");
+  assert.equal((await formatState(mobile)).sent, "", "a cleared format stays cleared when the type changes");
+  await mobile.goto(baseUrl, { waitUntil: "load" });
+  await mobile.locator("#format").selectOption("Supper Club");
+  await mobile.getByRole("link", { name: "Explore a partnership" }).click();
+  assert.deepEqual(await formatState(mobile), { value: "Supper Club", label: "Supper Club", sent: "Supper Club", intent: "venue_partnership" }, "the venue CTA sets the type without overriding an explicit format");
+  await mobile.goto(baseUrl, { waitUntil: "load" });
   assert.equal(await mobile.locator("#business").getAttribute("placeholder"), "Choose an inquiry type",
     "English initial business placeholder is concise");
   assert.equal(await mobile.locator("#business-label").textContent(), "Choose an inquiry type",
@@ -1312,6 +1344,13 @@ try {
   assert.deepEqual(await mobile.locator("#concept-deck .card-art-image").evaluateAll(images => images.map(image => image.alt)), expectedItalianArtAlts, "Italian cards expose localized, format-specific photo descriptions");
   await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
   await assertMailFallback(mobile, "IT service unavailable");
+  assert.deepEqual(await formatState(mobile), { value: "", label: "Nessuno in particolare, accetto proposte", sent: "", intent: "" }, "the Italian form starts with a neutral event format");
+  await mobile.locator("#intent").selectOption("corporate_event");
+  assert.deepEqual(await formatState(mobile), { value: "Corporate Social", label: "Evento aziendale", sent: "Corporate Social", intent: "corporate_event" }, "the Italian corporate path applies its localized default");
+  await mobile.locator("#intent").selectOption("venue_partnership");
+  assert.equal((await formatState(mobile)).label, "Vorrei valutare una collaborazione", "the Italian venue path applies its localized default");
+  await mobile.reload({ waitUntil: "load" });
+  await mobile.waitForFunction(() => document.querySelector("#form-feedback").textContent.includes("L’invio online non è momentaneamente disponibile"));
   assert.equal(await mobile.locator(".menu-toggle").getAttribute("aria-label"), "Apri il menu di navigazione");
   await mobile.locator("#intent").selectOption("venue_partnership");
   assert.equal(await mobile.locator("#business").evaluate(input => input.required), true, "venue path makes the business field required");
