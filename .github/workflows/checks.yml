@@ -1,16 +1,10 @@
 name: Events checks
 
+# One always-triggered workflow with one job named "test", the required check
+# on main (#130). The job classifies the changed files itself: docs-only pull
+# requests take a cheap path, and anything else runs the full suite.
 on:
   pull_request:
-    paths:
-      - ".github/workflows/checks.yml"
-      - "dist/**"
-      - "src/**"
-      - "test/**"
-      - "package.json"
-      - "package-lock.json"
-      - "wrangler.json"
-      - "wrangler.production.json"
   workflow_dispatch:
     inputs:
       visual_matrix:
@@ -32,45 +26,69 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - name: Run unit and site smoke tests
-        run: npm ci && npm test
-      - name: Select the responsive browser matrix
-        id: browser-matrix
+      - name: Classify changed files and select the browser matrix
+        id: classify
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           MANUAL_MATRIX: ${{ github.event.inputs.visual_matrix }}
         run: |
+          set -euo pipefail
+          kind=code
           mode=quick
-          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$MANUAL_MATRIX" == "full" ]]; then
-            mode=full
-          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
-            git fetch --no-tags --depth=1 origin "$BASE_SHA"
-            while IFS= read -r path; do
-              case "$path" in
-                dist/*|src/worker.js|src/security-headers.js|test/browser-smoke.mjs)
-                  mode=full
-                  break
-                  ;;
-              esac
-            done < <(git diff --name-only "$BASE_SHA" HEAD)
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$MANUAL_MATRIX" == "full" ]]; then mode=full; fi
+          else
+            if [[ -z "$BASE_SHA" ]]; then
+              echo "::error::No pull request base SHA; cannot classify changed files."
+              exit 1
+            fi
+            git fetch --no-tags --depth=1 origin "$BASE_SHA" || { echo "::error::Could not fetch base $BASE_SHA to classify changed files."; exit 1; }
+            changed=$(git diff --name-only "$BASE_SHA" HEAD) || { echo "::error::Could not diff $BASE_SHA..HEAD to classify changed files."; exit 1; }
+            if [[ -z "$changed" ]]; then
+              echo "No changed files reported; running full checks to be safe."
+            else
+              kind=docs
+              while IFS= read -r path; do
+                case "$path" in
+                  # Documentation only: prose, reference copies and non-executed notes.
+                  docs/collateral/*) kind=code ;;
+                  docs/*|reference/*|*.md) ;;
+                  *) kind=code ;;
+                esac
+                case "$path" in
+                  dist/*|src/worker.js|src/security-headers.js|test/browser-smoke.mjs) mode=full ;;
+                esac
+              done <<< "$changed"
+            fi
           fi
-          echo "Selected browser matrix: $mode"
+          echo "Change classification: $kind; browser matrix: $mode"
+          echo "kind=$kind" >> "$GITHUB_OUTPUT"
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
+      - name: Docs-only change
+        if: steps.classify.outputs.kind == 'docs'
+        run: echo "Only documentation changed; site, worker and browser checks are not needed."
+      - uses: actions/setup-node@v4
+        if: steps.classify.outputs.kind == 'code'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Run unit and site smoke tests
+        if: steps.classify.outputs.kind == 'code'
+        run: npm ci && npm test
       - name: Restore Playwright browser cache
+        if: steps.classify.outputs.kind == 'code'
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
       - name: Install Playwright Chromium
+        if: steps.classify.outputs.kind == 'code'
         run: npx playwright install chromium
       - name: Run responsive browser checks
+        if: steps.classify.outputs.kind == 'code'
         env:
-          MATRIX_MODE: ${{ steps.browser-matrix.outputs.mode }}
+          MATRIX_MODE: ${{ steps.classify.outputs.mode }}
         run: |
           if [[ "$MATRIX_MODE" == "full" ]]; then
             npm run test:e2e:full
@@ -78,7 +96,7 @@ jobs:
             npm run test:e2e
           fi
       - name: Upload responsive screenshots
-        if: always()
+        if: always() && steps.classify.outputs.kind == 'code'
         uses: actions/upload-artifact@v4
         with:
           name: events-responsive-screenshots-${{ github.sha }}
