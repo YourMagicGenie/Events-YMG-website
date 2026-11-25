@@ -229,26 +229,44 @@ if (form) {
   let widgetId = null;
   let submitting = false;
   let validationFeedback = null;
+  let currentFeedback = { message: feedback.textContent, state: "", mail: false };
+
+  // Fallback states put a plain mailto link (no prefilled subject, body or
+  // visitor data) inside the status itself, so it can be tapped or tabbed to.
+  const contactEmail = "hello@ymgconsultingservices.com";
+  const renderFeedback = ({ message, state, mail }) => {
+    currentFeedback = { message, state, mail };
+    feedback.dataset.state = state;
+    if (!mail) {
+      feedback.textContent = message;
+      return;
+    }
+    const link = document.createElement("a");
+    link.className = "form-feedback-mail";
+    link.href = `mailto:${contactEmail}`;
+    link.textContent = contactEmail;
+    const at = message.indexOf(contactEmail);
+    if (at >= 0) feedback.replaceChildren(message.slice(0, at), link, message.slice(at + contactEmail.length));
+    else feedback.replaceChildren(`${message} `, link);
+  };
 
   const hasInvalidFields = () => Boolean(form.querySelector('[aria-invalid="true"]:not(:disabled)'));
-  const setFeedback = (message, state = "") => {
+  const setFeedback = (message, state = "", { mail = false } = {}) => {
     if (validationFeedback) {
-      validationFeedback = { message, state };
+      validationFeedback = { message, state, mail };
       if (hasInvalidFields()) return;
     }
-    feedback.textContent = message;
-    feedback.dataset.state = state;
+    renderFeedback({ message, state, mail });
   };
   const showInvalidFields = () => {
-    if (!validationFeedback) validationFeedback = { message: feedback.textContent, state: feedback.dataset.state || "" };
-    feedback.textContent = messages.invalidFields;
-    feedback.dataset.state = "error";
+    if (!validationFeedback) validationFeedback = currentFeedback;
+    renderFeedback({ message: messages.invalidFields, state: "error", mail: false });
   };
   const restoreFeedbackIfValid = () => {
     if (hasInvalidFields() || !validationFeedback) return;
     const previous = validationFeedback;
     validationFeedback = null;
-    setFeedback(previous.message, previous.state);
+    setFeedback(previous.message, previous.state, { mail: previous.mail });
   };
   const updateFieldValidity = event => {
     const control = event.target;
@@ -270,10 +288,15 @@ if (form) {
     restoreFeedbackIfValid();
   });
 
-  const loadTurnstile = () => new Promise((resolve, reject) => {
+  const loadTurnstile = (timeoutMs = 20000) => new Promise((resolve, reject) => {
     if (window.turnstile) return resolve(window.turnstile);
     const callbackName = "ymgEventsTurnstileLoaded";
+    const timer = setTimeout(() => {
+      delete window[callbackName];
+      reject(new Error(messages.turnstileLoadError));
+    }, timeoutMs);
     window[callbackName] = () => {
+      clearTimeout(timer);
       delete window[callbackName];
       resolve(window.turnstile);
     };
@@ -282,6 +305,7 @@ if (form) {
     script.async = true;
     script.defer = true;
     script.onerror = () => {
+      clearTimeout(timer);
       delete window[callbackName];
       reject(new Error(messages.turnstileLoadError));
     };
@@ -292,6 +316,7 @@ if (form) {
     try {
       const response = await fetch("/api/events/config", {
         method: "GET", credentials: "same-origin", cache: "no-store",
+        signal: AbortSignal.timeout(15000),
         headers: { Accept: "application/json" },
       });
       const config = await response.json();
@@ -321,13 +346,13 @@ if (form) {
           showVerification(true);
           challengeReady = false;
           submit.disabled = true;
-          setFeedback(messages.turnstileError, "error");
+          setFeedback(messages.turnstileError, "error", { mail: true });
         },
       });
     } catch {
       challengeReady = false;
       submit.disabled = true;
-      setFeedback(messages.formUnavailable, "error");
+      setFeedback(messages.formUnavailable, "error", { mail: true });
     }
   };
 
@@ -348,7 +373,7 @@ if (form) {
       await sendEventsInquiry(new FormData(form), turnstileToken);
       setFeedback(messages.accepted, "success");
     } catch {
-      setFeedback(messages.failed, "error");
+      setFeedback(messages.failed, "error", { mail: true });
     } finally {
       submitting = false;
       form.removeAttribute("aria-busy");

@@ -623,6 +623,9 @@ test("inquiry form collects reply email and submits inline through the Worker", 
   assert.match(html, /id="form-feedback"[^>]*aria-live="polite"/);
   assert.match(html, /href="mailto:hello@ymgconsultingservices\.com"/);
   assert.doesNotMatch(html, /Open email app|Prepare my inquiry email|Nothing is sent until you send/);
+  for (const page of [html, italianHtml]) {
+    assert.match(page, /id="form-feedback"[^>]*>[^<]*<\/p><noscript><p class="form-noscript">[^<]+<a href="mailto:hello@ymgconsultingservices\.com">/, "script-disabled visitors get an email path beside the status (#132)");
+  }
   const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
   assert.match(interactions, /sendEventsInquiry\(new FormData\(form\), turnstileToken\)/);
   assert.match(interactions, /submit\.disabled = true/);
