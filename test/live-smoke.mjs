@@ -99,7 +99,7 @@ async function main() {
       const retry = Date.now() + 15000 <= deadline;
       console.error(`Attempt ${attempt} failed: ${error.message}${retry ? ' — retrying in 15 s' : ''}`);
       if (!retry) {
-        console.error(`LIVE SMOKE FAILED for ${origin}. The deployment is live; check it and roll back if needed (docs/CLOUDFLARE-AUTO-PUBLISH.md).`);
+        console.error(`LIVE SMOKE FAILED for ${origin}. The deployment is live; check it and roll back if needed (deploy/README.md, "Release verification and rollback").`);
         process.exitCode = 1;
         return;
       }
