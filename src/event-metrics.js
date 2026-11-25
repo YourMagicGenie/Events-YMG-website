@@ -4,8 +4,9 @@ const EVENTS = new Set([
   "concept_interest",
   "inquiry_attempt",
   "inquiry_failure",
+  "inquiry_outage",
+  "intake_not_ready",
   "relay_accepted",
-  "relay_failure",
 ]);
 const LOCALES = new Set(["en", "it"]);
 const SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "inquire"]);
@@ -20,13 +21,31 @@ const FORMATS = new Set([
   "Wine pairing",
   "Corporate Social",
 ]);
-const FAILURE_CATEGORIES = new Set([
-  "service_unavailable",
+// Inquiry outcome taxonomy (#129). Each valid inquiry attempt ends in exactly
+// one of: relay_accepted, inquiry_failure (an expected visitor-side
+// rejection) or inquiry_outage (a dependency or upstream failure; the alert
+// counts these). intake_not_ready is a readiness signal from the config
+// endpoint, written before any attempt exists.
+export const REJECTION_CATEGORIES = new Set([
   "rate_limited",
-  "turnstile_unavailable",
   "turnstile_rejected",
-  "relay_failure",
+  "intake_rejected",
 ]);
+export const OUTAGE_CATEGORIES = new Set([
+  "config_unavailable",
+  "limiter_unavailable",
+  "turnstile_unavailable",
+  "upstream_error",
+  "upstream_timeout",
+  "upstream_unavailable",
+]);
+const READINESS_CATEGORIES = new Set([
+  "config_unavailable",
+  "upstream_error",
+  "upstream_timeout",
+  "upstream_unavailable",
+]);
+const FAILURE_CATEGORIES = new Set([...REJECTION_CATEGORIES, ...OUTAGE_CATEGORIES]);
 const EMPTY = "";
 
 export function eventsMetricsEnabled(env) {
@@ -51,8 +70,10 @@ function normalizeMetric(event, dimensions = {}) {
   if (event === "section_view" && !SECTIONS.has(section)) return null;
   if (event === "concept_interest" && (!INTENTS.has(intent) || !FORMATS.has(format))) return null;
   if (["inquiry_attempt", "relay_accepted"].includes(event) && !INTENTS.has(intent)) return null;
-  if (["inquiry_failure", "relay_failure"].includes(event) &&
-      (!INTENTS.has(intent) || !FAILURE_CATEGORIES.has(category))) return null;
+  if (event === "inquiry_failure" && (!INTENTS.has(intent) || !REJECTION_CATEGORIES.has(category))) return null;
+  if (event === "inquiry_outage" && (!INTENTS.has(intent) || !OUTAGE_CATEGORIES.has(category))) return null;
+  if (event === "intake_not_ready" && (intent || format || !READINESS_CATEGORIES.has(category))) return null;
+  if (!["inquiry_failure", "inquiry_outage", "intake_not_ready"].includes(event) && category) return null;
 
   return { locale, section, intent, format, category };
 }

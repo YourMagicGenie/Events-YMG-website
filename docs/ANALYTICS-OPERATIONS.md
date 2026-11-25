@@ -22,13 +22,61 @@ by the Cloudflare rate-limiter and is not included in the analytics point.
 | `section_view` | A named main section reached at least 25% visibility, once per page load | locale, fixed section ID |
 | `concept_interest` | A visitor selected an event concept | locale, fixed inquiry intent, fixed event format |
 | `inquiry_attempt` | A valid, non-honeypot form payload reached the Worker | locale, fixed inquiry intent and format |
-| `inquiry_failure` | A valid inquiry could not proceed | locale, intent, format, fixed failure category |
-| `relay_accepted` | Google Apps Script returned an affirmative acceptance response | locale, intent, format |
-| `relay_failure` | The relay did not return an affirmative acceptance response | locale, intent, format, `relay_failure` category |
+| `inquiry_failure` | An expected visitor-side rejection of a valid inquiry | locale, intent, format, rejection category |
+| `inquiry_outage` | A dependency or upstream failure stopped a valid inquiry (**the alert counts this**) | locale, intent, format, outage category |
+| `relay_accepted` | The production Science intake (HTTP 202 `ok:true`) or the direct Apps Script relay (`ok:true`) accepted the inquiry | locale, intent, format |
+| `intake_not_ready` | `/api/events/config` could not offer the form, so no inquiry attempt can happen (**the alert counts this**) | `en` placeholder locale, readiness category |
 
 Each point has `double1 = 1`. Worker code never records a `delivered` event:
 the relay response cannot prove final mailbox receipt. The relay-success label
 means **accepted**, not delivered or confirmed.
+
+### Inquiry outcome taxonomy (#129)
+
+Every `inquiry_attempt` is followed by **exactly one** outcome point:
+`relay_accepted`, `inquiry_failure` or `inquiry_outage`. The same categories are
+used on the production Science path and on the direct-relay fallback, so a
+failure is never counted twice. The category is in `blob5`.
+
+| Event | Category | Production Science path | Direct-relay path |
+| --- | --- | --- | --- |
+| `inquiry_failure` | `rate_limited` | Events limiter refused, or Science answered 429 | Events limiter refused |
+| `inquiry_failure` | `turnstile_rejected` | Science answered 403 | siteverify said no, or wrong hostname/action |
+| `inquiry_failure` | `intake_rejected` | Science answered 400 | — |
+| `inquiry_outage` | `config_unavailable` | Binding or limiter missing; no `cf-connecting-ip` | Turnstile keys, relay URL/secret or limiter missing; no `cf-connecting-ip` |
+| `inquiry_outage` | `limiter_unavailable` | The Events limiter threw | Same |
+| `inquiry_outage` | `turnstile_unavailable` | — (Science verifies) | siteverify unreachable, timed out or non-2xx |
+| `inquiry_outage` | `upstream_error` | Science answered 5xx, another status, or a non-JSON or non-`ok` body | Relay answered non-2xx, non-JSON or not `ok:true` |
+| `inquiry_outage` | `upstream_timeout` | The 25 s binding timeout fired | The 20 s relay timeout fired |
+| `inquiry_outage` | `upstream_unavailable` | The binding threw (network, missing target) | The relay fetch threw |
+
+`intake_not_ready` uses `config_unavailable`, `upstream_error`,
+`upstream_timeout` or `upstream_unavailable` with the same meanings for the
+Science `/api/assessment/config` call. The retired `relay_failure` event and the
+old `service_unavailable` and `relay_failure` categories are no longer written;
+points recorded before #129 keep them until Analytics Engine deletes them after
+three months.
+
+### Health endpoint
+
+`GET /api/events/health` is read-only, `no-store`, and writes no analytics. It
+answers HTTP 200 only when all three checks pass, otherwise 503:
+
+```json
+{ "ok": true, "checks": { "intake": "ok", "limiter": "ok", "metrics": "ok" } }
+```
+
+`intake` is `ok`, `not_configured` or a readiness category; `limiter` is `ok` or
+`missing`; `metrics` is `ok`, `disabled` (flag off) or `unavailable` (flag on but
+the dataset or limiter binding is missing). It contains no keys, secrets, URLs or
+visitor data. The **Production health** GitHub workflow
+(`.github/workflows/production-health.yml`) calls it hourly at minute 23 with
+`test/live-health.mjs`, and also requires `metrics: "ok"`. Because it runs outside
+Cloudflare, it fails even when the Analytics Engine monitor cannot fire.
+GitHub emails a failed scheduled run to the account that last changed the cron.
+GitHub also disables schedules after 60 days without repository activity;
+re-enable the workflow under **Actions** if that happens. `deploy:auto` checks the
+same endpoint after each production deploy.
 
 Analytics Engine stores points for three months and does not provide a shorter
 per-dataset retention setting. If that retention is not approved, leave the
@@ -66,27 +114,40 @@ Complete these steps only after #9 privacy review:
    SELECT SUM(double1) AS value
    FROM events.analyticsEngine.events_metrics
    WHERE accountTag = '<ACCOUNT_ID>'
-     AND index1 = 'relay_failure'
+     AND (index1 = 'inquiry_outage' OR index1 = 'intake_not_ready')
    ```
 
    Trigger when the result is **≥ 1**, average over **1m**, run every
    **Automatic**, repeat notification after **1h**, and send to the owner's
-   email destination only. Relay failures are rare on this low-volume site, so
+   email destination only. Outages are rare on this low-volume site, so
    any failure is worth one email; the hourly repeat limit prevents floods. The
    Worker still shows visitors a retry message and the direct-email fallback.
+   Visitor-side rejections (`inquiry_failure`) are deliberately not counted.
+   To see which dependency failed, group the same query by `blob5` in the SQL
+   API. **Until #129 the monitor counted `index1 = 'relay_failure'`**, which the
+   production Science path never wrote, so it could not fire for production
+   intake failures. Update the existing monitor's query to the one above.
 5. Verify the alert path without breaking the live relay: temporarily change
-   the monitor's `index1 = 'relay_failure'` to `index1 = 'page_view'` and the
-   threshold to **≥ 1**, open the site once, confirm the email arrives, then
+   the monitor's condition to `index1 = 'page_view'` with the
+   threshold **≥ 1**, open the site once, confirm the email arrives, then
    restore the query and threshold. This proves monitor → email delivery; the
-   relay-failure counter itself is covered by `test/form-handler.test.mjs`.
-   Record the real result on issue #30. Do not put customer data or inquiry
+   outage counters themselves are covered by `test/inquiry-alerting.test.mjs`.
+   Record the real result on the issue. Do not put customer data or inquiry
    content in alert names, labels, or notes.
+6. Separately, send one controlled inquiry from the live form with an inbox the
+   owner controls and confirm it arrives and that **Reply** addresses the
+   visitor's email (Reply-To). This is an owner-only check; the Worker cannot
+   observe mailbox delivery.
 
 ## Operational limits
 
 - A monitor based on this dataset cannot alert if analytics itself is disabled
-  or its binding is unavailable. Keep the feature disabled until the dataset,
-  account access and monitor have all been verified.
+  or its binding is unavailable, or if the Worker cannot run at all. The hourly
+  **Production health** workflow covers those cases independently, but it cannot
+  see a runtime write failure inside a bound dataset, and it notices a problem
+  only at the next hourly run.
+- `intake_not_ready` is written once per failed config request, so during an
+  outage its count follows page loads, not distinct visitors.
 - The fixed 30/minute metrics limiter is separate from the form submission
   limiter. Repeated refreshes or concept clicks can be sampled out by the
   limiter; these metrics are directional counts, not billing records.

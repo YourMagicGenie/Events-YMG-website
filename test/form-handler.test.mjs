@@ -182,7 +182,7 @@ test("subject removes header controls from sender name and event format", () => 
   );
 });
 
-test("aggregate form metrics distinguish a relay acceptance from a relay failure without PII", async () => {
+test("aggregate form metrics distinguish a relay acceptance from a relay outage without PII", async () => {
   const points = [];
   const metricsEnv = {
     ...env,
@@ -206,7 +206,7 @@ test("aggregate form metrics distinguish a relay acceptance from a relay failure
       ? Response.json({ success: true, hostname: "events.ymgconsultingservices.com", action: "events_inquiry" })
       : new Response("unavailable", { status: 503 }));
   assert.equal(failed.status, 503);
-  assert.deepEqual(points.map(point => point.indexes[0]), ["inquiry_attempt", "inquiry_failure", "relay_failure"]);
-  assert.equal(points[1].blobs[4], "relay_failure");
+  assert.deepEqual(points.map(point => point.indexes[0]), ["inquiry_attempt", "inquiry_outage"]);
+  assert.equal(points[1].blobs[4], "upstream_error");
   assert.doesNotMatch(JSON.stringify(points), /Jane Doe|jane@example\.org|Terrace Genova|198\.51\.100\.24|sunset event|€2000/);
 });

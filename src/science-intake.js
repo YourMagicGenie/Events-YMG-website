@@ -2,14 +2,25 @@
 const EVENTS_ORIGIN = 'https://events.ymgconsultingservices.com';
 export const hasScienceIntake = env => typeof env.SCIENCE_INTAKE?.fetch === 'function';
 
+// A timeout is reported separately from other network or binding errors (#129).
+export const upstreamErrorCategory = error => error?.name === 'TimeoutError' ? 'upstream_timeout' : 'upstream_unavailable';
+
+const readJson = async response => { try { return await response.json(); } catch { return null; } };
+
+/** Resolves to { config } when Science is ready, otherwise { category } naming what failed. Never throws. */
 export async function scienceConfiguration(request, env) {
-  if (new URL(request.url).origin !== EVENTS_ORIGIN) return null;
-  const response = await env.SCIENCE_INTAKE.fetch(new Request(`${EVENTS_ORIGIN}/api/assessment/config`, {
-    headers: { accept: 'application/json' }, signal: AbortSignal.timeout(5000),
-  }));
-  const result = response.ok ? await response.json() : null;
+  if (new URL(request.url).origin !== EVENTS_ORIGIN) return { category: 'config_unavailable' };
+  let response;
+  try {
+    response = await env.SCIENCE_INTAKE.fetch(new Request(`${EVENTS_ORIGIN}/api/assessment/config`, {
+      headers: { accept: 'application/json' }, signal: AbortSignal.timeout(5000),
+    }));
+  } catch (error) {
+    return { category: upstreamErrorCategory(error) };
+  }
+  const result = response.ok ? await readJson(response) : null;
   return result?.ready === true && typeof result.siteKey === 'string' && result.siteKey.length <= 200
-    ? { ready: true, siteKey: result.siteKey, action: 'assessment' } : null;
+    ? { config: { ready: true, siteKey: result.siteKey, action: 'assessment' } } : { category: 'upstream_error' };
 }
 
 export async function submitThroughScience(request, env, fields) {
@@ -28,10 +39,15 @@ export async function submitThroughScience(request, env, fields) {
   });
   // Host and Origin remain Events so Science verifies the token's exact frontend
   // hostname. The binding chooses the target Worker; the URL does not route publicly.
-  const response = await env.SCIENCE_INTAKE.fetch(new Request(`${EVENTS_ORIGIN}/api/assessment`, {
-    method: 'POST', headers: { origin: EVENTS_ORIGIN, 'content-type': 'application/x-www-form-urlencoded' },
-    body, signal: AbortSignal.timeout(25000),
-  }));
-  const result = await response.json();
+  let response;
+  try {
+    response = await env.SCIENCE_INTAKE.fetch(new Request(`${EVENTS_ORIGIN}/api/assessment`, {
+      method: 'POST', headers: { origin: EVENTS_ORIGIN, 'content-type': 'application/x-www-form-urlencoded' },
+      body, signal: AbortSignal.timeout(25000),
+    }));
+  } catch (error) {
+    return { accepted: false, status: 0, category: upstreamErrorCategory(error) };
+  }
+  const result = await readJson(response);
   return { accepted: response.status === 202 && result?.ok === true, status: response.status };
 }

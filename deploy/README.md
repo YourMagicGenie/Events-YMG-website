@@ -41,6 +41,7 @@ npx wrangler deployments list --config wrangler.production.json
 - the EN/IT home, privacy, robots, sitemap and key assets return 200 with security headers, and real 404s for unknown EN/IT pages and API paths;
 - `/` links the English guide and `/it/` the Italian guide, and both served PDFs are byte-identical to this release's `dist/downloads/`;
 - `/api/events/config` answers HTTP 200 with `ready: true` and a site key (`--allow-intake-disabled` exists only for previews without form secrets);
+- `/api/events/health` answers HTTP 200 with intake, submission limiter and metrics all `ok`, so a release that drops a binding fails here. The **Production health** workflow repeats this check every hour (`node test/live-health.mjs`; see `docs/ANALYTICS-OPERATIONS.md`);
 - `HEAD /` returns 200 with no body.
 
 If any check still fails when the wait runs out, the command exits non-zero, so the Cloudflare build is marked **failed** (visible in Workers & Pages → ymg-events-website → Deployments and on the merge commit's Cloudflare status). The new version is already serving at that point: inspect the failure in the build log and either roll back or ship a corrective PR. Run the same check by hand with:

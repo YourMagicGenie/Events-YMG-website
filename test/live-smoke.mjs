@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { checkLiveHealth } from './live-health.mjs';
 
 const siteRoot = new URL('../dist/', import.meta.url);
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -72,6 +73,8 @@ export async function runLiveSmoke({ origin, fetcher = fetch, allowIntakeDisable
     assert.equal(body?.ready, true, '/api/events/config: ready is not true');
     assert.ok(body?.siteKey, '/api/events/config: no Turnstile site key');
     log('Inquiry intake ready: true (mailbox delivery is not tested here).');
+    // The dependency report the hourly health workflow checks (#129).
+    await checkLiveHealth({ origin: base.href, fetcher, log });
   }
 
   const head = await read('/', { method: 'HEAD' });
