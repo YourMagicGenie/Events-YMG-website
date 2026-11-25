@@ -17,7 +17,7 @@ test('production and isolated preview have explicit separate deployment targets'
   assert.deepEqual(production.ratelimits.find(binding => binding.name === 'EVENTS_METRICS_LIMITER')?.simple, { limit: 30, period: 60 });
   assert.equal(production.observability.enabled, false);
   assert.ok(production.ratelimits.every(binding => !preview.ratelimits.some(other => other.namespace_id === binding.namespace_id)));
-  assert.equal(pkg.scripts['deploy:auto'], 'wrangler deploy --config wrangler.production.json');
+  assert.equal(pkg.scripts['deploy:auto'], 'wrangler deploy --config wrangler.production.json && node test/live-smoke.mjs --origin https://events.ymgconsultingservices.com/ --wait 240');
   assert.equal(pkg.scripts['deploy:preview'], 'wrangler deploy --config wrangler.json');
   assert.equal(pkg.scripts.build, 'npm test');
   assert.match(pkg.devDependencies.wrangler, /^\d+\.\d+\.\d+$/);

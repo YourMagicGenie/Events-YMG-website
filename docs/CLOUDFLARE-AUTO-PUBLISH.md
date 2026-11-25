@@ -23,7 +23,7 @@ The first checked merge (#72) triggered an automatic production build and deploy
 | Production branch | `main` |
 | Root | `/` |
 | Build command | `npm run build` (buildless site; validates unit/site tests) |
-| Deploy command | `npm run deploy:auto` |
+| Deploy command | `npm run deploy:auto` (upload, then the bounded read-only live smoke; see [release verification](../deploy/README.md#release-verification-and-rollback)) |
 | Production config | `wrangler.production.json` |
 | Static output | `dist/` |
 | Domain | `events.ymgconsultingservices.com` |
