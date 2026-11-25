@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, statSync } from 'node:fs';
-import { runLiveSmoke, guides } from './live-smoke.mjs';
+import { runLiveSmoke, guides, releaseAssets } from './live-smoke.mjs';
 
 const dist = new URL('../dist/', import.meta.url);
 const secure = { 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'content-security-policy': "default-src 'self'" };
@@ -32,6 +32,19 @@ test('live smoke compares each guide with the deployed dist bytes, not an archiv
   const stale = () => new Response('old bytes', { headers: { ...secure, 'content-type': 'application/pdf' } });
   await assert.rejects(run({ fetcher: fakeSite({ '/downloads/ymg-events-collaborazioni-location-it.pdf': stale }) }), /live bytes differ/);
   await assert.rejects(run({ fetcher: fakeSite({ '/downloads/ymg-events-venue-partnerships-en.pdf': stale }) }), /live bytes differ/);
+});
+
+test('live smoke compares every page script, stylesheet and imported module with dist bytes (#141)', async () => {
+  const assets = releaseAssets();
+  for (const expected of ['/assets/site-interactions.js', '/assets/inquiry-client.js', '/assets/i18n.js', '/assets/metrics-client.js', '/assets/legibility.css', '/assets/footer.css']) {
+    assert.ok(assets.includes(expected), `${expected} missing from ${assets.join(', ')}`);
+  }
+  for (const path of assets) assert.ok(existsSync(new URL(path.slice(1), dist)), path);
+  const stale = () => new Response('/* old build */', { headers: secure });
+  await assert.rejects(run({ fetcher: fakeSite({ '/assets/i18n.js': stale }) }), /\/assets\/i18n\.js: live bytes differ/);
+  await assert.rejects(run({ fetcher: fakeSite({ '/assets/footer.css': stale }) }), /\/assets\/footer\.css: live bytes differ/);
+  const missing = () => new Response('gone', { status: 404, headers: secure });
+  await assert.rejects(run({ fetcher: fakeSite({ '/assets/legibility.css': missing }) }), /legibility\.css: HTTP 404/);
 });
 
 test('each homepage must link its own guide', async () => {

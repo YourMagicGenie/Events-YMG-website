@@ -40,6 +40,7 @@ npx wrangler deployments list --config wrangler.production.json
 
 - the EN/IT home, privacy, robots, sitemap and key assets return 200 with security headers, and real 404s for unknown EN/IT pages and API paths;
 - `/` links the English guide and `/it/` the Italian guide, and both served PDFs are byte-identical to this release's `dist/downloads/`;
+- every same-origin script and stylesheet on both homepages and both privacy pages, plus the relative modules those scripts import, matches this release's `dist/` copy (line endings normalized), so a partial asset rollout or a stale edge copy fails the release (#141);
 - `/api/events/config` answers HTTP 200 with `ready: true` and a site key (`--allow-intake-disabled` exists only for previews without form secrets);
 - `/api/events/health` answers HTTP 200 with intake, submission limiter and metrics all `ok`, so a release that drops a binding fails here. The **Production health** workflow repeats this check every hour (`node test/live-health.mjs`; see `docs/ANALYTICS-OPERATIONS.md`);
 - `HEAD /` returns 200 with no body.
