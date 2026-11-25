@@ -24,6 +24,27 @@ export const guides = [
   { page: '/it/', path: '/downloads/ymg-events-collaborazioni-location-it.pdf' },
 ];
 
+// Every same-origin script and stylesheet a page loads, plus the relative
+// modules those scripts import, read from this release's dist/ (#141). A
+// partial rollout or stale edge copy then fails the smoke, not just a stale PDF.
+export function releaseAssets(pages = ['/', '/it/', '/privacy', '/it/privacy']) {
+  const found = new Set();
+  const visit = (path, text, pattern) => {
+    for (const [, ref] of text.matchAll(pattern)) {
+      if (/^(?:[a-z]+:)?\/\//i.test(ref) || ref.startsWith('data:')) continue;
+      const resolved = new URL(ref, new URL(path, 'https://release.invalid/')).pathname;
+      if (found.has(resolved)) continue;
+      found.add(resolved);
+      if (resolved.endsWith('.js')) visit(resolved, readFileSync(new URL(resolved.slice(1), siteRoot), 'utf8'), /^\s*import\s[^'"]*?from\s*["']([^"']+)["']/gm);
+    }
+  };
+  for (const page of pages) {
+    const file = page.endsWith('/') ? `${page.slice(1)}index.html` : `${page.slice(1)}.html`;
+    visit(page, readFileSync(new URL(file, siteRoot), 'utf8'), /<(?:script\b[^>]*\bsrc|link\b[^>]*\brel="stylesheet"[^>]*\bhref)="([^"]+)"/g);
+  }
+  return [...found].sort();
+}
+
 const routes = [
   ['/', 200], ['/it/', 200], ['/privacy', 200], ['/it/privacy', 200],
   ['/robots.txt', 200], ['/sitemap.xml', 200],
@@ -62,6 +83,21 @@ export async function runLiveSmoke({ origin, fetcher = fetch, allowIntakeDisable
       log(`${response.status} ${path}`);
     }));
   }
+
+  const assets = releaseAssets();
+  assert.ok(assets.length > 0, 'no scripts or stylesheets found in dist pages');
+  for (let i = 0; i < assets.length; i += 4) {
+    await Promise.all(assets.slice(i, i + 4).map(async path => {
+      const response = await read(path);
+      assert.equal(response.status, 200, `${path}: HTTP ${response.status}, expected 200`);
+      // Text compares with LF line endings: a Windows checkout (autocrlf) builds
+      // CRLF copies, while Workers Builds deploys LF. Any other change still fails.
+      const lf = text => text.replace(/\r\n/g, '\n');
+      const expected = lf(readFileSync(new URL(path.slice(1), siteRoot), 'utf8'));
+      assert.equal(hash(lf(await response.text())), hash(expected), `${path}: live bytes differ from this release's dist${path}`);
+    }));
+  }
+  log(`${assets.length} scripts and stylesheets match this release's dist bytes`);
 
   const config = await read('/api/events/config', { headers: { Accept: 'application/json' } });
   let body = null;
