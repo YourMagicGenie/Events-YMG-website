@@ -36,3 +36,4 @@ Before matrix selection was added, GitHub Actions run [#78](https://github.com/Y
 ## Branch protection
 
 Checked on 25 November 2026 with `gh api repos/YourMagicGenie/Events-YMG-website/branches/main/protection`: classic branch protection on `main` requires the status check `test` from GitHub Actions (app 15368), with `strict: false`. #130 kept that context name, so the protection setting needed no edit and there was no ungated period.
+
