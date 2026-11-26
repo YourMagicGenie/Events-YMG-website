@@ -163,7 +163,7 @@ try {
         scrollWidth: document.documentElement.scrollWidth,
       };
     });
-    assert.equal(iconRendering.count, 11, `${width}px EN retains all 11 decorative CTA arrow icons`);
+    assert.equal(iconRendering.count, 14, `${width}px EN retains all 14 decorative CTA arrow icons`);
     assert.equal(iconRendering.unicodeArrowText, false, `${width}px never asks iOS to render a Unicode arrow emoji`);
     for (const [label, icon] of [["header", iconRendering.header], ["hero", iconRendering.hero]]) {
       assert.ok(icon && icon.width >= 17 && icon.width <= 19 && icon.height >= 17 && icon.height <= 19,
@@ -264,6 +264,7 @@ try {
         const captcha = document.querySelector("#turnstile-widget");
         return {
           messageWrapper: rect("#idea-label"),
+          offerHeight: document.querySelector(".offer-summary")?.getBoundingClientRect().height || 0,
           intent: rect("#intent"), name: rect("#name"), email: rect("#email"),
           intentAppearance: intentStyle.appearance,
           intentChevron: intentStyle.backgroundImage,
@@ -292,12 +293,12 @@ try {
       assert.ok(Math.abs(formGeometry.message.bottom - formGeometry.submit.bottom) <= 1,
         `08L and 08O must finish at the same rendered document Y: ${JSON.stringify(formGeometry)}`);
       assert.ok(Math.abs(formGeometry.submit.x - 86.4) <= 2 &&
-        Math.abs(formGeometry.submit.y - 3549) <= 4 &&
+        Math.abs(formGeometry.submit.y - formGeometry.offerHeight - 3549) <= 4 &&
         Math.abs(formGeometry.submit.w - 293) <= 1 &&
         Math.abs(formGeometry.submit.h - 72) <= 1,
         `08O must occupy 08M's former X86/Y3549 slot as W293/H72: ${JSON.stringify(formGeometry)}`);
       assert.ok(Math.abs(formGeometry.captcha.x - 86.4) <= 2 &&
-        Math.abs(formGeometry.captcha.y - 3634) <= 4 &&
+        Math.abs(formGeometry.captcha.y - formGeometry.offerHeight - 3634) <= 4 &&
         Math.abs(formGeometry.captcha.w - 320) <= 1,
         `08M must sit 85px below its former Y3549 position: ${JSON.stringify(formGeometry)}`);
       assert.ok(formGeometry.submit.bottom + 10 <= formGeometry.captcha.y &&
@@ -460,6 +461,7 @@ try {
             id, rect("#" + id)
           ])),
           founderTextPadding: parseFloat(getComputedStyle(document.querySelector(".about > div:nth-child(2)")).paddingTop),
+          offerHeight: document.querySelector(".offer-summary")?.getBoundingClientRect().height || 0,
           founderBiography: rect(".founder-bio"),
           founderSignature: rect(".about .signature"),
           founderParagraphs: [...document.querySelectorAll(".founder-bio p")].map(p => p.textContent),
@@ -483,7 +485,7 @@ try {
       assert.equal(compact.partnershipLastPaddingBottom, 0, "06F3 has no bottom padding");
       assert.ok(Math.abs(compact.partnershipPoints.bottom - compact.partnershipLast.bottom) <= 1,
         `06F list must finish at the last point\u0027s bottom: ${JSON.stringify(compact)}`);
-      assert.ok(Math.abs(compact.partnership.bottom - 2099) <= 5,
+      assert.ok(Math.abs(compact.partnership.bottom - compact.offerHeight - 2099) <= 5,
         `06 should end 40px earlier than its previous Y2139 baseline: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.founder.y - compact.partnership.bottom) <= 1,
         `07 must follow the shorter partnership section naturally: ${JSON.stringify(compact)}`);
@@ -510,7 +512,7 @@ try {
       }
       assert.ok(Math.abs(compact.founderTextPadding - 176) <= 0.25,
         `07D/07E column padding must be the prior 180px minus 4px at width 1280: ${JSON.stringify(compact)}`);
-      assert.ok(Math.abs(compact.founderBiography.y - 2327) <= 2,
+      assert.ok(Math.abs(compact.founderBiography.y - compact.offerHeight - 2327) <= 2,
         `07D biography must move 4px upward from browser-measured Y2331 without changing neighboring sections: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.controls.business.h - compact.controls.guests.h) <= 0.25 &&
         Math.abs(compact.controls.timing.h - compact.controls.format.h) <= 0.25 &&
@@ -928,7 +930,7 @@ try {
       assert.equal(await nav.isVisible(), false, `${width}px starts with the navigation disclosure closed`);
     } else {
       assert.ok(await nav.isVisible(), `${width}px keeps the desktop navigation visible`);
-      assert.ok(await page.getByRole("link", { name: "Inquire" }).isVisible(), `${width}px shows the short inquiry CTA`);
+      assert.ok(await page.getByRole("link", { name: "Inquire", exact: true }).isVisible(), `${width}px shows the short inquiry CTA`);
       assert.equal(await toggle.isVisible(), false, `${width}px hides the mobile menu control`);
       for (const name of ["Our approach", "Event concepts", "For your business"]) {
         assert.ok(await page.getByRole("link", { name }).isVisible(), `${width}px shows ${name}`);
@@ -1180,6 +1182,28 @@ try {
   assert.equal(await verification.locator("#submit-inquiry").isDisabled(), false, "a fresh verification re-enables retry after a failed send");
   await verification.close();
 
+  // #134: direct buyer routes in the homepage offer summary, keyboard-driven at phone width.
+  const offerRoutes = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await offerRoutes.route("https://fonts.googleapis.com/**", route => route.abort());
+  await offerRoutes.route("https://fonts.gstatic.com/**", route => route.abort());
+  for (const locale of ["", "/it/"]) {
+    for (const [intent, format] of [["venue_partnership", "Let’s explore a partnership"], ["corporate_event", "Corporate Social"], ["private_celebration", "Private celebrations"]]) {
+      await offerRoutes.goto(baseUrl + locale, { waitUntil: "load" });
+      const label = `${locale || "EN"} ${intent}`;
+      assert.equal(await offerRoutes.locator(".offer-route a[data-inquiry-intent]").count(), 3, `${label}: three direct buyer routes`);
+      assert.ok(await offerRoutes.locator(".offer-summary").evaluate(section => section.scrollWidth <= section.clientWidth), `${label}: summary fits 390px`);
+      const link = offerRoutes.locator(`.offer-route a[data-inquiry-intent="${intent}"]`);
+      assert.ok((await link.boundingBox()).height >= 44, `${label}: route has a comfortable touch target`);
+      await link.focus();
+      await offerRoutes.keyboard.press("Enter");
+      await offerRoutes.waitForFunction(() => location.hash === "#inquire");
+      assert.equal(await offerRoutes.locator("#intent").inputValue(), intent, `${label}: Enter preselects the inquiry type`);
+      assert.equal(await offerRoutes.locator("#format").inputValue(), format, `${label}: the type's default format follows`);
+    }
+  }
+  await offerRoutes.screenshot({ path: resolve(screenshotRoot, "offer-routes-it-390px.png"), fullPage: false });
+  await offerRoutes.close();
+
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.route("https://fonts.googleapis.com/**", route => route.abort());
   await mobile.route("https://fonts.gstatic.com/**", route => route.abort());
@@ -1322,7 +1346,7 @@ try {
     headerIntrinsic: document.querySelector(".header-cta svg.ui-arrow")?.getAttribute("width"),
     heroIntrinsic: document.querySelector(".hero-actions svg.ui-arrow")?.getAttribute("width"),
   }));
-  assert.equal(italianIcons.count, 11, "Italian CTA links also all use SVG, not iOS emoji glyphs");
+  assert.equal(italianIcons.count, 14, "Italian CTA links also all use SVG, not iOS emoji glyphs");
   assert.equal(italianIcons.noUnicodeEmoji, true);
   assert.equal(italianIcons.headerIntrinsic, "18", "Italian header arrow has explicit icon size even before CSS");
   assert.equal(italianIcons.heroIntrinsic, "18", "Italian hero arrow has explicit icon size even before CSS");
