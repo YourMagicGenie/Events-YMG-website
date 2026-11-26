@@ -368,8 +368,11 @@ try {
           conceptsPaddingBottom: parseFloat(getComputedStyle(document.querySelector(".concepts")).paddingBottom),
           descriptionLines: Math.round(paragraphHeight / paragraphLineHeight),
           overflow: document.documentElement.scrollWidth - window.innerWidth,
+          offerHeight: document.querySelector(".offer-summary")?.getBoundingClientRect().height || 0,
         };
       });
+      // Sections after the #134 offer summary keep their approved rhythm, shifted by its height.
+      const belowOffer = y => y - heroPosition.offerHeight;
       const expected = [
         ["01A Header wordmark", heroPosition.wordmark.y, 4],
         ["02A Hero eyebrow", heroPosition.eyebrow.y, 121],
@@ -381,17 +384,17 @@ try {
         ["02 Hero height", heroPosition.hero.height, 610],
         ["02D Hero inquiry", heroPosition.inquiryButton.y, 526],
         ["02E Audience line", heroPosition.audienceLine.y, 602],
-        ["04 Approach start", heroPosition.approach.y, 754],
+        ["04 Approach start", belowOffer(heroPosition.approach.y), 754],
         ["04 Approach height", heroPosition.approach.height, 176],
-        ["04C Approach description", heroPosition.approachCopy.y, 822],
-        ["05 Concepts start", heroPosition.concepts.y, 930],
+        ["04C Approach description", belowOffer(heroPosition.approachCopy.y), 822],
+        ["05 Concepts start", belowOffer(heroPosition.concepts.y), 930],
         ["05 Concepts height", heroPosition.concepts.height, 723],
-        ["05A Eyebrow", heroPosition.conceptsEyebrow.y, 953],
-        ["05B Heading", heroPosition.conceptsHeading.y, 986],
-        ["05C Carousel controls", heroPosition.carouselControls.y, 1002],
+        ["05A Eyebrow", belowOffer(heroPosition.conceptsEyebrow.y), 953],
+        ["05B Heading", belowOffer(heroPosition.conceptsHeading.y), 986],
+        ["05C Carousel controls", belowOffer(heroPosition.carouselControls.y), 1002],
         ["05C Carousel X", heroPosition.carouselControls.x, 1093],
         ["05C Carousel width", heroPosition.carouselControls.width, 110],
-        ["05D Carousel track", heroPosition.carouselTrack.y, 1056],
+        ["05D Carousel track", belowOffer(heroPosition.carouselTrack.y), 1056],
       ];
       for (const [label, actual, target] of expected) {
         assert.ok(Math.abs(actual - target) <= 5,
