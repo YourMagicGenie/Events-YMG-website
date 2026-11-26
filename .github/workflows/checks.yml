@@ -95,12 +95,17 @@ jobs:
           else
             npm run test:e2e
           fi
+      - name: Run hero contrast audit
+        if: steps.classify.outputs.kind == 'code'
+        run: npm run test:contrast
       - name: Upload responsive screenshots
         if: always() && steps.classify.outputs.kind == 'code'
         uses: actions/upload-artifact@v4
         with:
           name: events-responsive-screenshots-${{ github.sha }}
-          path: test-results/responsive/
+          path: |
+            test-results/responsive/
+            test-results/hero-contrast/
           if-no-files-found: ignore
           retention-days: 3
 

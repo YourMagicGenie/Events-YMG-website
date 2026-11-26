@@ -3,3 +3,5 @@
 .hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.94) 0%,rgba(9,22,22,.79) 32%,rgba(9,22,22,.24) 68%,rgba(9,22,22,.12) 100%)}
 @media(max-width:850px){.hero-atmosphere img{object-position:70% center}.hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.93),rgba(9,22,22,.58) 60%,rgba(9,22,22,.22))}}
 @media(max-width:540px){.hero-atmosphere img{object-position:68% center}.hero-atmosphere:after{background:linear-gradient(90deg,rgba(9,22,22,.86),rgba(9,22,22,.57))}}
+/* #135: a soft dark halo keeps hero copy at WCAG AA over the photo's bright patches (dahlias, candles) without cropping, re-framing or re-toning the owner-approved photo. Phones keep the #100 overlay as is. */
+@media(min-width:541px){.hero-copy>p,.hero .geo{text-shadow:0 0 2px rgba(9,22,22,.95),0 0 6px rgba(9,22,22,.9),0 0 12px rgba(9,22,22,.85),0 0 24px rgba(9,22,22,.7)}.hero h1 em{text-shadow:0 0 6px rgba(9,22,22,.75),0 0 24px rgba(9,22,22,.6)}}

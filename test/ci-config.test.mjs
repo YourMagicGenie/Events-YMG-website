@@ -29,7 +29,7 @@ test("one always-triggered workflow owns the single required test check (#130)",
   assert.match(workflow, /::error::Could not fetch base/, "a failed base fetch fails the check clearly");
   assert.match(workflow, /::error::Could not diff/, "a failed diff fails the check clearly");
   assert.match(workflow, /docs\/collateral\/\*\) kind=code/, "collateral sources are not treated as docs-only");
-  for (const step of ["Run unit and site smoke tests", "Install Playwright Chromium", "Run responsive browser checks"]) {
+  for (const step of ["Run unit and site smoke tests", "Install Playwright Chromium", "Run responsive browser checks", "Run hero contrast audit"]) {
     assert.ok(workflow.includes(`name: ${step}\n        if: steps.classify.outputs.kind == 'code'`), `${step} runs for code and mixed changes`);
   }
 });

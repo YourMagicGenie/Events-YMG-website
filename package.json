@@ -7,6 +7,7 @@
     "test:site": "node --test test/site-smoke.test.mjs",
     "test:e2e": "node test/browser-smoke.mjs",
     "test:e2e:full": "node test/browser-smoke.mjs --full-matrix",
+    "test:contrast": "node test/hero-contrast-audit.mjs",
     "audit:performance": "node test/performance-audit.mjs",
     "build": "npm test",
     "deploy:auto": "wrangler deploy --config wrangler.production.json && node test/live-smoke.mjs --origin https://events.ymgconsultingservices.com/ --wait 240",
