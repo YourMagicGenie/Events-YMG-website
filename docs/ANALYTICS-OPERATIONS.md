@@ -155,6 +155,7 @@ Complete these steps only after #9 privacy review:
   response. Use Cloudflare Worker error/status metrics as a separate check for
   runtime and HTTP failures.
 - No alert or metric is configured on the live Worker by this source change.
+  The monitor lives only in the Cloudflare dashboard; see the activation history.
 
 ## References
 
@@ -167,3 +168,4 @@ Complete these steps only after #9 privacy review:
 ## Activation history
 - 11 November 2026: kept disabled pending the owner's retention decision. The parent-zone automatic RUM injection was disabled for Events only through configuration rule 99bc03ac741e44ccab032c4d13e9b655; that stays separate from these counts.
 - 14 November 2026: owner approved activation and three-month retention; privacy notices updated in the same release. The relay-failure monitor (step 4) still has to be created and tested in the Cloudflare dashboard.
+- 26 November 2026 (#129): the monitor **YMG Events Custom SQL · Threshold monitor** was found still on the step 5 `page_view` test condition. A controlled page load produced one `page_view` point (value 1, at the ≥ 1 threshold) in the monitor preview. The monitor was then saved with `index1 = 'inquiry_outage' OR index1 = 'intake_not_ready'`, ≥ 1, average 1m, run every 1m, repeat 1h, email destination unchanged. The saved query omits the `accountTag` filter, as the dashboard-created original did, and the preview evaluates it correctly. The owner still has to confirm the test email arrived; Cloudflare shows no alert history page for monitors.
