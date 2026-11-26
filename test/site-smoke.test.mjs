@@ -16,7 +16,7 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
   for (const [id, selector] of [
     ["01A", "header .logo"],
     ["02B", ".hero h1"],
-    ["04", ".intro"],
+    ["05B2", ".concepts-intro"],
     ["05D1", "#concept-deck .concept:nth-child(1)"],
     ["07D", ".about .founder-bio"],
     ["08C", "#brief"],
@@ -28,6 +28,7 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
     assert.ok(reference.includes("| " + String.fromCharCode(96) + id + String.fromCharCode(96) + " |"), id + " appears in the human-readable catalog");
   }
   assert.ok(!inspector.includes('["08N",'), "08N retired from inspector");
+  assert.ok(!inspector.includes('["04",'), "04 retired with the removed approach section (26 Nov 2026)");
   assert.ok(inspector.includes('["08O", "Submit inquiry button"'), "08O remains a stable inspector reference");
   assert.ok(inspector.includes('event.preventDefault()'), "inspect mode intercepts accidental page activations");
   assert.ok(inspector.includes('navigator.clipboard.writeText'), "reference copying is opt-in on click");
@@ -42,9 +43,14 @@ test("opt-in measurement overlay and stable IDs exist for both localized homepag
 
 test("owner-approved English hero and Approach copy is exact and stays distinct from Italian", () => {
   assert.ok(html.includes('<div class="eyebrow">EVENT PRODUCTION · GENOVA, ITALY</div>'));
-  assert.ok(html.includes("YMG Events specializes in event management and coordination; bringing the setting, service, music, and guest accomodation together into one unified experience. We can craft the format to your vision."));
+  assert.ok(html.includes("YMG Events specializes in event management and coordination; bringing the setting, service, music, and guest accommodation together into one unified experience. We can craft the format to your vision."));
   assert.ok(!html.includes("VENUE PARTNERSHIPS · EVENT PRODUCTION"));
-  assert.ok(italianHtml.includes("Una serata che lascia il segno"), "Italian copy was not rewritten");
+  assert.ok(italianHtml.includes("YMG Events si occupa di organizzazione e produzione di eventi"), "Italian copy was not rewritten");
+  // 26 Nov 2026: the owner removed the "Beautifully hosted / Anything but quiet" section.
+  for (const page of [html, italianHtml]) {
+    assert.ok(!page.includes('id="approach"') && !page.includes("Anything but quiet") && !page.includes("tutt’altro che sottotono"));
+    assert.match(page, /<div class="heading-row"><h2>[^<]*<em>[^<]*<\/em><\/h2><p class="concepts-intro">YMG Events /);
+  }
 });
 
 test("partnership section uses the tighter desktop gutter in both locales", () => {
@@ -142,7 +148,7 @@ test("main page exposes mobile navigation and a direct inquiry control", () => {
   assert.match(html, /<nav class="primary-nav" id="primary-navigation" aria-label="Main navigation">/);
   assert.match(html, /class="menu-toggle"[^>]*aria-expanded="false"[^>]*aria-controls="primary-navigation"/);
   assert.match(html, /class="btn header-cta" href="#inquire"/);
-  for (const section of ["approach", "concepts", "partners", "inquire"]) {
+  for (const section of ["offer", "concepts", "partners", "inquire"]) {
     assert.ok(html.includes(`href="#${section}"`));
     assert.match(html, new RegExp(`id="${section}"`));
   }
@@ -838,7 +844,7 @@ test("homepage summarizes the offer and gives each buyer a direct inquiry route 
   ]) {
     const summary = page.match(/<section class="offer-summary" id="offer"[\s\S]*?<\/section>/)?.[0];
     assert.ok(summary, `${locale} publishes the offer summary`);
-    assert.ok(page.indexOf('class="hero-actions"') < page.indexOf('id="offer"') && page.indexOf('id="offer"') < page.indexOf('id="approach"'),
+    assert.ok(page.indexOf('class="hero-actions"') < page.indexOf('id="offer"') && page.indexOf('id="offer"') < page.indexOf('id="concepts"'),
       `${locale} summary sits right after the hero, before the carousel`);
     for (const intent of ["venue_partnership", "corporate_event", "private_celebration"]) {
       assert.ok(summary.includes(`<a href="#inquire" data-inquiry-intent="${intent}">`), `${locale} has a direct ${intent} route`);

@@ -20,13 +20,6 @@
   .photo-note { bottom: 25px; }
   .band { padding-top: 18px; padding-bottom: 18px; }
 
-  /* Similar breathing room on either side of visual section boundaries. */
-  .intro {
-    padding: var(--events-section-space) 6%;
-    gap: clamp(32px, 5vw, 80px);
-    align-items: start;
-  }
-  .intro p { margin-top: 7px; }
   .concepts { padding: 44px 6% 52px; }
   .heading-row { margin: 15px 0 23px; }
   .concept-deck { gap: 10px; }
@@ -92,7 +85,6 @@
 
 /* Preserve the established mobile hero and keep the condensed rhythm. */
 @media (max-width: 850px) {
-  .intro { padding-top: 48px; padding-bottom: 42px; }
   .concepts { padding-top: 32px; padding-bottom: 48px; }
   .heading-row { margin: 14px 0 23px; }
   .partnerships, .about { padding-top: 48px; padding-bottom: 48px; }
@@ -103,7 +95,6 @@
 }
 
 @media (max-width: 540px) {
-  .intro { padding-top: 40px; padding-bottom: 36px; }
   .concepts { padding-top: 32px; padding-bottom: 42px; }
   .partnerships, .about, .inquiry { padding-top: 42px; padding-bottom: 42px; }
   .inquiry { gap: 22px; }
@@ -162,11 +153,6 @@
     /* 02G was not in this round: compensate for shortened parent photo. */
     bottom: 39px;
   }
-  html[lang] .intro {
-    /* Top stays Y794; content moves up ~20px, height drops 39px. */
-    padding-top: calc(var(--events-section-space) - 20px);
-    padding-bottom: calc(var(--events-section-space) - 19px);
-  }
   html[lang] .concepts {
     /* Section starts at Approach's new end Y994; content also moves up 20px. */
     padding-top: 24px;
@@ -207,15 +193,6 @@
   html[lang] .hero-actions {
     /* Both 02D and following 02E move down 10px without moving 02B/02C. */
     margin-top: 34px;
-  }
-  html[lang] .intro {
-    /* 04 is now 24px shorter, in addition to the upstream -40px hero shift. */
-    padding-bottom: calc(var(--events-section-space) - 43px);
-  }
-  html[lang] .intro > div:nth-child(2) {
-    /* The paragraph's actual pre-offset top is Y792, so +30px places it at Y822. */
-    position: relative;
-    top: 30px;
   }
   html[lang] .concepts {
     /* Measured track height ~557px: bottom1613 + 40px -> section bottom1653. */
@@ -517,4 +494,36 @@
     letter-spacing: -3.5px;
     white-space: nowrap;
   }
+}
+
+/*
+ * 26 Nov 2026 owner request: the "Beautifully hosted / Anything but quiet"
+ * section (04) is removed. Its specialization paragraph now sits beside the
+ * "Aperitivo to after hours" heading, and the carousel moves up to follow the
+ * #134 offer summary. The 1280px offsets that tucked the carousel arrows into
+ * the heading row would now cover the paragraph, so the arrows return to
+ * normal flow above the track's right edge.
+ */
+.concepts .heading-row > .concepts-intro {
+  max-width: 560px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+@media (min-width: 851px) {
+  .concepts .heading-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: end;
+    gap: clamp(32px, 5vw, 80px);
+  }
+  .concepts .heading-row > h2 { margin: 0; }
+  .concepts .heading-row > .concepts-intro { justify-self: end; }
+}
+@media (min-width: 1200px) and (max-width: 1399px) {
+  /* #89 owner target kept: the section still ends 40px after the track. */
+  html[lang] .concepts { min-height: 0; padding-bottom: 40px; }
+  html[lang] .concepts .concept-deck { margin-bottom: 0; }
+  html[lang] .concepts .deck-toolbar,
+  html[lang] .concepts #concept-deck { transform: none; }
 }

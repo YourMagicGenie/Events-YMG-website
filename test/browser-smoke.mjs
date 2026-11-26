@@ -264,7 +264,8 @@ try {
         const captcha = document.querySelector("#turnstile-widget");
         return {
           messageWrapper: rect("#idea-label"),
-          offerHeight: document.querySelector(".offer-summary")?.getBoundingClientRect().height || 0,
+          // #134 added the offer summary and the 26 Nov change removed section 04; shift by the net move.
+          layoutShift: document.querySelector(".partnerships").getBoundingClientRect().top + window.scrollY - 1885,
           intent: rect("#intent"), name: rect("#name"), email: rect("#email"),
           intentAppearance: intentStyle.appearance,
           intentChevron: intentStyle.backgroundImage,
@@ -293,12 +294,12 @@ try {
       assert.ok(Math.abs(formGeometry.message.bottom - formGeometry.submit.bottom) <= 1,
         `08L and 08O must finish at the same rendered document Y: ${JSON.stringify(formGeometry)}`);
       assert.ok(Math.abs(formGeometry.submit.x - 86.4) <= 2 &&
-        Math.abs(formGeometry.submit.y - formGeometry.offerHeight - 3549) <= 4 &&
+        Math.abs(formGeometry.submit.y - formGeometry.layoutShift - 3549) <= 4 &&
         Math.abs(formGeometry.submit.w - 293) <= 1 &&
         Math.abs(formGeometry.submit.h - 72) <= 1,
         `08O must occupy 08M's former X86/Y3549 slot as W293/H72: ${JSON.stringify(formGeometry)}`);
       assert.ok(Math.abs(formGeometry.captcha.x - 86.4) <= 2 &&
-        Math.abs(formGeometry.captcha.y - formGeometry.offerHeight - 3634) <= 4 &&
+        Math.abs(formGeometry.captcha.y - formGeometry.layoutShift - 3634) <= 4 &&
         Math.abs(formGeometry.captcha.w - 320) <= 1,
         `08M must sit 85px below its former Y3549 position: ${JSON.stringify(formGeometry)}`);
       assert.ok(formGeometry.submit.bottom + 10 <= formGeometry.captcha.y &&
@@ -352,9 +353,8 @@ try {
           hero: bounds(".hero"),
           inquiryButton: bounds(".hero-actions .btn"),
           audienceLine: bounds(".hero .geo"),
-          approachCopy: bounds(".intro > div:nth-child(2) > p"),
-          approach: bounds(".intro"),
-          approachEyebrow: bounds(".intro .eyebrow"),
+          offer: bounds(".offer-summary"),
+          conceptsIntro: bounds(".concepts-intro"),
           concepts: bounds(".concepts"),
           conceptsEyebrow: bounds(".concepts > .eyebrow"),
           conceptsHeading: bounds(".concepts h2"),
@@ -362,8 +362,6 @@ try {
           carouselArrows: bounds(".deck-actions"),
           carouselTrack: bounds("#concept-deck"),
           firstCard: bounds("#concept-deck .concept"),
-          approachPaddingTop: parseFloat(getComputedStyle(document.querySelector(".intro")).paddingTop),
-          approachPaddingBottom: parseFloat(getComputedStyle(document.querySelector(".intro")).paddingBottom),
           conceptsPaddingTop: parseFloat(getComputedStyle(document.querySelector(".concepts")).paddingTop),
           conceptsPaddingBottom: parseFloat(getComputedStyle(document.querySelector(".concepts")).paddingBottom),
           descriptionLines: Math.round(paragraphHeight / paragraphLineHeight),
@@ -384,46 +382,42 @@ try {
         ["02 Hero height", heroPosition.hero.height, 610],
         ["02D Hero inquiry", heroPosition.inquiryButton.y, 526],
         ["02E Audience line", heroPosition.audienceLine.y, 602],
-        ["04 Approach start", belowOffer(heroPosition.approach.y), 754],
-        ["04 Approach height", heroPosition.approach.height, 176],
-        ["04C Approach description", belowOffer(heroPosition.approachCopy.y), 822],
-        ["05 Concepts start", belowOffer(heroPosition.concepts.y), 930],
-        ["05 Concepts height", heroPosition.concepts.height, 723],
-        ["05A Eyebrow", belowOffer(heroPosition.conceptsEyebrow.y), 953],
-        ["05B Heading", belowOffer(heroPosition.conceptsHeading.y), 986],
-        ["05C Carousel controls", belowOffer(heroPosition.carouselControls.y), 1002],
+        // 26 Nov 2026: section 04 was removed, so 05 starts where 04 used to (Y754 below the offer).
+        ["05 Concepts start", belowOffer(heroPosition.concepts.y), 754],
+        ["05 Concepts height", heroPosition.concepts.height, 806],
+        ["05A Eyebrow", belowOffer(heroPosition.conceptsEyebrow.y), 778],
+        ["05B Heading", belowOffer(heroPosition.conceptsHeading.y), 836],
+        ["05B2 Specialization copy", belowOffer(heroPosition.conceptsIntro.y), 810],
+        ["05C Carousel controls", belowOffer(heroPosition.carouselControls.y), 909],
         ["05C Carousel X", heroPosition.carouselControls.x, 1093],
         ["05C Carousel width", heroPosition.carouselControls.width, 110],
-        ["05D Carousel track", belowOffer(heroPosition.carouselTrack.y), 1056],
+        ["05D Carousel track", belowOffer(heroPosition.carouselTrack.y), 963],
       ];
       for (const [label, actual, target] of expected) {
         assert.ok(Math.abs(actual - target) <= 5,
           `${label} 1280px should reach Y≈${target}±5px; actual=${actual}: ${JSON.stringify(heroPosition)}`);
       }
-      assert.ok(Math.abs(heroPosition.approach.y + heroPosition.approach.height - heroPosition.concepts.y) <= 1,
-        `04/05 sections should meet precisely: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.offer.y + heroPosition.offer.height - heroPosition.concepts.y) <= 1,
+        `the offer summary and 05 should meet precisely: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.photo.y + heroPosition.photo.height - 700) <= 2,
         `02F must end at Y700: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.carouselControls.x + heroPosition.carouselControls.width -
         (heroPosition.carouselTrack.x + heroPosition.carouselTrack.width)) <= 2,
         `05C right edge must align with 05D after +14px: ${JSON.stringify(heroPosition)}`);
-      assert.ok(heroPosition.carouselArrows.x >= heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
-        `05C arrows must sit to the right of 05B text, not cover it: ${JSON.stringify(heroPosition)}`);
-      assert.ok(Math.abs(heroPosition.approachPaddingTop - 31.2) <= 2 && Math.abs(heroPosition.approachPaddingBottom - 8.2) <= 2,
-        `04 removes roughly 20px from each padding: ${JSON.stringify(heroPosition)}`);
-      assert.ok(Math.abs(heroPosition.conceptsPaddingTop - 24) <= 1 && Math.abs(heroPosition.conceptsPaddingBottom - 32) <= 1,
-        `05 trims 20px from both paddings: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.conceptsIntro.x >= heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
+        `05B2 specialization copy sits beside the 05B heading: ${JSON.stringify(heroPosition)}`);
+      assert.ok(Math.abs(heroPosition.conceptsPaddingTop - 24) <= 1 && Math.abs(heroPosition.conceptsPaddingBottom - 40) <= 1,
+        `05 keeps its 24px top padding and ends 40px after the track: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.carouselTrack.y - heroPosition.firstCard.y) <= 6,
         `05D child cards move with parent track: ${JSON.stringify(heroPosition)}`);
       assert.ok(Math.abs(heroPosition.concepts.y + heroPosition.concepts.height -
         (heroPosition.carouselTrack.y + heroPosition.carouselTrack.height) - 40) <= 5,
         `05 section must end 40px after carousel track: ${JSON.stringify(heroPosition)}`);
-      assert.ok(heroPosition.approachCopy.y + heroPosition.approachCopy.height <=
-        heroPosition.conceptsEyebrow.y - 4,
-        `04C copy must clear 05A eyebrow after text revision: ${JSON.stringify(heroPosition)}`);
-      assert.ok(heroPosition.carouselControls.x >
-        heroPosition.conceptsHeading.x + heroPosition.conceptsHeading.width,
-        `narrow 05C controls cannot obstruct heading: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.conceptsIntro.y >= heroPosition.conceptsEyebrow.y + heroPosition.conceptsEyebrow.height,
+        `05B2 copy must clear the 05A eyebrow: ${JSON.stringify(heroPosition)}`);
+      assert.ok(heroPosition.carouselControls.y >= heroPosition.conceptsIntro.y + heroPosition.conceptsIntro.height &&
+        heroPosition.carouselControls.y >= heroPosition.conceptsHeading.y + heroPosition.conceptsHeading.height,
+        `05C controls cannot obstruct the heading or its copy: ${JSON.stringify(heroPosition)}`);
       assert.equal(heroPosition.descriptionLines, 2,
         `02C should occupy precisely two lines at 1280px: ${JSON.stringify(heroPosition)}`);
       assert.ok(heroPosition.description.width >= 600,
@@ -464,7 +458,8 @@ try {
             id, rect("#" + id)
           ])),
           founderTextPadding: parseFloat(getComputedStyle(document.querySelector(".about > div:nth-child(2)")).paddingTop),
-          offerHeight: document.querySelector(".offer-summary")?.getBoundingClientRect().height || 0,
+          // Net move from #134's offer summary and the 26 Nov removal of section 04.
+          layoutShift: document.querySelector(".partnerships").getBoundingClientRect().top + window.scrollY - 1653,
           founderBiography: rect(".founder-bio"),
           founderSignature: rect(".about .signature"),
           founderParagraphs: [...document.querySelectorAll(".founder-bio p")].map(p => p.textContent),
@@ -488,7 +483,7 @@ try {
       assert.equal(compact.partnershipLastPaddingBottom, 0, "06F3 has no bottom padding");
       assert.ok(Math.abs(compact.partnershipPoints.bottom - compact.partnershipLast.bottom) <= 1,
         `06F list must finish at the last point\u0027s bottom: ${JSON.stringify(compact)}`);
-      assert.ok(Math.abs(compact.partnership.bottom - compact.offerHeight - 2099) <= 5,
+      assert.ok(Math.abs(compact.partnership.bottom - compact.layoutShift - 2099) <= 5,
         `06 should end 40px earlier than its previous Y2139 baseline: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.founder.y - compact.partnership.bottom) <= 1,
         `07 must follow the shorter partnership section naturally: ${JSON.stringify(compact)}`);
@@ -515,7 +510,7 @@ try {
       }
       assert.ok(Math.abs(compact.founderTextPadding - 176) <= 0.25,
         `07D/07E column padding must be the prior 180px minus 4px at width 1280: ${JSON.stringify(compact)}`);
-      assert.ok(Math.abs(compact.founderBiography.y - compact.offerHeight - 2327) <= 2,
+      assert.ok(Math.abs(compact.founderBiography.y - compact.layoutShift - 2327) <= 2,
         `07D biography must move 4px upward from browser-measured Y2331 without changing neighboring sections: ${JSON.stringify(compact)}`);
       assert.ok(Math.abs(compact.controls.business.h - compact.controls.guests.h) <= 0.25 &&
         Math.abs(compact.controls.timing.h - compact.controls.format.h) <= 0.25 &&
@@ -590,7 +585,7 @@ try {
         };
         return {
           partnership: columns(".partnerships"),
-          adjacent: [columns(".intro").gap, columns(".about").gap],
+          adjacent: [columns(".concepts .heading-row").gap, columns(".about").gap],
         };
       });
       assert.ok(desktopGutters.partnership.gap >= 0 && desktopGutters.partnership.gap <= width * 0.07,
@@ -657,7 +652,7 @@ try {
       const size = selector => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
       return [
         ["body copy", size("body"), 15],
-        ["supporting copy", size(".intro p"), 14],
+        ["supporting copy", size(".concepts-intro"), 14],
         ["concept description", size(".concept p"), 14],
         ["concept number", size(".concept small"), 11],
         ["form label", size("label"), 13],
@@ -852,10 +847,10 @@ try {
       });
       const readings = [
         ["main copy", body.color, body.backgroundColor],
-        ["muted copy on paper", style(".intro p").color, body.backgroundColor],
+        ["muted copy on paper", style(".concepts-intro").color, body.backgroundColor],
         ["muted copy on warm ivory", style(".about p").color, style(".about").backgroundColor],
         ["conditional inquiry guidance", style(".field-help").color, inquiry.backgroundColor],
-        ["red section accent", style(".intro h2 em").color, body.backgroundColor],
+        ["red section accent", style(".concepts h2 em").color, body.backgroundColor],
         ["red section accent on warm ivory", style(".about h2 em").color, style(".about").backgroundColor],
         ["hero supporting copy", style(".hero p").color, hero.backgroundColor],
         ["hero eyebrow", style(".hero .eyebrow").color, hero.backgroundColor],
@@ -1072,8 +1067,8 @@ try {
   await measurements.setViewportSize({ width: 1440, height: 900 });
   await inspectorButtons.click();
   assert.equal(await inspectorButtons.getAttribute("aria-pressed"), "false", "normal interaction can be restored");
-  await measurements.locator('.primary-nav a[href="#approach"]').click();
-  assert.equal(new URL(measurements.url()).hash, "#approach",
+  await measurements.locator('.primary-nav a[href="#offer"]').click();
+  assert.equal(new URL(measurements.url()).hash, "#offer",
     "regular site navigation works after inspection is turned off");
   await overlay.locator('[data-action="close"]').click();
   assert.equal(await measurements.locator("#ymg-layout-inspector").count(), 0, "closing removes the inspector");
@@ -1215,7 +1210,7 @@ try {
   await menu.focus();
   await mobile.keyboard.press("Enter");
   assert.equal(await menu.getAttribute("aria-expanded"), "true", "keyboard opens the mobile navigation");
-  for (const [name, hash] of [["Our approach", "#approach"], ["Event concepts", "#concepts"], ["For your business", "#partners"]]) {
+  for (const [name, hash] of [["Our approach", "#offer"], ["Event concepts", "#concepts"], ["For your business", "#partners"]]) {
     assert.ok(await mobile.getByRole("link", { name }).isVisible(), `${name} is reachable from the menu`);
     assert.ok(await mobile.locator(hash).count(), `${hash} destination exists`);
   }
@@ -1605,7 +1600,7 @@ try {
   const expectedFocusOrder = [
     ".skip-link",
     ".logo",
-    "#primary-navigation a[href='#approach']",
+    "#primary-navigation a[href='#offer']",
     "#primary-navigation a[href='#concepts']",
     "#primary-navigation a[href='#partners']",
     "#language-switch",
