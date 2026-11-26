@@ -9,7 +9,7 @@ const EVENTS = new Set([
   "relay_accepted",
 ]);
 const LOCALES = new Set(["en", "it"]);
-const SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "inquire"]);
+const SECTIONS = new Set(["approach", "concepts", "offer", "partners", "venue-offer", "inquire"]);
 const INTENTS = new Set(["venue_partnership", "corporate_event", "private_celebration"]);
 const FORMATS = new Set([
   "Let’s explore a partnership",

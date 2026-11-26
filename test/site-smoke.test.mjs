@@ -123,7 +123,7 @@ test("bilingual footer gives visitors clear business contact, privacy and Atlas 
 
 test("all bilingual north-east CTA arrows are thin accessible SVGs, never iPhone emoji glyphs", () => {
   const css = readFileSync(new URL("../dist/assets/legibility.css", import.meta.url), "utf8");
-  for (const [page, expected, locale] of [[html, 11, "EN"], [italianHtml, 11, "IT"]]) {
+  for (const [page, expected, locale] of [[html, 14, "EN"], [italianHtml, 14, "IT"]]) {
     assert.equal((page.match(/<svg class="arrow ui-arrow"/g) || []).length, expected,
       `${locale} must convert every former Unicode arrow to a stable vector`);
     assert.doesNotMatch(page, /↗|&#x2197;|&#8599;/i, `${locale} must not use emoji-prone Unicode arrows`);
@@ -826,4 +826,31 @@ test("public English consistently uses American inquiry spelling", () => {
   for (const file of ["index.html", "it/index.html", "privacy.html", "it/privacy.html", "404.html", "it/404.html", "assets/i18n.js", "assets/site-interactions.js", "assets/inquiry-client.js"]) {
     assert.doesNotMatch(readFileSync(new URL(`../dist/${file}`, import.meta.url), "utf8"), /enquir/i, file);
   }
+});
+
+test("homepage summarizes the offer and gives each buyer a direct inquiry route (#134)", () => {
+  const css = readFileSync(new URL("../dist/assets/offer-summary.css", import.meta.url), "utf8");
+  const metrics = readFileSync(new URL("../dist/assets/metrics-client.js", import.meta.url), "utf8");
+  const server = readFileSync(new URL("../src/event-metrics.js", import.meta.url), "utf8");
+  for (const [page, locale, pdf, fitCall] of [
+    [html, "EN", "/downloads/ymg-events-venue-partnerships-en.pdf", "A free 15–20 minute fit call"],
+    [italianHtml, "IT", "/downloads/ymg-events-collaborazioni-location-it.pdf", "Una chiamata conoscitiva gratuita di 15-20 minuti"],
+  ]) {
+    const summary = page.match(/<section class="offer-summary" id="offer"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(summary, `${locale} publishes the offer summary`);
+    assert.ok(page.indexOf('class="hero-actions"') < page.indexOf('id="offer"') && page.indexOf('id="offer"') < page.indexOf('id="approach"'),
+      `${locale} summary sits right after the hero, before the carousel`);
+    for (const intent of ["venue_partnership", "corporate_event", "private_celebration"]) {
+      assert.ok(summary.includes(`<a href="#inquire" data-inquiry-intent="${intent}">`), `${locale} has a direct ${intent} route`);
+    }
+    assert.ok(summary.includes(fitCall), `${locale} states the next step from the guide`);
+    assert.equal((page.match(/<div class="hero-actions">[\s\S]*?<\/div>/)[0].match(/<a /g) || []).length, 1, `${locale} hero keeps its single general CTA`);
+    assert.ok(page.includes(`href="${pdf}"`), `${locale} keeps its localized PDF link`);
+    assert.ok(page.includes('href="/assets/offer-summary.css"'), `${locale} loads the summary styles`);
+    assert.doesNotMatch(summary, /€|\d[.,]\d{3}/, `${locale} summary does not repeat the fee bands`);
+  }
+  assert.doesNotMatch(html.match(/<section class="offer-summary"[\s\S]*?<\/section>/)[0], /enquir/i);
+  assert.match(css, /\.offer-routes \{ grid-template-columns: 1fr;/);
+  assert.match(metrics, /"offer"/);
+  assert.match(server, /"offer"/);
 });

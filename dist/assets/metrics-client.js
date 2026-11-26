@@ -1,4 +1,4 @@
-const ALLOWED_SECTIONS = new Set(["approach", "concepts", "partners", "venue-offer", "inquire"]);
+const ALLOWED_SECTIONS = new Set(["approach", "concepts", "offer", "partners", "venue-offer", "inquire"]);
 const ALLOWED_INTENTS = new Set(["venue_partnership", "corporate_event", "private_celebration"]);
 const ALLOWED_FORMATS = new Set([
   "Let’s explore a partnership",
