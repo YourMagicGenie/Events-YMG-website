@@ -32,6 +32,13 @@ header .logo { display: block; min-height: 44px; padding-block: 4px; }
 label { font-size: 13px; }
 #brief input:not([type="hidden"]),
 #brief select { min-height: 44px; }
+/* iOS Safari zooms the page when a focused field is under 16px (#136). */
+#brief input:not([type="hidden"]),
+#brief select,
+#brief textarea { font-size: 16px; }
+/* Keeps single-line fields at the 48px control height with the larger text. */
+#brief input:not([type="hidden"]),
+#brief select { line-height: 1.4; min-height: 48px; }
 #brief textarea { min-height: 75px; }
 .result { font-size: 14px; }
 .result pre { font-size: 13px; }

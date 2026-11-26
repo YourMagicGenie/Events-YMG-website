@@ -666,6 +666,13 @@ try {
       assert.ok(actual >= minimum, `${name} is ${actual}px at ${width}px; expected at least ${minimum}px`);
     }
 
+    // iOS Safari zooms into any focused field rendered under 16px (#136).
+    const fieldSizes = await page.$$eval('#brief input:not([type="hidden"]):not(#bot-field), #brief select, #brief textarea',
+      controls => controls.map(control => [control.id, Number.parseFloat(getComputedStyle(control).fontSize)]));
+    for (const [id, size] of fieldSizes) {
+      assert.ok(size >= 16, `#${id} is ${size}px at ${width}px; iOS Safari zooms fields under 16px`);
+    }
+
     const heroVisual = await page.evaluate(() => {
       const image = document.querySelector(".hero-atmosphere img");
       const hero = document.querySelector(".hero");

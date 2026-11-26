@@ -33,4 +33,4 @@ The hero uses a dark CSS gradient behind its light text; the contrast check uses
 
 ## Review limits
 
-Chromium emulates CSS viewport sizes; it does not replace testing on a physical phone. The mobile-handset review remains in issue #15. A screen-reader pass remains in issue #14 and requires the isolated preview tracked by issue #3.
+Chromium emulates CSS viewport sizes; it does not replace testing on a physical phone. The iPhone Safari and VoiceOver walkthrough is in `docs/IOS-VOICEOVER-CHECK.md` (#136). Inquiry fields use 16px text so iOS Safari does not zoom on focus.
