@@ -70,3 +70,19 @@ Claude proposed the edits below from a reading of the whole Italian site, the fo
 | Privacy §4 | Google fornisce posta e servizio di consegna. | Google fornisce la posta elettronica e il servizio di inoltro. |
 
 Declined or not marked: a shorter disabled-field placeholder (too long to read in the field), a rewording of the Turnstile "expired" message, "Data o periodo indicativo", and adding "…e coordiniamo chi lo realizza" to the guide subtitle. Form option values and API identifiers are unchanged. The privacy date stays 14 November 2026, because these edits reword the notice without changing what it says.
+
+# Italian editorial pass (#102) — 27 November 2026
+
+Scope: the Italian copy added by #134 (offer band and buyer routes) and the `.concepts-intro` paragraph moved by #155. Claude proposed the edits below; the owner approved all seven before they were applied. This is still **not a review by a native Italian speaker**.
+
+| # | Where | Before | After | Why |
+|---|---|---|---|---|
+| P1 | Concepts intro | organizzazione e produzione di eventi | organizzazione e realizzazione di eventi | Matches the hero, footer and offer eyebrow |
+| P2 | Venue route | Una serata commissionata per il tuo pubblico | Una serata su commissione per il tuo pubblico | "commissionata" reads as a calque |
+| P3 | Venue route | con briefing per lo staff | con indicazioni chiare per il tuo staff | Avoids the Anglicism "briefing" |
+| P4 | Company CTA | Contattaci per un’azienda | Contattaci per un evento aziendale | The old wording was ambiguous |
+| P5 | Private route | un piano condiviso … qualcuno che gestisce la giornata | un piano che approvi tu … qualcuno che lo gestisca il giorno stesso | Clearer who decides and when |
+| P6 | Next step | Cosa succede dopo: | Come si procede: | More natural |
+| P7 | Offer intro | Spazio, ospitalità e intrattenimento diventano un piano concreto; poi coordiniamo le persone che lo realizzano. | Location, accoglienza e intrattenimento in un unico piano concreto; poi coordiniamo chi lo mette in pratica. | Less literal; echoes the band heading |
+
+Not changed: the venue partnership guide PDF still uses "Spazio, ospitalità…" and "Una serata commissionata…" in its own copy; it is a separate, owner-approved asset.

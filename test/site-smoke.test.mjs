@@ -45,7 +45,7 @@ test("owner-approved English hero and Approach copy is exact and stays distinct 
   assert.ok(html.includes('<div class="eyebrow">EVENT PRODUCTION · GENOVA, ITALY</div>'));
   assert.ok(html.includes("YMG Events specializes in event management and coordination; bringing the setting, service, music, and guest accommodation together into one unified experience. We can craft the format to your vision."));
   assert.ok(!html.includes("VENUE PARTNERSHIPS · EVENT PRODUCTION"));
-  assert.ok(italianHtml.includes("YMG Events si occupa di organizzazione e produzione di eventi"), "Italian copy was not rewritten");
+  assert.ok(italianHtml.includes("YMG Events si occupa di organizzazione e realizzazione di eventi"), "Italian copy was not rewritten");
   // 26 Nov 2026: the owner removed the "Beautifully hosted / Anything but quiet" section.
   for (const page of [html, italianHtml]) {
     assert.ok(!page.includes('id="approach"') && !page.includes("Anything but quiet") && !page.includes("tutt’altro che sottotono"));
