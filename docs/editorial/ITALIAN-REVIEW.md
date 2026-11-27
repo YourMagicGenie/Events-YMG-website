@@ -86,3 +86,14 @@ Scope: the Italian copy added by #134 (offer band and buyer routes) and the `.co
 | P7 | Offer intro | Spazio, ospitalità e intrattenimento diventano un piano concreto; poi coordiniamo le persone che lo realizzano. | Location, accoglienza e intrattenimento in un unico piano concreto; poi coordiniamo chi lo mette in pratica. | Less literal; echoes the band heading |
 
 Not changed: the venue partnership guide PDF still uses "Spazio, ospitalità…" and "Una serata commissionata…" in its own copy; it is a separate, owner-approved asset.
+
+# Search metadata (#137) — 27 November 2026
+
+The Italian homepage title, description, `og:` and `twitter:` text now reuse wording already on the page and approved in #102, so a native reader has nothing new to learn. Only the order of the words changed for search results.
+
+| Field | Before | Now | Source on the page |
+| --- | --- | --- | --- |
+| Title | YMG Events — Eventi a Genova | Organizzazione e realizzazione eventi a Genova — YMG Events | Offer band heading |
+| Description | Feste, serate ed eventi a Genova. Raccontaci cosa hai in mente. | Organizzazione e realizzazione eventi a Genova per location, aziende e privati: un unico piano, un unico referente e una chiamata conoscitiva gratuita. | Offer band, the three buyer routes and "Come si procede" |
+
+The share images and their alt text are unchanged: the alt text describes the words in the image, which still say "Eventi a Genova".
