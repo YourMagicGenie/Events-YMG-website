@@ -86,7 +86,7 @@ do not export them to a visitor-level system.
 
 ## Activation checklist
 
-Complete these steps only after #9 privacy review:
+*Completed:* steps 1–5 were done between 14 and 26 November 2026 (see the activation history). Keep the list as the procedure for recreating the dataset or monitor; step 6 stays an owner-only check.
 
 1. Update both privacy notices with the approved purpose, legal basis, data
    categories, Cloudflare recipient, three-month retention and any consent
@@ -154,8 +154,9 @@ Complete these steps only after #9 privacy review:
 - Analytics writes are best-effort and never block or change an inquiry
   response. Use Cloudflare Worker error/status metrics as a separate check for
   runtime and HTTP failures.
-- No alert or metric is configured on the live Worker by this source change.
-  The monitor lives only in the Cloudflare dashboard; see the activation history.
+- The monitor lives only in the Cloudflare dashboard, not in this repository;
+  see the activation history. The dataset binding and flag are in
+  `wrangler.production.json`.
 
 ## References
 

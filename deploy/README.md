@@ -6,7 +6,22 @@
 
 Cloudflare Workers Builds watches `main` in `YourMagicGenie/Events-YMG-website`, root `/`, runs `npm run build`, then `npm run deploy:auto`. The latter uses the pinned Wrangler and explicit `wrangler.production.json`. GitHub PR unit/site/browser checks must pass before merges. Builds repeats unit/site checks before upload; it does not independently wait for GitHub checks on arbitrary direct pushes.
 
-The current GitHub source has an inline form. It is deliberately unavailable without its Turnstile and relay runtime configuration, and offers direct email. A successful deployment is not a mailbox-delivery test. See #10 and docs/PRIVACY-DATA-FLOW.md.
+## Current production state
+
+Checked 27 November 2026 against the live domain and `npx wrangler deployments list --config wrangler.production.json`. Earlier sections below are dated evidence.
+
+| Area | Current state | Where it is defined or checked |
+| --- | --- | --- |
+| Active version | `cf56d3e5` at 100% when checked (rollback target `79810d97`); every merge creates a new one, so read the live value | `wrangler deployments list` |
+| Inquiry intake | Events Worker validates and rate-limits, then forwards over the `SCIENCE_INTAKE` service binding to `ymg-science-website`, which verifies Turnstile and relays to Google Workspace. No Turnstile secret or relay credential is set on Events. | `wrangler.production.json`, `src/science-intake.js`, [shared intake](../docs/SCIENCE-INTAKE.md) |
+| Public readiness signal | `/api/events/config` → 200 `ready: true` with a site key; `/api/events/health` → 200 with `intake`, `limiter` and `metrics` all `ok` | `test/live-smoke.mjs`, `test/live-health.mjs` |
+| Aggregate metrics | Enabled since 14 November 2026 (`EVENTS_METRICS_ENABLED`, `events_metrics` dataset, 30/minute limiter); `/api/events/metrics/config` → `enabled: true` | [analytics operations](../docs/ANALYTICS-OPERATIONS.md) |
+| Worker logs | `observability.enabled: false` in the production config, applied on every deploy | `wrangler.production.json` |
+| Previews | `wrangler.json` (`ymg-events-preview`) has no intake binding and metrics off. Version URLs of the production Worker have the binding, but the Science adapter accepts only the `events.ymgconsultingservices.com` origin, so they also report the form unavailable. | `src/science-intake.js` |
+| Alerting | Hourly **Production health** workflow (GitHub emails a failed run) and the Cloudflare monitor on `inquiry_outage` / `intake_not_ready`, tested 26 November 2026 | [analytics operations](../docs/ANALYTICS-OPERATIONS.md#health-endpoint), #129 |
+| Release and rollback | Owner-approved automatic release: a checked squash merge to `main` publishes; the agent or owner who merges records the rollback target and verifies the Cloudflare build | sections below |
+
+What these checks cannot show: mailbox receipt and Reply-To (owner-only check, #129), Science's own logging and retention settings, and provider account settings that have not been read from the dashboard. A successful deployment is not a mailbox-delivery test.
 
 The original live bundle is a generated standalone `deploy/cloudflare-worker.mjs` in the Sites-managed source. It is **not** copied as a second editable source of truth. That launch history no longer describes the active deployment path. Current releases package `src/worker.js` and editable `dist/` assets.
 
@@ -15,13 +30,15 @@ The original live bundle is a generated standalone `deploy/cloudflare-worker.mjs
 - `npm ci && npm test`
 - `npx playwright install chromium && npm run test:e2e:full`
 - `npx wrangler deploy --config wrangler.production.json --dry-run`
-- `npm run test:live -- --origin https://<approved-version-host>` before promotion, and the same read-only check against the public domain afterwards.
+- `npm run test:live -- --origin https://<version-host> --allow-intake-disabled` for a version or preview URL (intake is unavailable there by design, so the health check is skipped), and the full read-only check without the flag against the public domain afterwards.
 
 `wrangler.json` remains an isolated `ymg-events-preview` configuration; no production domain is attached to it. `npm run deploy:preview` selects that file. Production version URLs use their version's actual resources, not an isolated database/environment. No submission data store exists here. Never assume that a preview label isolates resources.
 
-The first staged build was tested at the version URL for `6f991d2a-a714-4587-ba38-86bb32edfb62`: bilingual home/privacy pages, fonts/hero/portrait, robots/sitemap, 404/405, GET/HEAD and the expected unavailable config response passed. Then the owner-approved production path was activated.
+*Dated evidence, 11 November 2026:* the first staged build was tested at the version URL for `6f991d2a-a714-4587-ba38-86bb32edfb62`: bilingual home/privacy pages, fonts/hero/portrait, robots/sitemap, 404/405, GET/HEAD and the expected unavailable config response passed. Then the owner-approved production path was activated.
 
-## First automatic production release — 11 November 2026
+## First automatic production release — 11 November 2026 (dated evidence)
+
+At that time the form had no runtime configuration and metrics were off; both changed later (Science binding, then metrics on 14 November).
 
 - Checked PR #72 merged commit `ce7c690b3224998a170beac60b7120b3438f3c69`.
 - Cloudflare push-event build `8ce03184-0c66-4d90-895c-da49c668d0eb` succeeded automatically.
