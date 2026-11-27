@@ -28,7 +28,7 @@ The first checked merge (#72) triggered an automatic production build and deploy
 | Static output | `dist/` |
 | Domain | `events.ymgconsultingservices.com` |
 
-Pinned project-local Wrangler avoids relying on an unpinned global CLI. `npm run deploy:auto` explicitly selects the production file. `npm run deploy:preview` explicitly selects the isolated preview file. The production config has separate rate-limit namespace `2026111110`, optional metrics disabled, no analytics binding, and observability disabled to avoid unnecessary persistent invocation logs. The production namespace was checked against all listed Worker settings: no other Worker uses it. Secrets are not copied from DnD and no D1 migration is needed for Events.
+Pinned project-local Wrangler avoids relying on an unpinned global CLI. `npm run deploy:auto` explicitly selects the production file. `npm run deploy:preview` explicitly selects the isolated preview file. The production config has separate rate-limit namespaces (`2026111110` for submissions, `2026111430` for metrics), the `SCIENCE_INTAKE` service binding, aggregate metrics enabled with the `events_metrics` dataset (since 14 November 2026), and observability disabled to avoid unnecessary persistent invocation logs. The production namespace was checked against all listed Worker settings: no other Worker uses it. Secrets are not copied from DnD and no D1 migration is needed for Events.
 
 ## Connect and activate
 
@@ -36,7 +36,7 @@ In Cloudflare: Workers & Pages → **ymg-events-website** → Settings → Build
 
 The connection and production trigger are active. No new GitHub Actions deploy workflow or chat CLI token was required. Cloudflare owns the repository checkout/build/upload path. An existing managed build credential is shared with the previously configured build service; review that dependency before rotating/deleting it, since both build connections may rely on it.
 
-Cloudflare can create and upload static assets from its own build environment, avoiding the connector's temporary upload-header limitation. Runtime form secrets still belong in the Events Worker: `GOOGLE_RELAY_URL`, `GOOGLE_RELAY_SECRET`, `TURNSTILE_SECRET_KEY`, and non-secret `TURNSTILE_SITE_KEY`. Hostname/action expectations are checked in `src/form-handler.js`. Without them the form fails closed and offers direct email; deployment is not mailbox-delivery verification.
+Cloudflare can create and upload static assets from its own build environment, avoiding the connector's temporary upload-header limitation. Production needs no form secrets on the Events Worker: the inquiry goes over the `SCIENCE_INTAKE` service binding, and Science holds the Turnstile secret and relay credentials ([shared intake](SCIENCE-INTAKE.md)). The `GOOGLE_RELAY_*` / `TURNSTILE_*` variables apply only to an isolated deployment using the direct relay. Without a working intake the form fails closed and shows the email address; deployment is not mailbox-delivery verification.
 
 Once connected, each checked PR merge to `main` starts a Cloudflare build and deploy. Verify the first build logs and the live home/Italian/privacy/404/assets/API behavior. Subsequent deployments follow the same path. PR CI still runs on GitHub; deployment builds run on Cloudflare and have Cloudflare's separate usage limits.
 

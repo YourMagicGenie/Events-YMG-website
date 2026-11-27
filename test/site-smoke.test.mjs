@@ -454,7 +454,9 @@ test("source and deployment docs identify one editable source and the separate p
   assert.match(readme, /`dist\/`: editable buildless website/);
   assert.match(readme, /original generated bundle remains in the Sites-managed source/);
   assert.doesNotMatch(readme, /deploy\/cloudflare-worker\.mjs/);
-  assert.match(deployment, /current GitHub source has an inline form/);
+  assert.match(deployment, /## Current production state/);
+  assert.match(deployment, /`SCIENCE_INTAKE` service binding/);
+  assert.match(readme, /holds \*\*no\*\* Turnstile secret or relay credentials/);
   assert.match(deployment, /original live bundle is a generated standalone[\s\S]*in the Sites-managed source/);
   assert.match(deployment, /\*\*not\*\* copied as a second editable source of truth/);
   assert.match(deployment, /Cloudflare Workers Builds watches `main`/);

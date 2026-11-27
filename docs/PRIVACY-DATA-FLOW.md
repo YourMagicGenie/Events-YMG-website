@@ -1,10 +1,10 @@
 # Events privacy data-flow and research record
 
-Updated 12 November 2026. The owner directs a self-managed, best-effort policy using current comparable businesses and authoritative sources. Professional sign-off is no longer an imposed release gate; technical/factual verification remains necessary.
+Updated 12 November 2026; reconciled with production on 27 November 2026 (#140). The owner directs a self-managed, best-effort policy using current comparable businesses and authoritative sources. Professional sign-off is no longer an imposed release gate; technical/factual verification remains necessary.
 
 ## Release boundary
 
-Production now serves the checked repository source through Workers Builds. The inquiry form is now configured through a private service binding to Science's existing Turnstile/Google Apps Script/Workspace intake; the owner confirms real inbox receipt. All event fields remain validated, including Reply-To. API errors and source tests distinguish acceptance from receipt; the owner report supplies actual receipt evidence. Fonts, original illustrative hero, portrait and brochure are first-party assets. No new provider or submission database was introduced. Events-specific Cloudflare configuration disables automatic RUM injection from the parent zone; optional aggregate conversion metrics remain disabled. The live browser audit checks actual requests, cookies/storage and CSP on all four public routes.
+Production now serves the checked repository source through Workers Builds. The inquiry form is configured through a private service binding to Science's existing Turnstile/Google Apps Script/Workspace intake; the owner confirms real inbox receipt. All event fields remain validated, including Reply-To. API errors and source tests distinguish acceptance from receipt; the owner report supplies actual receipt evidence. Fonts, the hero photo, portrait and brochure are served as first-party files. No new provider or submission database was introduced. Events-specific Cloudflare configuration disables automatic RUM injection from the parent zone. Aggregate metrics have been **enabled since 14 November 2026** (see [analytics operations](ANALYTICS-OPERATIONS.md)), and both privacy notices describe them. The live browser audit checks actual requests, cookies/storage and CSP on all four public routes. For the current version, readiness and health signals see [current production state](../deploy/README.md#current-production-state).
 
 
 ## Identity
@@ -19,18 +19,18 @@ Frederic David, Genova, P.IVA 03044510992: visually verified from the VAT assign
 | --- | --- | --- |
 | Page hosting | Cloudflare receives connection/URL/browser data to serve and secure requests | Legitimate interest, Art. 6(1)(f); source does not intentionally log briefs |
 | Online inquiry, when configured | Name, email, intent, organization when relevant, selected format, optional guests/timing/budget/message | Art. 6(1)(b) for requested pre-contract steps; 6(1)(f) for general/business-representative correspondence |
-| Abuse checks | Turnstile technical signals/token and server IP-based rate limit | Security/abuse prevention; server verifies action/host; fails closed without config |
-| Delivery | Authenticated Worker → Google Apps Script relay → fixed Workspace recipient, visitor Reply-To | No separate submissions database; acceptance is not proof of inbox delivery |
-| Email fallback | Visitor's provider → Google Workspace | Visitor chooses whether to send |
+| Abuse checks | Turnstile technical signals/token and server IP-based rate limit | Security/abuse prevention; Events rate-limits per IP, Science verifies the token's hostname/action; fails closed without the binding |
+| Delivery | Events Worker → `SCIENCE_INTAKE` service binding (same Cloudflare account) → Science's authenticated Google Apps Script relay → fixed Workspace recipient, visitor Reply-To | No separate submissions database; acceptance is not proof of inbox delivery. The direct-relay code path is unused in production |
+| Email address | Visitor's provider → Google Workspace (the footer and the no-JavaScript note link `hello@ymgconsultingservices.com`) | Visitor chooses whether to send |
 | Fonts / portrait | First-party static assets | No Google Fonts request in candidate source |
-| Hero | First-party responsive WebP illustration | No Unsplash resource request in candidate; AI provenance documented |
-| Optional metrics | Disabled in configuration | Do not enable without corresponding notice/processing review |
+| Hero | Self-hosted responsive WebP crops of an Unsplash photo (since #100, 20 November 2026) | No request to Unsplash; source and license in `ASSET-PROVENANCE.md` |
+| Aggregate metrics | Enabled: unlinked counts to Workers Analytics Engine `events_metrics`, no identifiers, IP used only by the 30/minute limiter | Art. 6(1)(f); three-month automatic deletion; described in notice section 6 |
 
 ## Retention and operational practice
 
 Use purpose-based criteria rather than copying another business's arbitrary 24-month period. Review closed correspondence for deletion once response/proposal/follow-up is no longer needed. Restrict records retained for a concrete legal duty or dispute to that purpose. This is a manual operator practice, not an automated mailbox deletion job; no Gmail deletion or retention setting was changed. Provider backups and other security data have their own lifecycle.
 
-The live Events settings read on 11 November report persisted invocation logs/traces at 10% sampling and Logpush disabled. Cloudflare documents standard Workers Logs retention of 3 days (Free) / up to 7 days (Paid). This is not proof that every Cloudflare security log has that retention. Candidate production config should avoid unnecessary logging and never log brief bodies or secrets.
+*Dated, 11 November 2026:* the Events settings read then (before the repository config was first deployed) reported persisted invocation logs/traces at 10% sampling and Logpush disabled. Every release since #72 deploys `wrangler.production.json` with `observability.enabled: false`; the dashboard setting has not been re-read since. The Science Worker that handles the inquiry has its own logging settings, which this repository does not control or verify. Cloudflare documents standard Workers Logs retention of 3 days (Free) / up to 7 days (Paid). This is not proof that every Cloudflare security log has that retention. Source must not log brief bodies or secrets.
 
 ## Research, checked 11 November 2026
 
@@ -48,7 +48,7 @@ Provider terms describe standard safeguards; they do not establish a personally 
 
 ## Remaining factual checks
 
-1. Verify the actual released host's resource requests/cookies, same-origin form behavior, secrets and non-sensitive mailbox/Reply-To delivery. Keep metrics off.
+1. Mailbox receipt and Reply-To of a controlled live inquiry remain an owner-only check (#129). Released-host requests, cookies, CSP and same-origin form readiness are covered by the live browser audit and smoke.
 2. Confirm applicable provider agreements/account retention settings and enact closed-inquiry review. No professional appointment is required by this workflow.
 3. Resolve current business classification/activity-code and any required public contracting address before making unsupported registrations or transactional-sales claims.
 
