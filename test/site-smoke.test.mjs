@@ -365,16 +365,16 @@ test("brand icons and bilingual social previews use documented local assets", ()
       name: "English",
       page: html,
       image: "social-card-v3.png",
-      title: "YMG Events — Events in Genova",
-      description: "Events, activities and celebrations in Genova. Tell us what you have in mind.",
+      title: "Event Production &amp; Coordination in Genova — YMG Events",
+      description: "Event production and coordination in Genova for venues, companies and private hosts: one plan, one point of contact and a free fit call to start.",
       alt: "YMG Events — Events in Genova.",
     },
     {
       name: "Italian",
       page: italianHtml,
       image: "social-card-it-v3.png",
-      title: "YMG Events — Eventi a Genova",
-      description: "Feste, serate ed eventi a Genova. Raccontaci cosa hai in mente.",
+      title: "Organizzazione e realizzazione eventi a Genova — YMG Events",
+      description: "Organizzazione e realizzazione eventi a Genova per location, aziende e privati: un unico piano, un unico referente e una chiamata conoscitiva gratuita.",
       alt: "YMG Events — Eventi a Genova.",
     },
   ];
@@ -390,12 +390,19 @@ test("brand icons and bilingual social previews use documented local assets", ()
       '<meta property="og:image:width" content="1200">',
       '<meta property="og:image:height" content="630">',
       '<meta property="og:image:type" content="image/png">',
+      `<title>${title}</title>`,
+      `<meta name="description" content="${description}">`,
+      `<meta property="og:title" content="${title}">`,
+      `<meta property="og:description" content="${description}">`,
       `<meta name="twitter:title" content="${title}">`,
       `<meta name="twitter:description" content="${description}">`,
       `<meta name="twitter:image" content="https://events.ymgconsultingservices.com/assets/${image}">`,
       `<meta name="twitter:image:alt" content="${alt}">`,
     ]) assert.ok(page.includes(token), `${name} metadata includes ${token}`);
     assert.match(page, /<meta property="og:url" content="https:\/\/events\.ymgconsultingservices\.com\//, `${name} canonical share URL is absolute`);
+    assert.ok(title.replace("&amp;", "&").length <= 60, `${name} title fits a search result line`);
+    assert.ok(description.length >= 120 && description.length <= 160, `${name} description fits a search snippet`);
+    assert.match(description, /Genova/, `${name} description names the honest local service area`);
   }
 
   const pngDimensions = name => {
@@ -563,8 +570,7 @@ test("hero uses the owner-selected, licensed illustrative event photo", () => {
 });
 
 test("public positioning is venue-facing, factual, and consistent with metadata", () => {
-  assert.match(html, /name="description" content="Events, activities and celebrations in Genova\. Tell us what you have in mind\."/);
-  assert.match(html, /property="og:description" content="Events, activities and celebrations in Genova\. Tell us what you have in mind\."/);
+  assert.match(html, /name="description" content="Event production and coordination in Genova for venues, companies and private hosts: one plan, one point of contact and a free fit call to start\."/);
   for (const detail of [
     "We work with Genova venues and hosts to shape evenings with character",
     "thoughtful hospitality, distinctive music, and an experience planned around the space.",
