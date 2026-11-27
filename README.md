@@ -14,6 +14,10 @@ This repository was initialized on 2026-11-09 from the selected YMG Events Sites
 
 Use [the prioritized GPT coding handoff](docs/GPT_CODING_HANDOFF.md) when starting a new implementation session. It inventoried the 33 approved issues of its date, actual source/deployment boundaries, critical dependency order, test gates and PR/CI expectations. The handoff is a dated snapshot; recheck open issues, repository state, live Worker and Project Keeper before changing code.
 
+## Homepage styles
+
+`dist/index.html` and `dist/it/index.html` load the same stylesheets in the same order. Base rules shared by both languages live in `dist/assets/home.css`, which loads first. Feature stylesheets follow it (`legibility`, `footer`, `founder`, `collateral`, `mobile-hero`, `layout-rhythm`, `offer-summary`) and may override it. Change a shared rule once in those files, not in the pages. Don't add inline `<style>` blocks; a site-smoke test fails if one comes back. There is no build or template step: both pages are hand-maintained static HTML, so keep any markup change identical in both locales.
+
 ## Direct inquiries
 
 Production intake is live and aggregate metrics are on. The version, readiness signals and verification limits are kept in one place: [current production state](deploy/README.md#current-production-state).
