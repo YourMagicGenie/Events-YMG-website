@@ -77,14 +77,11 @@ IDs are assigned dynamically to the existing matching elements in inspector mode
 | `03C` | Highlight: music | `.band > div:nth-of-type(2)` |
 | `03D` | Highlight: dining | `.band > div:nth-of-type(3)` |
 
-### 04 — Approach
+### 04 — Approach (retired)
 
-| Inspector ID | Element | Source selector |
-|---|---|---|
-| `04` | Our approach | `.intro` |
-| `04A` | Approach eyebrow | `.intro .eyebrow` |
-| `04B` | Approach heading | `.intro h2` |
-| `04C` | Approach description | `.intro > div:nth-child(2)` |
+Removed on 26 November 2026 at the owner's request. Its specialization paragraph
+moved beside the event concepts heading as `05B2`; the "Our approach" link now
+goes to the `#offer` summary.
 
 ### 05 — Event concepts
 
@@ -93,6 +90,7 @@ IDs are assigned dynamically to the existing matching elements in inspector mode
 | `05` | Event concepts | `.concepts` |
 | `05A` | Concepts eyebrow | `.concepts > .eyebrow` |
 | `05B` | Concepts heading | `.concepts h2` |
+| `05B2` | Specialization copy | `.concepts-intro` |
 | `05C` | Carousel controls | `.deck-toolbar` |
 | `05D` | Carousel track | `#concept-deck` |
 | `05D1` | Concept card 1 | `#concept-deck .concept:nth-child(1)` |
