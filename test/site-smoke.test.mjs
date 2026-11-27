@@ -3,7 +3,15 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const html = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+const homeCss = readFileSync(new URL("../dist/assets/home.css", import.meta.url), "utf8");
 const italianHtml = readFileSync(new URL("../dist/it/index.html", import.meta.url), "utf8");
+test("both homepages share one stylesheet instead of duplicated inline styles", () => {
+  for (const page of [html, italianHtml]) {
+    assert.doesNotMatch(page, /<style/, "homepage carries no inline style blocks");
+    assert.ok(page.includes('<link rel="preload" href="/assets/fonts/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/home.css">'), "shared stylesheet loads first, before the per-feature stylesheets");
+  }
+});
+
 
 test("opt-in measurement overlay and stable IDs exist for both localized homepages", () => {
   const inspector = readFileSync(new URL("../dist/assets/layout-inspector.js", import.meta.url), "utf8");
@@ -55,8 +63,8 @@ test("owner-approved English hero and Approach copy is exact and stays distinct 
 
 test("partnership section uses the tighter desktop gutter in both locales", () => {
   for (const page of [html, italianHtml]) {
-    assert.match(page, /\.partnerships\{[^}]*grid-template-columns:minmax\(0,\.95fr\) minmax\(0,1\.05fr\);gap:clamp\(32px,5vw,72px\)/);
-    assert.match(page, /\.partnerships p\{color:#ccd3c8;max-width:420px/);
+    assert.match(homeCss, /\.partnerships\{[^}]*grid-template-columns:minmax\(0,\.95fr\) minmax\(0,1\.05fr\);gap:clamp\(32px,5vw,72px\)/);
+    assert.match(homeCss, /\.partnerships p\{color:#ccd3c8;max-width:420px/);
   }
 });
 
@@ -161,10 +169,10 @@ test("main page exposes mobile navigation and a direct inquiry control", () => {
 test("main content can be reached by keyboard and reduced motion is respected", () => {
   assert.match(html, /class="skip-link" href="#main-content"/);
   assert.match(html, /<main id="main-content" tabindex="-1">/);
-  assert.match(html, /prefers-reduced-motion:reduce/);
+  assert.match(homeCss, /prefers-reduced-motion:reduce/);
   const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
   assert.match(interactions, /prefers-reduced-motion: reduce/);
-  assert.match(html, /:focus-visible/);
+  assert.match(homeCss, /:focus-visible/);
 });
 
 test("local assets and public crawl files are present", () => {
@@ -305,13 +313,14 @@ test("self-hosted fonts are licensed, preloaded, and disclosed accurately", () =
   for (const asset of fontAssets) assert.ok(existsSync(new URL(`../dist/assets/fonts/${asset}`, import.meta.url)), `${asset} is present`);
   for (const page of [html, italianHtml]) {
     assert.doesNotMatch(page, /fonts\.googleapis\.com|fonts\.gstatic\.com|@import/);
-    assert.equal([...page.matchAll(/@font-face\{/g)].length, 6, "English and Italian pages retain all weight, style, and language subsets");
-    assert.equal([...page.matchAll(/@font-face\{font-family:'Playfair Display';[^}]*font-weight:400;/g)].length, 4, "Playfair Display only loads the regular weight used by the design");
-    assert.equal([...page.matchAll(/@font-face\{font-family:'DM Sans';[^}]*font-weight:400 700;/g)].length, 2, "DM Sans retains its variable weight range");
+    assert.doesNotMatch(homeCss, /fonts\.googleapis\.com|fonts\.gstatic\.com|@import/);
+    assert.equal([...homeCss.matchAll(/@font-face\{/g)].length, 6, "English and Italian pages retain all weight, style, and language subsets");
+    assert.equal([...homeCss.matchAll(/@font-face\{font-family:'Playfair Display';[^}]*font-weight:400;/g)].length, 4, "Playfair Display only loads the regular weight used by the design");
+    assert.equal([...homeCss.matchAll(/@font-face\{font-family:'DM Sans';[^}]*font-weight:400 700;/g)].length, 2, "DM Sans retains its variable weight range");
     for (const asset of ["dm-sans-latin.woff2", "playfair-display-latin.woff2"]) {
       assert.ok(page.includes(`<link rel="preload" href="/assets/fonts/${asset}" as="font" type="font/woff2" crossorigin>`), `${asset} is preloaded for first-viewport text`);
     }
-    assert.match(page, /font-display:swap/);
+    assert.match(homeCss, /font-display:swap/);
   }
   const italianPrivacy = readFileSync(new URL("../dist/it/privacy.html", import.meta.url), "utf8");
   assert.doesNotMatch(italianPrivacy, /Se l’invio online non è disponibile|Ambito e aggiornamenti|Unsplash/);
@@ -494,7 +503,7 @@ test("event formats form a six-card carousel without filters or mockup disclaime
     assert.ok(html.includes(`data-concept="${format}"`), `${format} has a form preselection`);
     assert.ok(html.includes(`<option>${format}</option>`), `${format} is available in the form`);
   }
-  assert.match(html, /\.concept-grid\{display:flex;gap:[^}]*overflow-x:auto/);
+  assert.match(homeCss, /\.concept-grid\{display:flex;gap:[^}]*overflow-x:auto/);
   const interactions = readFileSync(new URL("../dist/assets/site-interactions.js", import.meta.url), "utf8");
   assert.match(interactions, /ArrowRight/);
   assert.match(interactions, /scrollIntoView\(\{ behavior: reduceMotion\(\) \? "auto" : "smooth"/);
@@ -523,7 +532,7 @@ test("event card photos are local, format-specific, responsive and documented", 
       assert.match(alt, localizedAlt === "en" ? /^Illustrative photo of / : /^Foto illustrativa /, `${pageName} card ${index + 1} presents the photo as illustrative, not as a past YMG event`);
     }
   }
-  for (const [pageName, styles] of [["English", html], ["Italian", italianHtml]]) {
+  for (const [pageName, styles] of [["Shared", homeCss]]) {
     assert.match(styles, /\.concept \.art\{height:auto;aspect-ratio:5\/4/, `${pageName} uses the shared 5:4 card image frame`);
     assert.match(styles, /\.concept \.art img\{display:block;width:100%;height:100%;object-fit:cover/, `${pageName} crops the images without distortion`);
     assert.doesNotMatch(styles, /\.art-title|\.art-kicker|\.art-foot|\.type-art|\.games-art/, `${pageName} has no leftover poster-style art rules`);
@@ -657,16 +666,16 @@ test("inquiry controls expose bilingual required guidance and accessible states"
     assert.match(page, /id="name" name="name" autocomplete="name" maxlength="120" placeholder="[^"]+" aria-describedby="form-required-note"/);
     assert.match(page, /id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="[^"]+" aria-describedby="form-required-note"/);
     assert.match(page, /id="business" name="business"[^>]*aria-describedby="business-help form-required-note"/);
-    assert.match(page, /#brief input:not\(\[type=hidden\]\),#brief select,#brief textarea\{[^}]*min-height:48px[^}]*border:1px solid[^}]*background:#faf8f2/);
-    assert.match(page, /#brief input:focus-visible,#brief select:focus-visible,#brief textarea:focus-visible\{outline:3px solid/);
-    assert.match(page, /#brief \[aria-invalid="true"\]\{border-color:#743037/);
-    assert.match(page, /#brief input:disabled,#brief select:disabled,#brief textarea:disabled\{/);
-    assert.ok(page.includes('.form-feedback{position:absolute;width:1px;height:1px;min-height:0'), "neutral form status has no visible panel or layout height");
-    assert.ok(page.includes('clip-path:inset(50%)'), "neutral status remains accessible");
-    assert.ok(page.includes('.form-feedback[data-state="error"],.form-feedback[data-state="success"]{position:static;display:block'), "real errors and success appear as plain text");
-    assert.ok(page.includes('background:transparent;box-shadow:none'), "real outcomes have no colored panel or shadow");
-    assert.ok(page.includes('.form-feedback[data-state="error"]{color:#743037}'), "errors retain readable color");
-    assert.ok(page.includes('.form-feedback[data-state="success"]{color:#174c3b}'), "success retains readable color");
+    assert.match(homeCss, /#brief input:not\(\[type=hidden\]\),#brief select,#brief textarea\{[^}]*min-height:48px[^}]*border:1px solid[^}]*background:#faf8f2/);
+    assert.match(homeCss, /#brief input:focus-visible,#brief select:focus-visible,#brief textarea:focus-visible\{outline:3px solid/);
+    assert.match(homeCss, /#brief \[aria-invalid="true"\]\{border-color:#743037/);
+    assert.match(homeCss, /#brief input:disabled,#brief select:disabled,#brief textarea:disabled\{/);
+    assert.ok(homeCss.includes('.form-feedback{position:absolute;width:1px;height:1px;min-height:0'), "neutral form status has no visible panel or layout height");
+    assert.ok(homeCss.includes('clip-path:inset(50%)'), "neutral status remains accessible");
+    assert.ok(homeCss.includes('.form-feedback[data-state="error"],.form-feedback[data-state="success"]{position:static;display:block'), "real errors and success appear as plain text");
+    assert.ok(homeCss.includes('background:transparent;box-shadow:none'), "real outcomes have no colored panel or shadow");
+    assert.ok(homeCss.includes('.form-feedback[data-state="error"]{color:#743037}'), "errors retain readable color");
+    assert.ok(homeCss.includes('.form-feedback[data-state="success"]{color:#174c3b}'), "success retains readable color");
   }
   assert.match(interactions, /form\.addEventListener\("invalid"/);
   assert.match(interactions, /form\.addEventListener\("input", updateFieldValidity\)/);
@@ -767,7 +776,7 @@ test("event format context is bilingual, explicit, clearable and sent through th
     assert.match(page, /<button type="button" id="clear-format">/);
     assert.match(page, /<select id="format" name="format"><option(?: value="Let’s explore a partnership")?>[^<]*<\/option><option value="" selected>/, "the neutral format is the initial selection (#133)");
     assert.equal((page.match(/<select id="format"[^]*?<\/select>/)[0].match(/ selected/g) || []).length, 1, "only the neutral format is preselected");
-    assert.match(page, /\.format-context button\{min-height:44px/);
+    assert.match(homeCss, /\.format-context button\{min-height:44px/);
   }
   assert.match(messages, /selectedFormatPrefix: "Selected event format:"/);
   assert.match(messages, /selectedFormatPrefix: "Format selezionato:"/);
